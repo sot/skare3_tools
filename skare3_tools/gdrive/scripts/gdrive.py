@@ -35,7 +35,7 @@ def cmd_ls(args):
 
 def cmd_rm(args):
     for d in args.path:
-        gdrive.rm(d, drive=args.drive)
+        gdrive.trash(d, drive=args.drive)
 
 
 def cmd_delete(args):
@@ -104,12 +104,22 @@ def main():
     logging.getLogger('gdrive').addHandler(handler)
     logging.getLogger('gdrive').setLevel(args.log.upper())
 
+    cred_filename = ''
+    if 'GOOGLE_DRIVE_CREDENTIALS' in os.environ:
+        cred_filename = '.gdrive_credentials'
+        with open(cred_filename, 'w') as cred_file:
+            cred_file.write(os.environ['GOOGLE_DRIVE_CREDENTIALS'])
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = cred_filename
+
     try:
         gdrive.init(interactive=args.interactive, save_credentials=args.save_credentials)
     except gdrive.InitException as e:
         logging.getLogger('gdrive').info(e)
         parser.print_usage()
         parser.exit(1)
+    finally:
+        if cred_filename and os.path.exists(cred_filename):
+            os.remove(cred_filename)
 
     ACTIONS[args.cmd](args)
 
