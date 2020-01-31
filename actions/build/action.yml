@@ -1,0 +1,20 @@
+# action.yml
+name: 'Ska package builder'
+description: 'Build a ska package'
+inputs:
+  package:
+    description: 'Package to build'
+    required: true
+  ref:
+    description: 'git ref to build (branch, tag, commit sha)'
+    required: true
+outputs:
+  files:
+    description: 'Files produced as result'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.package }}
+    - --tag=${{ inputs.ref }}
+
