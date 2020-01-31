@@ -1,0 +1,4 @@
+setuptools_scm
+google_auth_oauthlib
+google-api-python-client
+sphinx-argparse
