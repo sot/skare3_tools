@@ -14,6 +14,7 @@ import argparse
 import subprocess
 import logging
 import datetime
+import yaml
 
 
 REPO_PACKAGE_MAP = [
@@ -148,13 +149,19 @@ def get_parser():
     parser.add_argument('-o', default='repository_info.json',
                         help='Output file (default=repository_info.json)')
     parser.add_argument('-u', help='User name')
+    parser.add_argument('-c', help='Netrc file name with credentials')
     return parser
 
 
 def main():
     args = get_parser().parse_args()
 
-    github.init(user=args.u)
+    if args.c:
+        with open(args.c) as f:
+            data = yaml.load(f)
+            github.init(user=data['user'], password=data['password'])
+    else:
+        github.init(user=args.u)
     """
     repositories = [
         'sot/Chandra.Maneuver',
