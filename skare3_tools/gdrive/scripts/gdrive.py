@@ -44,11 +44,12 @@ def cmd_delete(args):
 
 
 def cmd_upload(args):
-    for file in args.path[:-1]:
-        if os.path.exists(file):
-            gdrive.upload(file, args.path[-1], drive=args.drive)
-        else:
-            print(f'no such file {file}')
+    destination = args.path[-1]
+    for filename in args.path[:-1]:
+        if os.path.exists(filename):
+            gdrive.upload(filename, destination, drive=args.drive)
+            filename = os.path.abspath(filename)
+            print(f'Upload: {filename:80s} -> {destination}')
 
 
 def cmd_download(args):
