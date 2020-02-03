@@ -49,7 +49,7 @@ def cmd_upload(args):
         if os.path.exists(filename):
             gdrive.upload(filename, destination, drive=args.drive)
             filename = os.path.abspath(filename)
-            print(f'Upload: {filename:80s} -> {destination}')
+            logging.getLogger('gdrive').info(f'Upload: {filename:80s} -> {destination}')
 
 
 def cmd_download(args):
