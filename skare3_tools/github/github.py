@@ -105,16 +105,23 @@ class GithubAPI:
     def __init__(self, user=None, password=None):
         if user is None:
             if 'GITHUB_USER' in os.environ:
+                _logger.debug('Github user from environment')
                 user = os.environ['GITHUB_USER']
             else:
+                _logger.debug('Github user from prompt')
                 user = input('Username: ')
+        else:
+            _logger.debug('Github user from arguments')
         if password is None:
             if 'GITHUB_PASSWORD' in os.environ:
                 password = os.environ['GITHUB_PASSWORD']
+                _logger.debug('Github password from environment')
             elif keyring:
                 password = keyring.get_password("skare3-github", user)
+                _logger.debug('Github user from keyring')
             if password is None:
                 password = getpass.getpass()
+                _logger.debug('Github user from prompt')
 
         self.user = user
         self.auth = HTTPBasicAuth(self.user, password)
@@ -234,7 +241,7 @@ class _EndpointGroup:
             kwargs['params']['page'] = page
             r = self._get(url, **kwargs)
             if type(r) is not list:
-                _logger.warning('_get_list_generator received a %s', type(r))
+                _logger.warning('_get_list_generator received a %s: %s', type(r), r)
                 break
             if len(r) == 0:
                 break
@@ -428,8 +435,9 @@ class Commits(_EndpointGroup):
     Endpoints that have to do with repository commits
     (`commit API docs <https://developer.github.com/v3/repos/commits>`_)
     """
-    def __call__(self, **kwargs):
+    def __call__(self, ref=None, **kwargs):
         """
+        :param ref: str
         :param sha: str
             SHA or branch to start listing commits from.
             Default: the repository’s default branch (usually master).
@@ -447,7 +455,14 @@ class Commits(_EndpointGroup):
         :param kwargs:
         :return:
         """
-        return self._get_list('repos/:owner/:repo/commits', **kwargs)
+        required = []
+        optional = ['sha', 'path', 'author', 'since', 'until']
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k] for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
+        if ref is not None:
+            return self._get('repos/:owner/:repo/commits/:ref', ref=ref, params=json, **kwargs)
+        return self._get_list('repos/:owner/:repo/commits', params=json, **kwargs)
 
 
 class Branches(_EndpointGroup):
@@ -465,9 +480,15 @@ class Branches(_EndpointGroup):
         :param kwargs:
         :return:
         """
+        required = []
+        optional = ['protected']
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k] for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
         if branch:
-            return self._get('/repos/:owner/:repo/branches/:branch', branch=branch, **kwargs)
-        return self._get_list('repos/:owner/:repo/branches', **kwargs)
+            return self._get('/repos/:owner/:repo/branches/:branch',
+                             branch=branch, params=json, **kwargs)
+        return self._get_list('repos/:owner/:repo/branches', params=json, **kwargs)
 
 
 class Issues(_EndpointGroup):
@@ -506,11 +527,17 @@ class Issues(_EndpointGroup):
         :param kwargs:
         :return:
         """
+        required = []
+        optional = ['filter', 'labels', 'sort', 'direction', 'since']
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k] for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
         if issue_number is not None:
             return self._get('/repos/:owner/:repo/issues/:issue_number',
                              issue_number=issue_number,
+                             params=json,
                              **kwargs)
-        return self._get_list('repos/:owner/:repo/issues', **kwargs)
+        return self._get_list('repos/:owner/:repo/issues', params=json, **kwargs)
 
     def create(self, **kwargs):
         """

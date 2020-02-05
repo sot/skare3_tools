@@ -11,6 +11,11 @@ entry_points = {
         'gdrive=skare3_tools.gdrive.scripts.gdrive:main',
         'skare3-github-info=skare3_tools.github.scripts.ska_github_info:main',
         'skare3-dashboard=skare3_tools.dashboard.dashboard:main',
+        'skare3-bulk=skare3_tools.scripts.bulk:main',
+        'skare3-add-secrets=skare3_tools.github.scripts.add_secrets:main',
+        'skare3-create-issue=skare3_tools.github.scripts.create_issue:main',
+        'skare3-create-pr=skare3_tools.github.scripts.create_pr:main',
+        'skare3-release-merge-info=skare3_tools.github.scripts.release_merge_info:main'
     ]
 }
 

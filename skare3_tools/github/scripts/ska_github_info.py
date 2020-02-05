@@ -53,19 +53,20 @@ def get_repository_info(owner_repo):
         commits = commits[:-1]  # remove the commit associated to the release
 
         merges = []
-        for commit in commits:
-            msg = commit['commit']['message']
-            match = re.match(
-                'Merge pull request (?P<pr>.+) from (?P<branch>\S+)\n\n(?P<description>.+)', msg)
-            if match:
-                msg = match.groupdict()
-                merges.append(f'PR{msg["pr"]}: {msg["description"]}')
+for commit in commits:
+    msg = commit['commit']['message']
+    match = re.match(
+        'Merge pull request (?P<pr>.+) from (?P<branch>\S+)\n\n(?P<description>.+)', msg)
+    if match:
+        msg = match.groupdict()
+        merges.append(f'PR{msg["pr"]}: {msg["description"]}')
     else:
         last_tag = {'tag_name': '', 'published_at': ''}
         commits = []
         merges = []
     branches = api.get(f'repos/{owner}/{repo}/branches').json()
     n_branches = len(branches)
+    n_commits = len(commits)
 
     issue_page = api.get(f'repos/{owner}/{repo}/issues', params={'per_page': 100}).json()
     issues = issue_page
@@ -77,12 +78,12 @@ def get_repository_info(owner_repo):
 
     pull_requests = []
     for pr in repository.pull_requests():
-        commits = api.get(pr['commits_url']).json()
-        date = commits[-1]['commit']['committer']['date']
+        pr_commits = api.get(pr['commits_url']).json()
+        date = pr_commits[-1]['commit']['committer']['date']
         pull_requests.append({'number': pr['number'],
                               'url': pr['_links']['html']['href'],
                               'title': pr['title'],
-                              'n_commits': len(commits),
+                              'n_commits': len(pr_commits),
                               'last_commit_date': date})
 
     headers = {'Accept': 'application/vnd.github.antiope-preview+json'}
@@ -94,7 +95,7 @@ def get_repository_info(owner_repo):
         'name': repo,
         'last_tag': last_tag["tag_name"],
         'last_tag_date': last_tag['published_at'],
-        'commits': len(commits),
+        'commits': n_commits,
         'merges': len(merges),
         'merge_info': merges,
         'issues': n_issues,
@@ -103,7 +104,7 @@ def get_repository_info(owner_repo):
         'pull_requests': pull_requests,
         'workflows': workflows
     }
-    return repo_info
+    return repo_info, commits
 
 
 def get_repositories_info(repositories, conda=True):
