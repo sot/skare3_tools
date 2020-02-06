@@ -212,6 +212,9 @@ class _EndpointGroup:
     def _get(self, url, **kwargs):
         return self._method_('get', url, **kwargs)
 
+    def _put(self, url, **kwargs):
+        return self._method_('put', url, **kwargs)
+
     def _post(self, url, **kwargs):
         return self._method_('post', url, **kwargs)
 
@@ -297,6 +300,7 @@ class Repository:
         self.branches = Branches(self)
         self.checks = Checks(self)
         self.pull_requests = PullRequests(self)
+        self.merge = Merge(self)
 
 
 class Releases(_EndpointGroup):
@@ -631,9 +635,24 @@ class PullRequests(_EndpointGroup):
             Default: desc when sort is created or sort is not specified, otherwise asc.
         """
         if pull_number is not None:
-            return self._get('/repos/:owner/:repo/pulls/:pull_number',
-                             pull_number=pull_number, **kwargs)
-        return self._get('/repos/:owner/:repo/pulls', **kwargs)
+            r = self._get('/repos/:owner/:repo/pulls/:pull_number',
+                          pull_number=pull_number, **kwargs)
+            if r['response']['ok']:
+                if 'state' in kwargs and r['state'] != kwargs['state']:
+                    return []
+                for k in ['head', 'base']:
+                    if k in kwargs and r[k]['ref'] != kwargs[k]:
+                        return []
+                r = [r]
+            return r
+        if 'head' in kwargs and ':' not in kwargs['head']:
+            return {"error": "head must be in the format user:ref-name or organization:ref-name."}
+        required = []
+        optional = ['state', 'head', 'base', 'sort', 'direction']
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k]for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
+        return self._get('/repos/:owner/:repo/pulls', params=json, **kwargs)
 
     def create(self, **kwargs):
         """
@@ -751,7 +770,33 @@ class PullRequests(_EndpointGroup):
         kwargs = {k: v for k, v in kwargs.items() if k not in json}
         return self._put('/repos/:owner/:repo/pulls/:pull_number/merge',
                          pull_number=pull_number,
-                         json=json, **kwargs)
+                         params=json, **kwargs)
+
+
+class Merge(_EndpointGroup):
+    """
+    Single endpoint for merges
+    (`merges API docs <https://developer.github.com/v3/repos/merging/>`_)
+
+    Note: this is for branches. Merging pull requests is done with the pull requests API
+    """
+    def __call__(self, **kwargs):
+        """
+        Merge a branch
+
+        :param base: str
+            The name of the base branch that the head will be merged into.
+        :param head: str
+            The head to merge. This can be a branch name or a commit SHA1.
+        :param commit_message: str. optional
+            Commit message to use for the merge commit. If omitted, a default message will be used.
+        """
+        required = ['base', 'head']
+        optional = ['commit_message']
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k]for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
+        return self._post('/repos/:owner/:repo/pulls/:pull_number/merge', params=json, **kwargs)
 
 
 class Checks(_EndpointGroup):
