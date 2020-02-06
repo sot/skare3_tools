@@ -105,16 +105,23 @@ class GithubAPI:
     def __init__(self, user=None, password=None):
         if user is None:
             if 'GITHUB_USER' in os.environ:
+                _logger.debug('Github user from environment')
                 user = os.environ['GITHUB_USER']
             else:
+                _logger.debug('Github user from prompt')
                 user = input('Username: ')
+        else:
+            _logger.debug('Github user from arguments')
         if password is None:
             if 'GITHUB_PASSWORD' in os.environ:
                 password = os.environ['GITHUB_PASSWORD']
+                _logger.debug('Github password from environment')
             elif keyring:
                 password = keyring.get_password("skare3-github", user)
+                _logger.debug('Github user from keyring')
             if password is None:
                 password = getpass.getpass()
+                _logger.debug('Github user from prompt')
 
         self.user = user
         self.auth = HTTPBasicAuth(self.user, password)
@@ -152,7 +159,8 @@ class GithubAPI:
                 result['response'] = {
                     'status_code': r.status_code,
                     'ok': r.ok,
-                    'reason': r.reason
+                    'reason': r.reason,
+                    'message': result['message'] if 'message' in result else ''
                 }
             return result
         return r
@@ -205,6 +213,9 @@ class _EndpointGroup:
     def _get(self, url, **kwargs):
         return self._method_('get', url, **kwargs)
 
+    def _put(self, url, **kwargs):
+        return self._method_('put', url, **kwargs)
+
     def _post(self, url, **kwargs):
         return self._method_('post', url, **kwargs)
 
@@ -234,7 +245,7 @@ class _EndpointGroup:
             kwargs['params']['page'] = page
             r = self._get(url, **kwargs)
             if type(r) is not list:
-                _logger.warning('_get_list_generator received a %s', type(r))
+                _logger.warning('_get_list_generator received a %s: %s', type(r), r)
                 break
             if len(r) == 0:
                 break
@@ -290,6 +301,7 @@ class Repository:
         self.branches = Branches(self)
         self.checks = Checks(self)
         self.pull_requests = PullRequests(self)
+        self.merge = Merge(self)
 
 
 class Releases(_EndpointGroup):
@@ -428,8 +440,9 @@ class Commits(_EndpointGroup):
     Endpoints that have to do with repository commits
     (`commit API docs <https://developer.github.com/v3/repos/commits>`_)
     """
-    def __call__(self, **kwargs):
+    def __call__(self, ref=None, **kwargs):
         """
+        :param ref: str
         :param sha: str
             SHA or branch to start listing commits from.
             Default: the repository’s default branch (usually master).
@@ -447,7 +460,14 @@ class Commits(_EndpointGroup):
         :param kwargs:
         :return:
         """
-        return self._get_list('repos/:owner/:repo/commits', **kwargs)
+        required = []
+        optional = ['sha', 'path', 'author', 'since', 'until']
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k] for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
+        if ref is not None:
+            return self._get('repos/:owner/:repo/commits/:ref', ref=ref, params=json, **kwargs)
+        return self._get_list('repos/:owner/:repo/commits', params=json, **kwargs)
 
 
 class Branches(_EndpointGroup):
@@ -465,9 +485,15 @@ class Branches(_EndpointGroup):
         :param kwargs:
         :return:
         """
+        required = []
+        optional = ['protected']
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k] for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
         if branch:
-            return self._get('/repos/:owner/:repo/branches/:branch', branch=branch, **kwargs)
-        return self._get_list('repos/:owner/:repo/branches', **kwargs)
+            return self._get('/repos/:owner/:repo/branches/:branch',
+                             branch=branch, params=json, **kwargs)
+        return self._get_list('repos/:owner/:repo/branches', params=json, **kwargs)
 
 
 class Issues(_EndpointGroup):
@@ -506,11 +532,17 @@ class Issues(_EndpointGroup):
         :param kwargs:
         :return:
         """
+        required = []
+        optional = ['filter', 'labels', 'sort', 'direction', 'since']
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k] for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
         if issue_number is not None:
             return self._get('/repos/:owner/:repo/issues/:issue_number',
                              issue_number=issue_number,
+                             params=json,
                              **kwargs)
-        return self._get_list('repos/:owner/:repo/issues', **kwargs)
+        return self._get_list('repos/:owner/:repo/issues', params=json, **kwargs)
 
     def create(self, **kwargs):
         """
@@ -604,9 +636,31 @@ class PullRequests(_EndpointGroup):
             Default: desc when sort is created or sort is not specified, otherwise asc.
         """
         if pull_number is not None:
-            return self._get('/repos/:owner/:repo/pulls/:pull_number',
-                             pull_number=pull_number, **kwargs)
-        return self._get('/repos/:owner/:repo/pulls', **kwargs)
+            r = self._get('/repos/:owner/:repo/pulls/:pull_number',
+                          pull_number=pull_number, **kwargs)
+            if r['response']['ok']:
+                if 'state' in kwargs and r['state'] != kwargs['state']:
+                    return []
+                for k in ['head', 'base']:
+                    if k in kwargs and r[k]['ref'] != kwargs[k]:
+                        return []
+                r = [r]
+            return r
+        if 'head' in kwargs and ':' not in kwargs['head']:
+            return {
+                "response": {
+                    'status_code': 404,
+                    'ok': False,
+                    'reason':  'head must be in the format user:ref-name or organization:ref-name.'
+                }
+            }
+
+        required = []
+        optional = ['state', 'head', 'base', 'sort', 'direction']
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k]for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
+        return self._get('/repos/:owner/:repo/pulls', params=json, **kwargs)
 
     def create(self, **kwargs):
         """
@@ -724,7 +778,33 @@ class PullRequests(_EndpointGroup):
         kwargs = {k: v for k, v in kwargs.items() if k not in json}
         return self._put('/repos/:owner/:repo/pulls/:pull_number/merge',
                          pull_number=pull_number,
-                         json=json, **kwargs)
+                         params=json, **kwargs)
+
+
+class Merge(_EndpointGroup):
+    """
+    Single endpoint for merges
+    (`merges API docs <https://developer.github.com/v3/repos/merging/>`_)
+
+    Note: this is for branches. Merging pull requests is done with the pull requests API
+    """
+    def __call__(self, **kwargs):
+        """
+        Merge a branch
+
+        :param base: str
+            The name of the base branch that the head will be merged into.
+        :param head: str
+            The head to merge. This can be a branch name or a commit SHA1.
+        :param commit_message: str. optional
+            Commit message to use for the merge commit. If omitted, a default message will be used.
+        """
+        required = ['base', 'head']
+        optional = ['commit_message']
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k]for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
+        return self._post('/repos/:owner/:repo/pulls/:pull_number/merge', params=json, **kwargs)
 
 
 class Checks(_EndpointGroup):
