@@ -3,6 +3,7 @@
 Create a pull request
 """
 
+import sys
 import argparse
 from skare3_tools import github
 
@@ -23,11 +24,16 @@ def main():
     args = parser().parse_args()
     github.init(user=args.user)
     repository = github.Repository(args.repository)
-    repository.pull_requests.create(title=args.title,
-                                    head=args.head,
-                                    base=args.base,
-                                    body=args.body
-                                    )
+    pr = repository.pull_requests.create(title=args.title,
+                                         head=args.head,
+                                         base=args.base,
+                                         body=args.body
+                                         )
+
+    if not pr['response']['ok']:
+        print('Failed to create pull request')
+        sys.exit(1)
+    print(f"created pull request {pr['number']} at {pr['html_url']}")
 
 
 if __name__ == '__main__':

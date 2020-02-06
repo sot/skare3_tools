@@ -3,6 +3,7 @@
 Create a github issue
 """
 
+import sys
 import argparse
 from skare3_tools import github
 
@@ -22,9 +23,14 @@ def main():
     args = parser().parse_args()
     github.init(user=args.user)
     repository = github.Repository(args.repository)
-    repository.issues.create(title=args.title,
+    issue = repository.issues.create(title=args.title,
                              body=args.body,
                              labels=args.label)
+
+    if not issue['response']['ok']:
+        print('Failed to create issue')
+        sys.exit(1)
+    print(f"created issue {issue['number']} at {issue['html_url']}")
 
 
 if __name__ == '__main__':

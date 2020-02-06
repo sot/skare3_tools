@@ -159,7 +159,8 @@ class GithubAPI:
                 result['response'] = {
                     'status_code': r.status_code,
                     'ok': r.ok,
-                    'reason': r.reason
+                    'reason': r.reason,
+                    'message': result['message'] if 'message' in result else ''
                 }
             return result
         return r
@@ -646,7 +647,14 @@ class PullRequests(_EndpointGroup):
                 r = [r]
             return r
         if 'head' in kwargs and ':' not in kwargs['head']:
-            return {"error": "head must be in the format user:ref-name or organization:ref-name."}
+            return {
+                "response": {
+                    'status_code': 404,
+                    'ok': False,
+                    'reason':  'head must be in the format user:ref-name or organization:ref-name.'
+                }
+            }
+
         required = []
         optional = ['state', 'head', 'base', 'sort', 'direction']
         json = {k: kwargs[k] for k in required}

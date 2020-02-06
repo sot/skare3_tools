@@ -36,12 +36,16 @@ def main():
     kwargs['state'] = 'open'
     prs = repository.pull_requests(**kwargs)
 
+    if type(prs) == dict and not prs['response']['ok']:
+        print(f'Failed getting requested PR: {prs["response"]["reason"]}')
+        sys.exit(1)
+
     if len(prs) != 1:
         print(f"There are {len(prs)} PRs matching the filter criteria")
         sys.exit(1)
 
     # sanity checks
-    sha = prs[0]['merge_commit_sha']
+    sha = prs[0]['head']['sha']
     if args.sha and sha != args.sha:
         print(f"Requested sha does not match that of the PR")
         sys.exit(1)
@@ -58,9 +62,10 @@ def main():
 
     kwargs['sha'] = sha
     kwargs['pull_number'] = prs[0]['number']
-    print('merge kwargs:', kwargs)
-    repository.pull_requests.merge(**kwargs)
-
+    result = repository.pull_requests.merge(**kwargs)
+    if not result['response']['ok']:
+        print(f'Failed merging PR: {result["response"]["reason"]}. {result["response"]["message"]}')
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()

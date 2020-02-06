@@ -133,7 +133,11 @@ def main():
     try:
         login(args.user)
         for repository in args.repositories:
-            add_secrets(repository, secrets)
+            print(repository)
+            try:
+                add_secrets(repository, secrets)
+            except Exception as e:
+                print(f' - Failed setting {repository} secrets: {e}')
     except Exception as e:
         print(f'Failed setting secrets: {e}')
     finally:
