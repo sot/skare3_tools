@@ -64,7 +64,7 @@ def main():
         for merge in merges:
             body += f'- {merge}\n'
 
-        r = repository.releases.edit('none', body=body)
+        r = repository.releases.edit(release_id, body=body)
         if not r['response']['ok']:
             sys.exit((f"Failed to edit release '{releases[i_1]['name']}'"
                       f" ({release_id}): {r['response']['reason']}"))
