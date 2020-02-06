@@ -23,14 +23,15 @@ A valid YAML file looks like this:
 """
 
 
-import json, sys, time, os
-from bs4 import BeautifulSoup
+import json
+import yaml
+import time
+import os
+import sys
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import TimeoutException
 import getpass
 import keyring
-import yaml
 import argparse
 
 _driver_ = None
@@ -48,14 +49,17 @@ def go(url, allow_timeout=True, ok=None, verbose=False, max_tries=5):
             time.sleep(2)
             break
         except TimeoutException:
-            if not ok is None and not ok():
-                if verbose: print(url, 'time out fail')
+            if ok is not None and not ok():
+                if verbose:
+                    print(url, 'time out fail')
                 continue
             if allow_timeout:
-                if verbose: print(url, 'time out')
+                if verbose:
+                    print(url, 'time out')
                 break
         except Exception as e:
-            if verbose: print(url, 'timeout', str(e))
+            if verbose:
+                print(url, 'timeout', str(e))
 
 
 def init():
@@ -66,6 +70,7 @@ def init():
 
 
 def login(username, password=None):
+    global _driver_
     if _driver_ is None:
         init()
 
@@ -89,15 +94,14 @@ def add_secrets(repository, secrets):
     for secret in secrets:
         buttons = _driver_.find_elements_by_tag_name('button')
 
-        # this is not strictly needed it just shows th input fields that are hidden by default:
-        try:
-            button = [button for button in buttons if button.text == 'Add a new secret'][0]
-            button.click()
-        except Exception as e:
-            pass
+        button = [button for button in buttons if button.text == 'Add a new secret'][0]
+        button.click()
 
         _driver_.find_element_by_id('name').send_keys(secret)
-        _driver_.find_element_by_id('secret_value').send_keys(str(secrets[secret]))
+        value = secrets[secret]
+        if type(value) == dict:
+            value = json.dumps(value)
+        _driver_.find_element_by_id('secret_value').send_keys(value)
         button = [button for button in buttons if button.text == 'Add secret'][0]
         button.click()
 
@@ -105,20 +109,37 @@ def add_secrets(repository, secrets):
 def parser():
     parse = argparse.ArgumentParser(description=__doc__)
     parse.add_argument('repositories', nargs='+')
-    parse.add_argument('--secrets', default='secrets.yml', help='YAML file with all secrets')
+    parse.add_argument('--secrets', default='secrets.json', help='JSON file with all secrets')
     parse.add_argument('--user', required=True, help='Github user name')
+    parse.add_argument('--no-quit', dest='quit', default=True, action='store_false',
+                       help='Do not close chrome browser at the end')
     return parse
 
 
 def main():
+    global _driver_
     args = parser().parse_args()
 
     with open(args.secrets) as f:
-        #secrets = yaml.load(f, Loader=yaml.FullLoader)
-        secrets = yaml.load(f)
-    login(args.user)
-    for repository in args.repositories:
-        add_secrets(repository, secrets)
+        if args.secrets[-4:] in ['.yaml', '.yml']:
+            # secrets = yaml.load(f, Loader=yaml.FullLoader)
+            secrets = yaml.load(f)
+        elif args.secrets[-5:] == '.json':
+            secrets = json.load(f)
+        else:
+            print(f"don't know how to handle file '{args.secrets}'")
+            sys.exit(1)
+
+    try:
+        login(args.user)
+        for repository in args.repositories:
+            add_secrets(repository, secrets)
+    except Exception as e:
+        print(f'Failed setting secrets: {e}')
+    finally:
+        if args.quit:
+            _driver_.quit()
+            _driver_ = None
 
 
 if __name__ == '__main__':
