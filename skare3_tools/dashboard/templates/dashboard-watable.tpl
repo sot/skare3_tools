@@ -152,6 +152,12 @@
               type: "string",
               friendly: "Open Pull Requests",
               tooltip: "Open Pull Requests",
+            },
+            build_status: {
+              index: 12,
+              type: "string",
+              friendly: "Conda Package",
+              tooltip: "Conda Package Building",
             }
           };
 
@@ -173,6 +179,7 @@
               commits: {{ pkg.commits }},
               merges: {{ pkg.merges }},
               merge_info: "{% for msg in pkg.merge_info %} {{ msg }} <br/> {% endfor %}",
+              build_status: "<img alt='' src='https://github.com/{{ pkg.owner }}/{{ pkg.name }}/workflows/Conda%20build/badge.svg'>",
               pr_info: "{% for pr in pkg.pull_requests %} {{ pr.last_commit_date }} - PR #{{ pr.number }} <a href='{{ pr.url }}'> {{ pr.title }} </a> <br/> {% endfor %}",
             },
             {% endfor %}
