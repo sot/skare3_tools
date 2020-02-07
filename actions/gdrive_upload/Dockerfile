@@ -5,7 +5,7 @@ RUN apt-get update && \
 
 # the skare3_tools folder is outside docker's context (when github builds the action)
 # so it can't be copied. This is an issue, because the branch/tag to clone must be changed here.
-RUN git clone --branch first_try https://github.com/sot/skare3_tools.git && \
+RUN git clone --branch master https://github.com/sot/skare3_tools.git && \
     pip3 install -r ./skare3_tools/requirements.txt && \
     pip3 install ./skare3_tools
 
