@@ -44,8 +44,7 @@ def cmd_delete(args):
 
 
 def cmd_upload(args):
-    args = [a.strip() for arg in args for a in arg.split()]
-    print(f"upload args: {args}")
+    print(f"upload args: {args.path}")
     destination = args.path[-1]
     for filename in args.path[:-1]:
         if os.path.exists(filename):
