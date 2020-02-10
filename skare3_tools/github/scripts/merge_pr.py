@@ -15,8 +15,8 @@ def parser():
     parse.add_argument('--pull-number', help='pull number')
     parse.add_argument('--head', help='branch you are merging from')
     parse.add_argument('--base', help='branch you are merging to')
-    parse.add_argument('--commit-title')
-    parse.add_argument('--commit-message')
+    parse.add_argument('--commit-title', help='Optional. Filled from PR.')
+    parse.add_argument('--commit-message', help='Optional. Filled from PR.')
     parse.add_argument('--sha', help='SHA that pull request head must match to allow merge.')
     parse.add_argument('--merge-method',
                        help='Merge method to use. Possible values are merge, squash or rebase.')
