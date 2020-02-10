@@ -14,4 +14,6 @@ RUN useradd -ms /bin/bash ska -u 1001
 USER ska
 WORKDIR /home/ska
 
-ENTRYPOINT ["gdrive", "--batch"]
+COPY gdrive.sh /home/ska/gdrive.sh
+
+ENTRYPOINT ["/home/ska/gdrive.sh", "--batch"]
