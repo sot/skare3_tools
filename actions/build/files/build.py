@@ -42,7 +42,7 @@ subprocess.check_call(cmd, cwd=skare3_path)
 
 # move resulting files to work dir
 os.makedirs('builds')
-for d in ['linux-64', 'macos-64', 'noarch']:
+for d in ['linux-64', 'osx-64', 'noarch']:
     d = os.path.join(skare3_path, 'builds', d)
     if os.path.exists(d):
         shutil.move(d, 'builds')
@@ -53,7 +53,7 @@ for r in rm:
 
 # report result
 files = glob.glob('builds/linux-64/*tar.bz2*') + \
-        glob.glob('builds/macos-64/*tar.bz2*') + \
+        glob.glob('builds/osx-64/*tar.bz2*') + \
         glob.glob('builds/noarch/*tar.bz2*')
 files = ' '.join(files)
 
