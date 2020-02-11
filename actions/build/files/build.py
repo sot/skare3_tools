@@ -8,6 +8,16 @@ import shutil
 
 
 package = os.path.basename(sys.argv[1])
+
+# these are packages whose name does not match the repository name
+# at this point, automated builds do not know the package name,
+# just the repository name, and the package name determines where to
+# get the configuration.
+package_map = {
+    'cmd_states': 'Chandra.cmd_states',
+    'eng_archive': 'Ska.engarchive',
+}
+
 print(f"Building {package}")
 
 # setup condarc, because conda does not seem to replace the env variables
@@ -41,11 +51,19 @@ print(' '.join(cmd))
 subprocess.check_call(cmd, cwd=skare3_path)
 
 # move resulting files to work dir
-os.makedirs('builds')
+if not os.path.exists('builds'):
+    os.makedirs('builds')
 for d in ['linux-64', 'osx-64', 'noarch']:
-    d = os.path.join(skare3_path, 'builds', d)
-    if os.path.exists(d):
-        shutil.move(d, 'builds')
+    d_from = os.path.join(skare3_path, 'builds', d)
+    if os.path.exists(d_from):
+        d_to = os.path.join('builds',d)
+        if not os.path.exists(d_to):
+            os.makedirs(d_to)
+        for filename in glob.glob(os.path.join(d_from, '*')):
+            filename2 = os.path.join(d_to, os.path.basename(filename))
+            if os.path.exists(filename2):
+                os.remove(filename2)
+            shutil.move(filename, filename2)
 
 rm = glob.glob('builds/*/*json*') + glob.glob('builds/*/.*json*')
 for r in rm:
@@ -56,6 +74,10 @@ files = glob.glob('builds/linux-64/*tar.bz2*') + \
         glob.glob('builds/osx-64/*tar.bz2*') + \
         glob.glob('builds/noarch/*tar.bz2*')
 files = ' '.join(files)
+
+if not files:
+    print("No files were built. Something should have been built, right?")
+    sys.exit(1)
 
 print(f'Built files: {files}')
 print(f'::set-output name=files::{files}')
