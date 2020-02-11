@@ -17,6 +17,7 @@ package_map = {
     'cmd_states': 'Chandra.cmd_states',
     'eng_archive': 'Ska.engarchive',
 }
+package = package_map[package_map]
 
 print(f"Building {package}")
 
