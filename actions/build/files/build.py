@@ -17,7 +17,8 @@ package_map = {
     'cmd_states': 'Chandra.cmd_states',
     'eng_archive': 'Ska.engarchive',
 }
-package = package_map[package_map]
+if package in package_map:
+    package = package_map[package]
 
 print(f"Building {package}")
 
@@ -45,7 +46,7 @@ else:
                            'https://github.com/sot/skare3.git'], cwd=os.path.dirname(skare3_path))
 
 # do the actual building
-cmd = ['./ska_builder.py', '--force',
+cmd = ['./ska_builder.py', '--force', '--github-https',
        '--build-list', './ska3_flight_build_order.txt']
 cmd += sys.argv[2:] + [package]
 print(' '.join(cmd))
