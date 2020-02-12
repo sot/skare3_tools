@@ -17,7 +17,8 @@ package_map = {
     'cmd_states': 'Chandra.cmd_states',
     'eng_archive': 'Ska.engarchive',
 }
-package = package_map[package_map]
+if package in package_map:
+    package = package_map[package]
 
 print(f"Building {package}")
 
