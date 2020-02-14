@@ -53,13 +53,13 @@ def get_repository_info(owner_repo):
         commits = commits[:-1]  # remove the commit associated to the release
 
         merges = []
-for commit in commits:
-    msg = commit['commit']['message']
-    match = re.match(
-        'Merge pull request (?P<pr>.+) from (?P<branch>\S+)\n\n(?P<description>.+)', msg)
-    if match:
-        msg = match.groupdict()
-        merges.append(f'PR{msg["pr"]}: {msg["description"]}')
+        for commit in commits:
+            msg = commit['commit']['message']
+            match = re.match(
+                'Merge pull request (?P<pr>.+) from (?P<branch>\S+)\n\n(?P<description>.+)', msg)
+            if match:
+                msg = match.groupdict()
+                merges.append(f'PR{msg["pr"]}: {msg["description"]}')
     else:
         last_tag = {'tag_name': '', 'published_at': ''}
         commits = []
@@ -104,7 +104,7 @@ for commit in commits:
         'pull_requests': pull_requests,
         'workflows': workflows
     }
-    return repo_info, commits
+    return repo_info
 
 
 def get_repositories_info(repositories, conda=True):
