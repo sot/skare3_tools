@@ -204,8 +204,10 @@ def main():
         'sot/xija'
     ])
     """
-    org = github.Organization('sot')
-    repositories = sorted([r['full_name'] for r in org.repositories()])
+    orgs = [github.Organization('sot'),
+            github.Organization('acisops'),
+            ]
+    repositories = sorted([r['full_name'] for org in orgs for r in org.repositories()])
     info = get_repositories_info(repositories)
     if info:
         with open(args.o, 'w') as f:
