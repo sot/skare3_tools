@@ -7,6 +7,7 @@ NOTE: Running within ska3-flight or ska3-matlab will cause errors that produce w
 """
 
 from skare3_tools import github
+import sys
 import os
 import re
 import json
@@ -38,9 +39,14 @@ def get_conda_pkg_versions_2(conda_metapackage):
 
 def get_conda_pkg_info(conda_package,
                        conda_channel='https://icxc.cfa.harvard.edu/aspect/ska3-conda'):
-    out = subprocess.check_output(
-        ['conda', 'search', conda_package, '--channel', conda_channel, '--json']).decode()
-    out = json.loads(out)
+    if sys.version_info.major == 3 and sys.version_info.minor >= 7:
+        kwargs = {'capture_output': True}
+    else:
+        kwargs = {'stdout': subprocess.PIPE}
+    p = subprocess.run(['conda', 'search', conda_package, '--channel', conda_channel, '--json'],
+                       **kwargs
+                       )
+    out = json.loads(p.stdout.decode())
     return out
 
 
@@ -61,40 +67,61 @@ def get_repository_info(owner_repo):
     owner, repo = owner_repo.split('/')
     repository = github.Repository(owner_repo)
 
-    last_tag = api.get(f'repos/{owner}/{repo}/releases/latest').json()
-    if "tag_name" in last_tag:
-        tag_info = api.get(f'repos/{owner}/{repo}/git/ref/tags/{last_tag["tag_name"]}').json()
-        tag_sha = tag_info['object']['sha']
-        rel_commit = api.get(f'repos/{owner}/{repo}/commits/{tag_sha}').json()
-        commit_date = rel_commit['commit']['author']['date']
+    n_releases = 3  # how many release to look back in time (recording commit/merge info)
 
-        commits = api.get(f'repos/{owner}/{repo}/commits',
-                          params={'sha': 'master', 'since': commit_date}).json()
-        commits = commits[:-1]  # remove the commit associated to the release
+    releases = [release for release in repository.releases()
+                if not release['prerelease'] and not release['draft']]
+    releases = releases[:n_releases]  # will fetch commits only after this release
 
-        merges = []
+    release_info = [{
+        'release_tag': '',
+        'release_tag_date': '',
+        'commits': [],
+        'merges': []
+    }]
+    if releases:
+        # only repositories with at least one release get their commit info in the dashboard
+        first_release_tag = repository.tags(name=releases[-1]["tag_name"])
+        first_release_commit = repository.commits(ref=first_release_tag['object']['sha'])
+        first_release_date = first_release_commit['commit']['author']['date']
+
+        releases = {repository.tags(name=r["tag_name"])['object']['sha']: r for r in releases}
+
+        commits = repository.commits(sha='master', since=first_release_date)
         for commit in commits:
-            msg = commit['commit']['message']
+            sha = commit['sha']
+            if sha in releases.keys():
+                release_info.append({
+                    'release_tag': releases[sha]["tag_name"],
+                    'release_tag_date': releases[sha]["published_at"],
+                    'commits': [],
+                    'merges': []
+                })
+
+            release_info[-1]['commits'].append({
+                'sha': commit['sha'],
+                'message': commit['commit']['message'],
+                'date': commit['commit']['committer']['date'],
+                'author': commit['commit']['author']['name']
+            })
             match = re.match(
-                'Merge pull request (?P<pr>.+) from (?P<branch>\S+)\n\n(?P<description>.+)', msg)
+                'Merge pull request (?P<pr>.+) from (?P<branch>\S+)\n\n(?P<description>.+)',
+                commit['commit']['message'])
             if match:
                 msg = match.groupdict()
-                merges.append(f'PR{msg["pr"]}: {msg["description"]}')
-    else:
-        last_tag = {'tag_name': '', 'published_at': ''}
-        commits = []
-        merges = []
-    branches = api.get(f'repos/{owner}/{repo}/branches').json()
-    n_branches = len(branches)
-    n_commits = len(commits)
+                release_info[-1]['merges'].append(f'PR{msg["pr"]}: {msg["description"]}')
 
-    issue_page = api.get(f'repos/{owner}/{repo}/issues', params={'per_page': 100}).json()
-    issues = issue_page
-    while len(issue_page) == 100:
-        issue_page = api.get(f'repos/{owner}/{repo}/issues', params={'per_page': 100}).json()
-        issues += issue_page
-    n_pr = len([i for i in issues if 'pull_request' in i])
-    n_issues = len(issues) - n_pr
+        last_tag = release_info[1]['release_tag']
+        last_tag_date = release_info[1]['release_tag_date']
+
+        # remove last release, which was just the starting point and no commits were added to it
+        release_info = release_info[:-1]
+    else:
+        last_tag = ''
+        last_tag_date = ''
+
+    branches = repository.branches()
+    issues = [i for i in repository.issues() if 'pull_request' not in i]
 
     pull_requests = []
     for pr in repository.pull_requests():
@@ -113,14 +140,15 @@ def get_repository_info(owner_repo):
     repo_info = {
         'owner': owner,
         'name': repo,
-        'last_tag': last_tag["tag_name"],
-        'last_tag_date': last_tag['published_at'],
-        'commits': n_commits,
-        'merges': len(merges),
-        'merge_info': merges,
-        'issues': n_issues,
-        'n_pull_requests': n_pr,
-        'branches': n_branches,
+        'last_tag': last_tag,
+        'last_tag_date': last_tag_date,
+        'commits': len(release_info[0]['commits']),
+        'merges': len(release_info[0]['merges']),
+        'merge_info': release_info[0]['merges'],
+        'release_info': release_info,
+        'issues': len(issues),
+        'n_pull_requests': len(pull_requests),
+        'branches': len(branches),
         'pull_requests': pull_requests,
         'workflows': workflows
     }
