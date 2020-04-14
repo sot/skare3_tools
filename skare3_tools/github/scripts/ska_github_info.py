@@ -23,7 +23,7 @@ REPO_PACKAGE_MAP = [
 ]
 
 
-def get_conda_pkg_versions(conda_metapackage):
+def get_conda_pkg_versions_2(conda_metapackage):
     out = subprocess.check_output(['conda', 'install', conda_metapackage, '--dry-run']).decode()
     out = out[out.find('The following NEW packages will be INSTALLED:'):
               out.find('The following packages will be UPDATED')].split('\n')
@@ -33,6 +33,26 @@ def get_conda_pkg_versions(conda_metapackage):
         m = re.match('(?P<version>\S+)(-py[0-9]*_[0-9]+)', v)
         if m:
             packages[k] = m.groupdict()['version']
+    return packages
+
+
+def get_conda_pkg_info(conda_package,
+                       conda_channel='https://icxc.cfa.harvard.edu/aspect/ska3-conda'):
+    out = subprocess.check_output(
+        ['conda', 'search', conda_package, '--channel', conda_channel, '--json']).decode()
+    out = json.loads(out)
+    return out
+
+
+def get_conda_pkg_dependencies(
+        conda_metapackage,
+        conda_channel='https://icxc.cfa.harvard.edu/aspect/ska3-conda'):
+    out = get_conda_pkg_info(conda_metapackage, conda_channel)
+    if conda_metapackage not in out:
+        raise Exception(f'{conda_metapackage} not found.')
+    packages = out[conda_metapackage][-1]['depends']
+    packages = dict([(p.split('==')[0].strip(), p.split('==')[1].strip())
+                     for p in packages])
     return packages
 
 
@@ -113,16 +133,16 @@ def get_repositories_info(repositories, conda=True):
     info = {'packages': []}
     if conda:
         try:
-            flight = get_conda_pkg_versions('ska3-flight')
-            info['ska3-flight'] = flight['ska3-flight']
+            flight = get_conda_pkg_dependencies('ska3-flight')
+            info['ska3-flight'] = get_conda_pkg_info('ska3-flight')['ska3-flight'][-1]['version']
             for repo, conda_pkg in REPO_PACKAGE_MAP:
                 if conda_pkg in flight:
                     flight[repo] = flight[conda_pkg]
         except Exception as e:
             logging.warning(f'Empty ska3-flight: {type(e)}: {e}')
         try:
-            matlab = get_conda_pkg_versions('ska3-matlab')
-            info['ska3-matlab'] = matlab['ska3-matlab']
+            matlab = get_conda_pkg_dependencies('ska3-matlab')
+            info['ska3-matlab'] = get_conda_pkg_info('ska3-matlab')['ska3-matlab'][-1]['version']
             for repo, conda_pkg in REPO_PACKAGE_MAP:
                 if conda_pkg in matlab:
                     matlab[repo] = matlab[conda_pkg]
@@ -138,6 +158,14 @@ def get_repositories_info(repositories, conda=True):
             info['packages'].append(repo_info)
         except Exception as e:
             print(f'{type(e)}: {e}')
+
+        repo_info['dev'] = ''
+        if conda:
+            dev_info = get_conda_pkg_info(
+                repo, 'https://ska:ska-cxc-20y@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/dev')
+            if repo.lower() in dev_info:
+                repo_info['dev'] = dev_info[repo.lower()][-1]['version']
+
 
     info.update({'time': datetime.datetime.now().isoformat()
                  })
