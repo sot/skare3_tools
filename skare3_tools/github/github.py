@@ -302,6 +302,7 @@ class Repository:
         self.checks = Checks(self)
         self.pull_requests = PullRequests(self)
         self.merge = Merge(self)
+        self.dispatch_event = DispatchEvent(self)
 
 
 class Releases(_EndpointGroup):
@@ -818,6 +819,13 @@ class Checks(_EndpointGroup):
         return self._get('repos/:owner/:repo/commits/:ref/check-runs',
                          headers={'Accept': 'application/vnd.github.antiope-preview+json'},
                          ref=ref)
+
+class DispatchEvent(_EndpointGroup):
+    def __call__(self, event_type, client_payload={}):
+        params = {'event_type': event_type,
+                  'client_payload': client_payload}
+        return self._post('/repos/:owner/:repo/dispatches',
+                          json=params)
 
 
 class Repositories(_EndpointGroup):
