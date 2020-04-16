@@ -62,16 +62,71 @@ def get_conda_pkg_dependencies(
     return packages
 
 
-def get_repository_info(owner_repo):
+def get_release_commit(repository, release_name):
+    """
+    Quaternion releases 3.4.1 and 3.5.1 give different results
+    :param repository:
+    :param release_name:
+    :return:
+    """
+    object = repository.tags(name=release_name)['object']
+    if object['type'] == 'tag':
+        object = repository.tags(tag_sha=object['sha'])['object']
+    if object['type'] != 'commit':
+        raise Exception(f'Object is not a commit, but a {object["type"]}')
+    return object
+
+
+def get_repository_info(owner_repo, since=7,
+                        use_pr_titles=True,
+                        include_unreleased_commits=False, include_commits=False):
+    """
+    Get information about a Github repository
+
+    :param owner_repo: str
+        the name of the repository, including owner, something like 'sot/skare3'.
+    :param since: int or str
+        the maximum number of releases to look back, or the release tag to look back to
+        (not inclusive).
+    :param use_pr_titles: bool
+        Whether to use PR titles instead of the PR commit message.
+        This is so one can change PR titles after the fact to be more informative.
+    :param include_unreleased_commits: bool
+        whether to include commits and merges for repositories that have no release.
+        This affects only top-level entries 'commits', 'merges', 'merge_info'.
+        It is for backward compatibility with the dashboard.
+    :param include_commits: bool
+        whether to include commits in release_info.
+    :return:
+    """
     api = github.init()
     owner, repo = owner_repo.split('/')
     repository = github.Repository(owner_repo)
 
-    n_releases = 3  # how many release to look back in time (recording commit/merge info)
-
     releases = [release for release in repository.releases()
                 if not release['prerelease'] and not release['draft']]
-    releases = releases[:n_releases]  # will fetch commits only after this release
+
+    # get the actual commit sha and date for each release
+    release_commits = [get_release_commit(repository, r["tag_name"]) for r in releases]
+    release_commits = [repository.commits(ref=c['sha']) for c in release_commits]
+    release_dates = {r['tag_name']: c['commit']['committer']['date'] for r, c in
+                     zip(releases, release_commits)}
+
+    # later on, the releases are referred by commit sha
+    releases = {c['sha']: r for r, c in zip(releases, release_commits)}
+
+    date_since = None
+    if type(since) is int:
+        # only the latest 'since' releases (at most) will be included in summary
+        if len(releases) > since:
+            date_since = sorted(release_dates.values(), reverse=True)[since]
+    elif since in release_dates:
+        # only releases _after_ 'since' will be included in summary
+        date_since = release_dates[since]
+    else:
+        raise Exception(f'Requested repository info with since={since},'
+                        f'which is not and integer and is not one of the known releases'
+                        f'({sorted(release_dates.keys())})')
 
     release_info = [{
         'release_tag': '',
@@ -79,43 +134,43 @@ def get_repository_info(owner_repo):
         'commits': [],
         'merges': []
     }]
-    if releases:
-        # only repositories with at least one release get their commit info in the dashboard
-        first_release_tag = repository.tags(name=releases[-1]["tag_name"])
-        first_release_commit = repository.commits(ref=first_release_tag['object']['sha'])
-        first_release_date = first_release_commit['commit']['author']['date']
 
-        releases = {repository.tags(name=r["tag_name"])['object']['sha']: r for r in releases}
-
-        commits = repository.commits(sha='master', since=first_release_date)
-        for commit in commits:
-            sha = commit['sha']
-            if sha in releases.keys():
-                release_info.append({
-                    'release_tag': releases[sha]["tag_name"],
-                    'release_tag_date': releases[sha]["published_at"],
-                    'commits': [],
-                    'merges': []
-                })
-
-            release_info[-1]['commits'].append({
-                'sha': commit['sha'],
-                'message': commit['commit']['message'],
-                'date': commit['commit']['committer']['date'],
-                'author': commit['commit']['author']['name']
+    if use_pr_titles:
+        all_pull_requests = repository.pull_requests(state='all')
+        all_pull_requests = {pr['number']: pr for pr in all_pull_requests}
+    commits = repository.commits(sha='master', since=date_since)
+    if date_since is not None:
+        commits = commits[:-1]  # remove first commit, which was just the starting point
+    for commit in commits:
+        sha = commit['sha']
+        if sha in releases.keys():
+            release_info.append({
+                'release_tag': releases[sha]["tag_name"],
+                'release_tag_date': releases[sha]["published_at"],
+                'commits': [],
+                'merges': []
             })
-            match = re.match(
-                'Merge pull request (?P<pr>.+) from (?P<branch>\S+)\n\n(?P<description>.+)',
-                commit['commit']['message'])
-            if match:
-                msg = match.groupdict()
-                release_info[-1]['merges'].append(f'PR{msg["pr"]}: {msg["description"]}')
 
+        release_info[-1]['commits'].append({
+            'sha': commit['sha'],
+            'message': commit['commit']['message'],
+            'date': commit['commit']['committer']['date'],
+            'author': commit['commit']['author']['name']
+        })
+        match = re.match(
+            'Merge pull request (?P<pr>.+) from (?P<branch>\S+)\n\n(?P<description>.+)',
+            commit['commit']['message'])
+        if match:
+            msg = match.groupdict()
+            if use_pr_titles:
+                pr_number = int(msg["pr"].replace('#', ''))
+                if pr_number in all_pull_requests:
+                    msg["description"] = all_pull_requests[pr_number]['title'].strip()
+            release_info[-1]['merges'].append(f'PR{msg["pr"]}: {msg["description"]}')
+
+    if len(release_info) > 1:
         last_tag = release_info[1]['release_tag']
         last_tag_date = release_info[1]['release_tag_date']
-
-        # remove last release, which was just the starting point and no commits were added to it
-        release_info = release_info[:-1]
     else:
         last_tag = ''
         last_tag_date = ''
@@ -152,6 +207,16 @@ def get_repository_info(owner_repo):
         'pull_requests': pull_requests,
         'workflows': workflows
     }
+
+    if not include_commits:
+        for r in repo_info['release_info']:
+            del r['commits']
+
+    if not include_unreleased_commits and len(repo_info['release_info']) == 1:
+        repo_info['commits'] = 0
+        repo_info['merges'] = 0
+        repo_info['merge_info'] = []
+
     return repo_info
 
 
@@ -194,9 +259,7 @@ def get_repositories_info(repositories, conda=True):
             if repo.lower() in dev_info:
                 repo_info['dev'] = dev_info[repo.lower()][-1]['version']
 
-
-    info.update({'time': datetime.datetime.now().isoformat()
-                 })
+    info.update({'time': datetime.datetime.now().isoformat()})
 
     return info
 
@@ -219,47 +282,7 @@ def main():
             github.init(user=data['user'], password=data['password'])
     else:
         github.init(user=args.u)
-    """
-    repositories = [
-        'sot/Chandra.Maneuver',
-        'sot/Chandra.Time',
-        'sot/Quaternion',
-        'sot/Ska.DBI',
-        'sot/Ska.File',
-        'sot/Ska.Matplotlib',
-        'sot/Ska.Numpy',
-        'sot/Ska.ParseCM',
-        'sot/Ska.Shell',
-        'sot/Ska.Sun',
-        'sot/Ska.arc5gl',
-        'sot/Ska.astro',
-        'sot/Ska.ftp',
-        'sot/Ska.quatutil',
-        'sot/Ska.tdb',
-        'sot/acdc',
-        'sot/acis_taco',
-        'sot/agasc',
-        'sot/annie',
-        'sot/chandra_aca',
-        'sot/cmd_states',
-        'sot/cxotime',
-        'sot/eng_archive',
-        'sot/hopper',
-        'sot/kadi',
-        'sot/maude',
-        'sot/mica',
-        'sot/parse_cm',
-        'sot/proseco',
-        'sot/pyyaks',
-        'sot/ska_path',
-        'sot/ska_sync',
-        'sot/sparkles',
-        'sot/starcheck',
-        'sot/tables3_api',
-        'sot/testr',
-        'sot/xija'
-    ])
-    """
+
     orgs = [github.Organization('sot'),
             github.Organization('acisops'),
             ]
