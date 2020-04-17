@@ -10,17 +10,7 @@ import argparse
 import importlib
 
 
-def parser():
-    parse = argparse.ArgumentParser(description=__doc__)
-    parse.add_argument('directory')
-    parse.add_argument('-o', default='test_results.json')
-    return parse
-
-
-def main():
-    args = parser().parse_args()
-    directory = args.directory
-
+def test_results(directory):
     filename = os.path.join(directory, 'test.log')
     with open(filename) as f:
         for l in f:
@@ -44,8 +34,20 @@ def main():
 
             test_results = {'log_directory': directory,
                             'results':result_dict}
-            with open(args.o, 'w') as f:
-                json.dump(test_results, f, indent=2)
+    return test_results
+
+
+def parser():
+    parse = argparse.ArgumentParser(description=__doc__)
+    parse.add_argument('directory')
+    parse.add_argument('-o', default='test_results.json')
+    return parse
+
+
+def main():
+    args = parser().parse_args()
+    with open(args.o, 'w') as f:
+        json.dump(test_results( args.directory), f, indent=2)
 
 
 if __name__ == '__main__':
