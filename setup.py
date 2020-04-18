@@ -8,6 +8,7 @@ except ImportError:
 
 entry_points = {
     'console_scripts': [
+        'skare3-test-results=skare3_tools.scripts.test_results:main',
         'gdrive=skare3_tools.gdrive.scripts.gdrive:main',
         'skare3-github-info=skare3_tools.github.scripts.ska_github_info:main',
         'skare3-dashboard=skare3_tools.dashboard.dashboard:main',
@@ -25,6 +26,7 @@ setup(name='skare3_tools',
       description='Tools used for skare3 package management',
       author_email='javier.gonzalez@cfa.harvard.edu',
       packages=['skare3_tools',
+                'skare3_tools.scripts',
                 'skare3_tools.gdrive',
                 'skare3_tools.github',
                 'skare3_tools.gdrive.scripts',
