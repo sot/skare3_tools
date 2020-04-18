@@ -158,15 +158,15 @@ def get_repository_info(owner_repo, since=7,
             'author': commit['commit']['author']['name']
         })
         match = re.match(
-            'Merge pull request (?P<pr>.+) from (?P<branch>\S+)\n\n(?P<description>.+)',
+            'Merge pull request #(?P<pr_number>.+) from (?P<branch>\S+)\n\n(?P<title>.+)',
             commit['commit']['message'])
         if match:
-            msg = match.groupdict()
+            merge = match.groupdict()
+            merge["pr_number"] = int(merge["pr_number"])
             if use_pr_titles:
-                pr_number = int(msg["pr"].replace('#', ''))
-                if pr_number in all_pull_requests:
-                    msg["description"] = all_pull_requests[pr_number]['title'].strip()
-            release_info[-1]['merges'].append(f'PR{msg["pr"]}: {msg["description"]}')
+                if merge["pr_number"] in all_pull_requests:
+                    merge["title"] = all_pull_requests[merge["pr_number"]]['title'].strip()
+            release_info[-1]['merges'].append(merge)
 
     if len(release_info) > 1:
         last_tag = release_info[1]['release_tag']
