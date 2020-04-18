@@ -66,6 +66,24 @@
         });
 
 
+	function testPassed(value) {
+	    if (value == 'PASS') {
+	        return "green";
+	    }
+	    if (value == 'FAIL') {
+	        return "red";
+	    }
+	    return "";
+	};
+
+	function versionColor(version, reference) {
+	    if (version == reference) {
+                return "";
+	    }
+	    return "red";
+	};
+
+
         function getData() {
 
           var cols = {
@@ -80,31 +98,33 @@
               //format: "<a href='https://github.com/sot/{0}'>{0}</a>",
             },
             owner: {
-              index: 1,
+              index: 2,
               type: "string",
               friendly: "Owner",
               hidden: true
             },
             branches: {
-              index: 2,
+              index: 3,
               type: "number",
               friendly: "Branches",
-              tooltip: "Number of branches"
+              tooltip: "Number of branches",
+              hidden: true
             },
             issues: {
-              index: 3,
+              index: 4,
               type: "number",
               friendly: "Issues",
               tooltip: "Number of open issues"
             },
             pr: {
-              index: 4,
+              index: 5,
               type: "number",
               friendly: "PRs",
-              tooltip: "Number of open pull requests"
+              tooltip: "Number of open pull requests",
+              hidden: true
             },
             tag: {
-              index: 5,
+              index: 6,
               type: "string",
               friendly: "Release",
               placeHolder: "0.0.0",
@@ -112,7 +132,7 @@
               tooltip: "Latest release"
             },
             flight: {
-              index: 6,
+              index: 7,
               type: "string",
               friendly: "Flight",
               placeHolder: "0.0.0",
@@ -120,46 +140,70 @@
               tooltip: "Current version in ska3-flight"
             },
             matlab: {
-              index: 7,
+              index: 8,
               type: "string",
               friendly: "Matlab",
               placeHolder: "0.0.0",
               filterTooltip: "filter the tags",
               tooltip: "Current version in ska3-matlab"
             },
+            master_version: {
+              index: 9,
+              type: "string",
+              friendly: "Master",
+              placeHolder: "0.0.0",
+              filterTooltip: "filter the tags",
+              tooltip: "Current version in ska3-masters"
+            },
+            test_version: {
+              index: 10,
+              type: "string",
+              friendly: "Test",
+              placeHolder: "0.0.0",
+              filterTooltip: "filter the tags",
+              tooltip: "Latest version in ska3-flight testr",
+              hidden: true
+            },
+            test_status: {
+              index: 11,
+              type: "string",
+              friendly: "Status",
+              tooltip: "Result from ska3-flight testr"
+            },
             date: {
-              index: 8,
+              index: 12,
               type: "string",
               friendly: "Last Release Date",
               filterTooltip: "filter the dates",
               tooltip: "Date of the latest release",
-
             },
             commits: {
-              index: 9,
+              index: 13,
               type: "number",
               friendly: "commits",
-              tooltip: "Commits since last release"
+              tooltip: "Commits since last release",
+              hidden: true
             },
             merge_info: {
-              index: 10,
+              index: 14,
               type: "string",
               friendly: "Merges since Release",
               tooltip: "Merges since last release",
             },
             pr_info: {
-              index: 11,
+              index: 15,
               type: "string",
               friendly: "Open Pull Requests",
               tooltip: "Open Pull Requests",
             },
             build_status: {
-              index: 12,
+              index: 16,
               type: "string",
               friendly: "Conda Package",
               tooltip: "Conda Package Building",
             }
           };
+
 
           var rows = [
             {% for pkg in info.packages %}
@@ -175,10 +219,16 @@
               tagFormat: "<a href='https://github.com/{{ pkg.owner }}/{{ pkg.name }}/releases/tag/{{ pkg.last_tag }}'> {{ pkg.last_tag }} </a>",
               flight: "{{ pkg.flight }}",
               matlab: "{{ pkg.matlab }}",
+	      matlabCls: versionColor("{{ pkg.matlab }}", "{{ pkg.flight }}"),
+	      master_version: "{{ pkg.dev }}",
+              test_version: "{{ pkg.test_version }}",
+	      test_status: "{{ pkg.test_status }}",
+              test_statusCls: testPassed("{{ pkg.test_status }}"),
+	      test_statusFormat: "<a href='test_results.html'> {{ pkg.test_status }} </a>",
               date: "{{ pkg.last_tag_date }}",
               commits: {{ pkg.commits }},
               merges: {{ pkg.merges }},
-              merge_info: "{% for msg in pkg.merge_info %} {{ msg }} <br/> {% endfor %}",
+              merge_info: "{% for merge in pkg.merge_info %} PR #{{ merge.pr_number }} <a href='https://github.com/{{ pkg.owner }}/{{ pkg.name }}/pull/{{ merge.pr_number }}'> {{ merge.title }} </a> <br/> {% endfor %}",
               build_status: "<img alt='' src='https://github.com/{{ pkg.owner }}/{{ pkg.name }}/workflows/Conda%20build/badge.svg'>",
               pr_info: "{% for pr in pkg.pull_requests %} {{ pr.last_commit_date }} - PR #{{ pr.number }} <a href='{{ pr.url }}'> {{ pr.title }} </a> <br/> {% endfor %}",
             },
