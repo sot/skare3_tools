@@ -32,7 +32,7 @@ def test_results(directory):
             result_dict[k[0]]['pass'] = not sum([r=='FAIL' for r in res])
             result_dict[k[0]]['version'] = version
 
-            test_results = {'log_directory': directory,
+            test_results = {'log_directory': os.path.basename(directory),
                             'results':result_dict}
     return test_results
 
