@@ -293,7 +293,7 @@ def main():
         autoescape=select_autoescape(['html', 'xml'])
     )
 
-    template = env.get_template('dashboard-watable.tpl')
+    template = env.get_template('dashboard-watable.html')
 
     with open(args.o, 'w') as out:
         out.write(template.render(title='Skare3 Packages',
