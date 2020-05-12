@@ -123,8 +123,11 @@ def main():
         if cred_filename and os.path.exists(cred_filename):
             os.remove(cred_filename)
 
-    ACTIONS[args.cmd](args)
-
+    try:
+        ACTIONS[args.cmd](args)
+    except Exception as e:
+        logging.getLogger('gdrive').info(e)
+        parser.exit(2)
 
 if __name__ == '__main__':
     main()
