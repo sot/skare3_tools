@@ -304,7 +304,7 @@ def get_ids(path, parent_id=None, drive=None, limit=None):
     return ids[:limit]
 
 
-def ls(path, fields=('id, name, kind, version, mimeType, createdTime'
+def get_meta(file_ids, fields=('id, name, kind, version, mimeType, createdTime, trashed'
                      ', modifiedTime, headRevisionId, owners'), drive=None):
     """
     Get metadata for a given path.
@@ -316,7 +316,7 @@ def ls(path, fields=('id, name, kind, version, mimeType, createdTime'
     :returns: list of dict
     """
     res = []
-    for file_id in get_ids(path, drive=drive):
+    for file_id in file_ids:
         f = fields
         if 'mimeType' not in f:
             f += ', mimeType'
@@ -339,14 +339,36 @@ def ls(path, fields=('id, name, kind, version, mimeType, createdTime'
     return res
 
 
-def trash(path, drive=None):
+def ls(path, fields=('id, name, kind, version, mimeType, createdTime, trashed'
+                     ', modifiedTime, headRevisionId, owners'), drive=None):
+    """
+    Get metadata for a given path.
+
+    :param path: str
+    :param fields: str (optional)
+        a comma-separated list of metadata fields.
+    :param drive: str (optional)
+    :returns: list of dict
+    """
+    file_ids = get_ids(path, drive=drive)
+    return get_meta(file_ids, fields=fields, drive=drive)
+
+
+def trash(path=None, path_id=None, drive=None):
     """
     Move file/folder to the trash.
 
     :param path: str
+    :param path_id: str
     :param drive: str
     """
-    for path_id in get_ids(path, drive=drive):
+    if path is not None and path_id is not None:
+        raise Exception('Only one of "path" or "path_id" can be give at a time')
+
+    if path is not None:
+        for path_id in get_ids(path, drive=drive):
+            trash(path_id=path_id, drive=drive)
+    elif path_id is not None:
         try:
             DRIVE.files().update(fileId=path_id,
                                  body={'trashed': True},
@@ -355,14 +377,21 @@ def trash(path, drive=None):
             raise
 
 
-def delete(path, drive=None):
+def delete(path=None, path_id=None, drive=None):
     """
     Remove file/folder without moving it to the trash.
 
     :param path: str
+    :param path_id: str
     :param drive: str
     """
-    for path_id in get_ids(path, drive=drive):
+    if path is not None and path_id is not None:
+        raise Exception('Only one of "path" or "path_id" can be give at a time')
+
+    if path is not None:
+        for path_id in get_ids(path, drive=drive):
+            delete(path_id=path_id, drive=drive)
+    elif path_id is not None:
         try:
             DRIVE.files().delete(fileId=path_id, supportsAllDrives=True).execute()
         except HttpError:
@@ -407,6 +436,8 @@ def _upload(filename, destination=None, parent=None, drive=None, force=True):
     # check if file is there already
     q = f'"{parent}" in parents and name = "{os.path.basename(filename)}"'
     files = DRIVE.files().list(q=q, **drive_args).execute()['files']
+    files = get_meta([f['id'] for f in files], drive=drive)
+    files = [f for f in files if not f['trashed']]
     file_id = None
     if files:
         if files[0]['mimeType'] == 'application/vnd.google-apps.folder':
@@ -416,7 +447,7 @@ def _upload(filename, destination=None, parent=None, drive=None, force=True):
             if force:
                 # it is there and is a file, remove it
                 for file in files:
-                    trash(file['id'])
+                    trash(path_id=file['id'], drive=drive)
             else:
                 file_id = files[0]['id']
 
