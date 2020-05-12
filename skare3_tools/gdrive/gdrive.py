@@ -58,6 +58,7 @@ Known Issues
 import os
 import logging
 import pickle
+import subprocess
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from googleapiclient.errors import HttpError
@@ -132,7 +133,6 @@ def init(interactive=True, save_credentials=False):
         raise InitException(msg)
 
 
-
 def get_drive_id(name):
     """
     Get the unique ID corresponding to a shared drive
@@ -150,60 +150,7 @@ def get_drive_id(name):
     return drives[0]['id']
 
 
-def get(file_id, fields=None):
-    """
-    Get metadata for a given file ID.
-
-    Possible metadata fields:
-
-    - kind
-    - id
-    - name
-    - mimeType
-    - starred
-    - trashed
-    - explicitlyTrashed
-    - parents
-    - spaces
-    - version
-    - webContentLink
-    - webViewLink
-    - iconLink
-    - hasThumbnail
-    - thumbnailVersion
-    - viewedByMe
-    - createdTime
-    - modifiedTime
-    - modifiedByMeTime
-    - modifiedByMe
-    - owners
-    - lastModifyingUser
-    - shared
-    - ownedByMe
-    - capabilities
-    - viewersCanCopyContent
-    - copyRequiresWriterPermission
-    - writersCanShare
-    - permissions
-    - permissionIds
-    - originalFilename
-    - fullFileExtension
-    - fileExtension
-    - md5Checksum
-    - size
-    - quotaBytesUsed
-    - headRevisionId
-    - isAppAuthorized
-
-    :param file_id: str
-    :param fields: str (optional)
-        a comma-separated list of fields
-    :return: dict
-    """
-    return DRIVE.files().get(fileId=file_id, fields=fields, supportsAllDrives=True).execute()
-
-
-def get_ids(path, parent_id=None, drive=None, limit=None):
+def get_ids(path, parent_id=None, drive=None, limit=None, include_trashed=False):
     """
     Get the ID of all files that match the given path.
 
@@ -269,6 +216,8 @@ def get_ids(path, parent_id=None, drive=None, limit=None):
     :param drive: str (optional)
     :param limit: int (optional)
         maximum number of matching files returned. The rest are just discarded.
+    :param include_trashed: bool (optional)
+        Also include IDs of files/folders that are in the trash.
     :returns: str
     """
     # assert os.path.isabs(path)
@@ -283,7 +232,8 @@ def get_ids(path, parent_id=None, drive=None, limit=None):
     if path[0] == '/' and len(folders) == 1:
         parent_id = root
 
-    args = {'q': f'name="{folder}"'}
+    args = {'q': f'name="{folder}"',
+            'fields': 'files(id, name, trashed)'}
     if parent_id:
         args['q'] += f' and "{parent_id}" in parents'
     if drive is not None:
@@ -293,9 +243,15 @@ def get_ids(path, parent_id=None, drive=None, limit=None):
             'supportsAllDrives': True,
             'driveId': get_drive_id(drive)
         })
-    ids = [f['id'] for f in DRIVE.files().list(**args).execute()['files']]
+    files = [f for f in DRIVE.files().list(**args).execute()['files']]
+    if not include_trashed:
+        files = [f for f in files if not f['trashed']]
+    ids = [f['id'] for f in files]
     if len(folders) > 1:
-        children = [get_ids('/'.join(folders[1:]), parent, drive=drive) for parent in ids]
+        children = [
+            get_ids('/'.join(folders[1:]), parent, drive=drive, include_trashed=include_trashed)
+            for parent in ids
+        ]
         ids = sum(children, [])
     if limit is None:
         return ids
@@ -304,10 +260,82 @@ def get_ids(path, parent_id=None, drive=None, limit=None):
     return ids[:limit]
 
 
+def get_children(file_id,
+                 fields=('id, name, kind, version, mimeType, createdTime, trashed'
+                         ', modifiedTime, headRevisionId, owners'),
+                 drive=None,
+                 include_trashed=False):
+    """
+    Get metadata for the given IDs.
+
+    Possible metadata fields are listed in the documentation of get_meta
+
+    :param path: str
+    :param fields: str (optional)
+        a comma-separated list of metadata fields.
+    :param drive: str (optional)
+    :returns: list of dict
+    """
+    args = {'q': f'"{file_id}" in parents',
+            'fields': f'files({fields})'}
+    if drive is not None:
+        args.update({
+            'corpora': 'drive',
+            'includeItemsFromAllDrives': True,
+            'supportsAllDrives': True,
+            'driveId': get_drive_id(drive)
+        })
+    res = DRIVE.files().list(**args).execute()['files']
+    if not include_trashed:
+        res = [f for f in res if not f['trashed']]
+    return res
+
+
 def get_meta(file_ids, fields=('id, name, kind, version, mimeType, createdTime, trashed'
                      ', modifiedTime, headRevisionId, owners'), drive=None):
     """
-    Get metadata for a given path.
+    Get metadata for the given IDs.
+
+    Possible metadata fields:
+
+    - kind
+    - id
+    - name
+    - mimeType
+    - starred
+    - trashed
+    - explicitlyTrashed
+    - parents
+    - spaces
+    - version
+    - webContentLink
+    - webViewLink
+    - iconLink
+    - hasThumbnail
+    - thumbnailVersion
+    - viewedByMe
+    - createdTime
+    - modifiedTime
+    - modifiedByMeTime
+    - modifiedByMe
+    - owners
+    - lastModifyingUser
+    - shared
+    - ownedByMe
+    - capabilities
+    - viewersCanCopyContent
+    - copyRequiresWriterPermission
+    - writersCanShare
+    - permissions
+    - permissionIds
+    - originalFilename
+    - fullFileExtension
+    - fileExtension
+    - md5Checksum
+    - size
+    - quotaBytesUsed
+    - headRevisionId
+    - isAppAuthorized
 
     :param path: str
     :param fields: str (optional)
@@ -317,30 +345,18 @@ def get_meta(file_ids, fields=('id, name, kind, version, mimeType, createdTime, 
     """
     res = []
     for file_id in file_ids:
-        f = fields
-        if 'mimeType' not in f:
-            f += ', mimeType'
-        metadata = DRIVE.files().get(fileId=file_id, fields=f, supportsAllDrives=True).execute()
-        if metadata['mimeType'] == 'application/vnd.google-apps.folder':
-            args = {'q': f'"{file_id}" in parents',
-                    'fields': f'files({fields})'}
-            if drive is not None:
-                args.update({
-                    'corpora': 'drive',
-                    'includeItemsFromAllDrives': True,
-                    'supportsAllDrives': True,
-                    'driveId': get_drive_id(drive)
-                })
-            res += (DRIVE.files().list(**args).execute()['files'])
-        else:
-            res += ([DRIVE.files().get(fileId=file_id,
-                                       fields=fields,
-                                       supportsAllDrives=True).execute()])
+        meta = DRIVE.files().get(fileId=file_id, fields=fields, supportsAllDrives=True).execute()
+        fields = [f.strip() for f in fields.split(',')]
+        meta = {k: (meta[k] if k in meta else None) for k in fields}
+        res.append(meta)
     return res
 
 
-def ls(path, fields=('id, name, kind, version, mimeType, createdTime, trashed'
-                     ', modifiedTime, headRevisionId, owners'), drive=None):
+def ls(path,
+       fields=('id, name, kind, version, mimeType, createdTime, trashed'
+               ', modifiedTime, headRevisionId, owners'),
+       drive=None,
+       include_trashed=False):
     """
     Get metadata for a given path.
 
@@ -348,15 +364,33 @@ def ls(path, fields=('id, name, kind, version, mimeType, createdTime, trashed'
     :param fields: str (optional)
         a comma-separated list of metadata fields.
     :param drive: str (optional)
-    :returns: list of dict
+    :param include_trashed: bool
+    :returns: list
+        list of pairs (metadata, children), where children is a list of metadata for the children.
     """
-    file_ids = get_ids(path, drive=drive)
-    return get_meta(file_ids, fields=fields, drive=drive)
+    file_ids = get_ids(path, drive=drive, include_trashed=include_trashed)
+    file_meta = get_meta(file_ids, fields=fields, drive=drive)
+    res = []
+    for meta in file_meta:
+        if meta['mimeType'] == 'application/vnd.google-apps.folder':
+            children = get_children(meta['id'],
+                                    fields=fields,
+                                    drive=drive,
+                                    include_trashed=include_trashed)
+        else:
+            children = None
+        res.append([meta, children])
+    return res
 
 
 def trash(path=None, path_id=None, drive=None):
     """
     Move file/folder to the trash.
+
+    Only path or path_id can be given at a time.
+
+    NOTE:
+    If a path is given, it will trash all files/folders matching the path.
 
     :param path: str
     :param path_id: str
@@ -366,7 +400,7 @@ def trash(path=None, path_id=None, drive=None):
         raise Exception('Only one of "path" or "path_id" can be give at a time')
 
     if path is not None:
-        for path_id in get_ids(path, drive=drive):
+        for path_id in get_ids(path, drive=drive, include_trashed=False):
             trash(path_id=path_id, drive=drive)
     elif path_id is not None:
         try:
@@ -380,6 +414,12 @@ def trash(path=None, path_id=None, drive=None):
 def delete(path=None, path_id=None, drive=None):
     """
     Remove file/folder without moving it to the trash.
+
+    Only path or path_id can be given at a time.
+
+    NOTE:
+    If a path is given, it will permanently delete all files/folders matching the path.
+    It will also include files/folders in the trash
 
     :param path: str
     :param path_id: str
@@ -404,6 +444,7 @@ def _upload(filename, destination=None, parent=None, drive=None, force=True):
 
     Strictly speaking, folders are not actual folders in Google Drive.
     The file is uploaded and its parent is set to the given folder.
+    The destination must not be in the trash.
 
     :param filename: str
         Input file name.
@@ -416,9 +457,11 @@ def _upload(filename, destination=None, parent=None, drive=None, force=True):
         if force == True, overwrite any pre-existing file at the destination.
     """
     if parent is None:
-        parent = get_ids(destination, drive=drive)
+        parent = get_ids(destination, drive=drive, include_trashed=False)
         if len(parent) > 1:
             raise Exception(f'Path is not unique: {destination}')
+        if len(parent) == 0:
+            raise Exception(f'Path does not exist: {destination}')
         parent = parent[0]
 
     filename = os.path.abspath(filename)
@@ -478,6 +521,7 @@ def upload(filename, destination, drive=None, force=False):
 
     If argument is a directory, traverse the tree, uploading everything
     while keeping the hierarchy. This removes and replaces existing files.
+    The destination must not be in the trash.
 
     :param filename: str
         Input file name.
@@ -508,7 +552,8 @@ def upload(filename, destination, drive=None, force=False):
             LOGGER.info(f'{name} -> {destinations[root]}')
 
 
-def _walk(path=None, file_id=None, fields='', drive=None, max_depth=None, _depth=0):
+def _walk(path=None, file_id=None, fields='', drive=None, max_depth=None, _depth=0,
+          include_trashed=False):
     """
     Generator to descend on a directory hierarchy starting at a given path.
 
@@ -524,6 +569,7 @@ def _walk(path=None, file_id=None, fields='', drive=None, max_depth=None, _depth
         maximum number of levels to descend on the hierarchy
     :param _depth: int
         Private. Do not use. It is used in recursive calls.
+    :param include_trashed: bool
     :yields: dict
     """
     if max_depth is not None and _depth > max_depth:
@@ -532,7 +578,7 @@ def _walk(path=None, file_id=None, fields='', drive=None, max_depth=None, _depth
 
     # path is only set at the top-level call, all recursive calls use file_id
     if file_id is None:
-        ids = get_ids(path, drive=drive)
+        ids = get_ids(path, drive=drive, include_trashed=False)
         if len(ids) > 1:
             raise Exception(f'{path} is not a unique path')
         if not ids:
@@ -551,29 +597,31 @@ def _walk(path=None, file_id=None, fields='', drive=None, max_depth=None, _depth
         drive_args = {}
 
     # fields passed to the drive API should not include our own custom fields
-    # and should include at least the file name and ID.
-    _fields = list(set([f.strip() for f in fields.split(',') if f]))
-    _fields = [field for field in _fields + ['id', 'name'] if field not in ['path', 'depth']]
+    # and should include at least the file name, ID, and trashed status.
+    _fields = list(set([f.strip() for f in fields.split(',') if f] + ['id', 'name', 'trashed']))
+    _fields = [field for field in _fields if field not in ['path', 'depth']]
     metadata = DRIVE.files().get(fileId=file_id,
                                  fields=','.join(_fields),
                                  supportsAllDrives=True).execute()
     metadata['depth'] = _depth
     metadata['path'] = path if path else metadata['name']
 
-    # this needs to be copied, because it can be modified in the outer scope (loop below)
-    LOGGER.debug(f'walking... {metadata["name"]}')
-    yield metadata.copy()
+    if include_trashed or not metadata['trashed']:
+        # this needs to be copied, because it can be modified in the outer scope (loop below)
+        LOGGER.debug(f'walking... {metadata["name"]}')
+        yield metadata.copy()
 
-    children = DRIVE.files().list(q=f'"{file_id}" in parents', **drive_args).execute()['files']
-    for child in children:
-        for node in _walk(file_id=child['id'], fields=fields, drive=drive, max_depth=max_depth,
-                          _depth=_depth + 1):
-            node['path'] = os.path.join(metadata['path'], node['path'])
-            LOGGER.debug(f'walking... {node["name"]}')
-            yield node
+        children = DRIVE.files().list(q=f'"{file_id}" in parents', **drive_args).execute()['files']
+        for child in children:
+            for node in _walk(file_id=child['id'], fields=fields, drive=drive, max_depth=max_depth,
+                              _depth=_depth + 1, include_trashed=include_trashed):
+                node['path'] = os.path.join(metadata['path'], node['path'])
+                LOGGER.debug(f'walking... {node["name"]}')
+                yield node
 
 
-def walk(path=None, fields='', drive=None, max_depth=None):
+
+def walk(path=None, fields='', drive=None, max_depth=None, include_trashed=False):
     """
     Generator to descend on a directory hierarchy starting at a given path.
 
@@ -610,35 +658,51 @@ def walk(path=None, fields='', drive=None, max_depth=None):
         name of shared drive
     :param max_depth: int
         maximum number of levels to descend on the hierarchy
+    :param include_trashed: bool
     :yields: tuple
         a tuple corresponding to the fields argument
     """
     field_list = [f.strip() for f in fields.split(',') if f]
-    for node in _walk(path=path, fields=fields, drive=drive, max_depth=max_depth):
-        yield tuple([node[field] for field in field_list])
+    for node in _walk(path=path, fields=fields, drive=drive, max_depth=max_depth,
+                      include_trashed=include_trashed):
+        yield tuple([node[field] if field in node else None for field in field_list])
 
 
-def download(path, destination=None, drive=None):
+def download(path, destination=None, drive=None, include_trashed=False):
     """
     Recursively download a file and save it into a file (or create a local directory,
     if the remote one is of type folder).
 
+    NOTE:
+    The default is not to download files/folders from the trash.
+    Setting include_trashed=True can potentially cause naming conflicts, as a file with the same
+    name could be in the trash. This will cause the first downloaded file to be overwritten.
+
     :param path: str
     :param destination: str (optional, default=current directory)
         Destination file name.
+    :param include_trashed: bool
     :param drive: str (optional)
     """
     if destination is None:
         destination = os.path.abspath('.')
     root_dir = os.path.dirname(path)
     LOGGER.debug(f'root_dir: {root_dir}')
-    for file_id, filename, mime_type in walk(path, fields='id,path,mimeType', drive=drive):
+    for file_id, filename, mime_type, md5Checksum_1 in walk(path,
+                                                            fields='id,path,mimeType,md5Checksum',
+                                                            drive=drive,
+                                                            include_trashed=include_trashed):
         outfile = os.path.relpath(filename, root_dir)  # this will fail in windows
         if mime_type == 'application/vnd.google-apps.folder':
             directory = os.path.join(destination, outfile)
             LOGGER.debug(f'directory {filename} -> {directory}')
             os.makedirs(directory, exist_ok=True)
         else:
+            if os.path.exists(outfile):
+                md5Checksum_2 = \
+                    subprocess.check_output(['md5', outfile]).decode().split('=')[1].strip()
+                if md5Checksum_2 == md5Checksum_1:
+                    continue
             # https://developers.google.com/drive/api/v3/manage-downloads
             LOGGER.debug(f'file {filename} -> {outfile}')
             if mime_type == 'application/vnd.google-apps.document':
