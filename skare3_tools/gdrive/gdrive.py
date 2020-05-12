@@ -458,7 +458,7 @@ def upload(filename, destination, drive=None, force=False):
     filename = os.path.abspath(filename)
     file_id = {filename: _upload(filename, destination, drive=drive, force=force)}
     destinations = {filename: os.path.join(destination, os.path.basename(filename))}
-    LOGGER.info(f'Upload: {filename:80s} -> {destination}')
+    #LOGGER.info(f'Upload: {filename:80s} -> {destination}')
 
     # traverse the tree
     for root, d_names, f_names in os.walk(filename,
