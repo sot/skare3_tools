@@ -277,7 +277,7 @@ def get_ids(path, parent_id=None, drive=None, limit=None):
     folders = [p for p in path.strip('/').split('/') if p]
     root = get_drive_id(drive)
     if not folders:
-        # path is ony forward slashes, so path is 'root'
+        # path is only forward slashes, so path is 'root'
         return [root]
     folder = folders[0]
     if path[0] == '/' and len(folders) == 1:
