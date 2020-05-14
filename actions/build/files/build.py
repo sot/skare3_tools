@@ -5,9 +5,50 @@ import os
 import subprocess
 import glob
 import shutil
+import jinja2
+import yaml
+import re
+from string import Template
+from packaging import version
+import argparse
 
 
-package = os.path.basename(sys.argv[1])
+def overwrite_skare3_version(current_version, new_version, skare3_path,
+                             meta_pkgs = ['ska3-flight', 'ska3-matlab', 'ska3-core']):
+    for pkg in meta_pkgs:
+        meta_file = os.path.join(skare3_path, 'pkg_defs', pkg, 'meta.yaml')
+        t = jinja2.Template(open(
+            meta_file
+        ).read())
+        text = (t.render(SKA_PKG_VERSION='$SKA_PKG_VERSION',
+                         SKA_TOP_SRC_DIR='$SKA_TOP_SRC_DIR'))
+        if version.parse(yaml.__version__) < version.parse("5.1"):
+            data = yaml.load(text)
+        else:
+            data = yaml.load(text, Loader=yaml.FullLoader)
+        if str(data['package']['version']) != str(current_version):
+            continue
+        data['package']['version'] = new_version
+        for i in range(len(data['requirements'])):
+            if re.search('==', data['requirements']['run'][i]):
+                name, pkg_version = data['requirements']['run'][i].split('==')
+                name = name.strip()
+                if name in meta_pkgs and pkg_version == current_version:
+                    data['requirements']['run'][i] = f'{name} =={new_version}'
+        t = Template(yaml.dump(data, indent=4)).substitute(SKA_PKG_VERSION='{{ SKA_PKG_VERSION }}',
+                                                           SKA_TOP_SRC_DIR='{{ SKA_TOP_SRC_DIR }}')
+        with open(meta_file, 'w') as f:
+            f.write(t)
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('package')
+parser.add_argument('--skare3-overwrite-version', default=None)
+parser.add_argument('--skare3-branch', default='master')
+
+args, unknown_args = parser.parse_known_args()
+
+package = os.path.basename(args.package)
 
 # these are packages whose name does not match the repository name
 # at this point, automated builds do not know the package name,
@@ -36,19 +77,28 @@ else:
     sys.exit(100)
 
 # fetch skare3 (make sure it is there)
-skare3_path = 'tmp/skare3'
+skare3_path = '/home/ska/tmp/skare3'
 if not os.path.exists(os.path.dirname(skare3_path)):
     os.makedirs(os.path.dirname(skare3_path))
 if os.path.exists(skare3_path):
     subprocess.check_call(['git', 'pull'], cwd=skare3_path)
 else:
-    subprocess.check_call(['git', 'clone', '--single-branch', '--branch', 'master',
+    subprocess.check_call(['git', 'clone', '--single-branch', '--branch', args.skare3_branch,
                            'https://github.com/sot/skare3.git'], cwd=os.path.dirname(skare3_path))
 
+
+if args.skare3_overwrite_version:
+    skare3_old_version, skare3_new_version = args.skare3_overwrite_version.split(':')
+    print(f'overwriting skare3 version {skare3_old_version} -> {skare3_new_version}')
+    overwrite_skare3_version(skare3_old_version, skare3_new_version, skare3_path)
+    # committing because ska_builder.py does not accept dirty repos, but this is not ideal.
+    subprocess.check_call(['git', 'commit', '.', '-m', '"Overwriting version"'],
+                          cwd=skare3_path)
+
 # do the actual building
-cmd = ['./ska_builder.py', '--force', '--github-https',
+cmd = ['./ska_builder.py', '--github-https',
        '--build-list', './ska3_flight_build_order.txt']
-cmd += sys.argv[2:] + [package]
+cmd += unknown_args + [package]
 print(' '.join(cmd))
 subprocess.check_call(cmd, cwd=skare3_path)
 
