@@ -4,7 +4,8 @@ Produce a list of changes for all packages between two sets of versions.
 
 The sets of versions can be specified in a few ways: 1. one string of flight, matlab, last_tag,
 2. one string that must correspond to a package in conda-info file 3. the name of a json file
-containing a dictionary of versions index by package names.
+containing a dictionary of versions indexed by package names (which can be created doing
+"conda search --info --json ska3-flight", for example).
 
 The changes come from a json file created with skare3-github-info.
 
