@@ -270,6 +270,8 @@ def main():
     if os.path.exists(args.t):
         with open(args.t, 'r') as f:
             test_results = json.load(f)
+    else:
+        test_results = {}
 
     repo2name = {p['repo']: p['name'] for p in package_name_map}
 

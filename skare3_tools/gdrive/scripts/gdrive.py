@@ -29,8 +29,19 @@ def cmd_ls(args):
     if not args.path:
         args.path = '/'
     for d in args.path:
-        print(d)
-        print('  ' + '\n  '.join([f['name'] for f in gdrive.ls(d, drive=args.drive)]))
+        ls = gdrive.ls(d, drive=args.drive, include_trashed=args.trashed)
+        n = max([len(f['name']) for _, children in ls for f in children]) if ls else 0
+        if args.long:
+            fmt = f'{{createdTime}} {{modifiedTime}}    ' \
+                  f'{{name:{n}s}} v{{version}} {{id}}  {{trashed}}'
+        else:
+            fmt = f'{{name:{n}s}} ' + ('{trashed}' if args.trashed else '')
+        for f, children in ls:
+            f['trashed'] = '(trashed)' if f['trashed'] else ''
+            print(fmt.format(**f))
+            for c in children:
+                c['trashed'] = '(trashed)' if c['trashed'] else ''
+                print('    ' + fmt.format(**c))
 
 
 def cmd_rm(args):
@@ -44,23 +55,23 @@ def cmd_delete(args):
 
 
 def cmd_upload(args):
-    print(f"upload args: {args.path}")
+    #print(f"upload args: {args.path}")
     destination = args.path[-1]
     for filename in args.path[:-1]:
         if os.path.exists(filename):
-            gdrive.upload(filename, destination, drive=args.drive)
+            gdrive.upload(filename, destination, drive=args.drive, force=True)
             filename = os.path.abspath(filename)
             logging.getLogger('gdrive').info(f'Upload: {filename:80s} -> {destination}')
 
 
 def cmd_download(args):
     for f in args.path:
-        gdrive.download(f, drive=args.drive)
+        gdrive.download(f, drive=args.drive, include_trashed=args.trashed)
 
 
 def cmd_id(args):
     for f in args.path:
-        print(gdrive.get_ids(f, drive=args.drive))
+        print(gdrive.get_ids(f, drive=args.drive, include_trashed=args.trashed))
 
 ACTIONS = {'ls': cmd_ls,
            'rm': cmd_rm,
@@ -78,9 +89,11 @@ def get_parser():
     parser.add_argument('cmd', choices=ACTIONS.keys())
     parser.add_argument('path', nargs='*')
     parser.add_argument('--drive', default=None)
+    parser.add_argument('--trashed', action='store_true')
     parser.add_argument('--batch', dest='interactive', action='store_false')
     parser.add_argument('--interactive', action='store_true')
     parser.add_argument('--save-credentials', action='store_true')
+    parser.add_argument('--long', action='store_true')
     parser.add_argument('--log', default='INFO', help='', choices=levels)
     parser.add_argument('-v', action='store_const', const='DEBUG', dest='log')
     return parser
@@ -123,8 +136,11 @@ def main():
         if cred_filename and os.path.exists(cred_filename):
             os.remove(cred_filename)
 
-    ACTIONS[args.cmd](args)
-
+    try:
+        ACTIONS[args.cmd](args)
+    except Exception as e:
+        logging.getLogger('gdrive').info(e)
+        parser.exit(2)
 
 if __name__ == '__main__':
     main()

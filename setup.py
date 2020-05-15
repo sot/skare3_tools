@@ -17,7 +17,7 @@ entry_points = {
         'skare3-create-issue=skare3_tools.github.scripts.create_issue:main',
         'skare3-create-pr=skare3_tools.github.scripts.create_pr:main',
         'skare3-merge-pr=skare3_tools.github.scripts.merge_pr:main',
-        'skare3-release-merge-info=skare3_tools.github.scripts.release_merge_info:main'
+        'skare3-release-merge-info=skare3_tools.github.scripts.release_merge_info:main',
         'skare3-changes-summary=skare3_tools.scripts.skare3_update_summary:main'
     ]
 }
