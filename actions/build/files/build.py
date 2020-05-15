@@ -40,7 +40,15 @@ def overwrite_skare3_version(current_version, new_version, skare3_path,
         with open(meta_file, 'w') as f:
             f.write(t)
 
-
+"""
+Argument order matters. The first "unknown" positional argument is the package.
+The rest are included as "unknown" arguments. So the following list of arguments builds ska3-flight:
+  ska3-flight --tag master
+while this one tries to build master at tag ska3-flight:
+  --tag master ska3-flight
+To fix this, I can require that packages are specified as a non-positional argument, but that breaks
+all current workflows.
+"""
 parser = argparse.ArgumentParser()
 parser.add_argument('package')
 parser.add_argument('--skare3-overwrite-version', default=None)
@@ -83,12 +91,22 @@ if not os.path.exists(os.path.dirname(skare3_path)):
 if os.path.exists(skare3_path):
     subprocess.check_call(['git', 'pull'], cwd=skare3_path)
 else:
-    subprocess.check_call(['git', 'clone', '--single-branch', '--branch', args.skare3_branch,
+    subprocess.check_call(['git', 'clone',
                            'https://github.com/sot/skare3.git'], cwd=os.path.dirname(skare3_path))
+    subprocess.check_call(['git', 'checkout', args.skare3_branch], cwd=skare3_path)
 
 
 if args.skare3_overwrite_version:
-    skare3_old_version, skare3_new_version = args.skare3_overwrite_version.split(':')
+    rc = re.match('(\S+)rc[0-9]+', args.skare3_overwrite_version)
+    if ':' in args.skare3_overwrite_version:
+        skare3_old_version, skare3_new_version = args.skare3_overwrite_version.split(':')
+    elif rc:
+        skare3_new_version = rc.group(0)
+        skare3_old_version = rc.group(1)
+    else:
+        raise Exception(f'wrong format for skare3_overwrite_version: {args.skare3_overwrite_version}')
+    skare3_new_version = skare3_new_version.split('/')[-1]
+    skare3_old_version = skare3_old_version.split('/')[-1]
     print(f'overwriting skare3 version {skare3_old_version} -> {skare3_new_version}')
     overwrite_skare3_version(skare3_old_version, skare3_new_version, skare3_path)
     # committing because ska_builder.py does not accept dirty repos, but this is not ideal.
