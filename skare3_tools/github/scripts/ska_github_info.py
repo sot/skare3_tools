@@ -24,6 +24,30 @@ REPO_PACKAGE_MAP = [
 ]
 
 
+def get_repositories_info_v4(owner):
+    """
+    This should do something very similar to get_repositories_info but much faster.
+    It uses the GraphQL interface (v4) instead of the REST interface (v3)
+
+    :param owner: str
+        the Github organization (e.g. 'sot' or 'acisops')
+    :return:
+    """
+    import jinja2
+    from skare3_tools.github import graphql
+    api = graphql.init()
+    query = jinja2.Template(graphql.ORG_QUERY).render(owner=owner)
+    repositories = api(query)['data']['organization']['repositories']
+    # note that in the following step I am not iterating over pages, which is oversimplifying things
+    repositories = [(r['owner']['login'], r['name']) for r in repositories['nodes']]
+    data = []
+    for owner, name in repositories:
+        print(f'{owner}/{name}')
+        data.append(api(jinja2.Template(graphql.REPO_QUERY).render(name=name, owner=owner)))
+
+    return data
+
+
 def get_conda_pkg_versions_2(conda_metapackage):
     out = subprocess.check_output(['conda', 'install', conda_metapackage, '--dry-run']).decode()
     out = out[out.find('The following NEW packages will be INSTALLED:'):
