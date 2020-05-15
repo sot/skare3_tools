@@ -67,7 +67,7 @@ _logger = logging.getLogger('github')
 GITHUB_API = None
 
 
-def init(user=None, password=None):
+def init(user=None, password=None, token=None):
     """
     Initialize the Github API.
 
@@ -89,7 +89,32 @@ def init(user=None, password=None):
     """
     global GITHUB_API
     if GITHUB_API is None:
-        api = GithubAPI(user=user, password=password)
+        if token is not None:
+            api = GithubAPI(token=token)
+        elif 'GITHUB_TOKEN' in os.environ:
+            api = GithubAPI(token=os.environ['GITHUB_TOKEN'])
+        else:
+            _logger.warning('Using basic auth, which is deprecated')
+            if user is None:
+                if 'GITHUB_USER' in os.environ:
+                    _logger.debug('Github user from environment')
+                    user = os.environ['GITHUB_USER']
+                else:
+                    _logger.debug('Github user from prompt')
+                    user = input('Username: ')
+            else:
+                _logger.debug('Github user from arguments')
+            if password is None:
+                if 'GITHUB_PASSWORD' in os.environ:
+                    password = os.environ['GITHUB_PASSWORD']
+                    _logger.debug('Github password from environment')
+                elif keyring:
+                    password = keyring.get_password("skare3-github", user)
+                    _logger.debug('Github user from keyring')
+                if password is None:
+                    password = getpass.getpass()
+                    _logger.debug('Github user from prompt')
+            api = GithubAPI(user=user, password=password)
         r = api.get('')
         if r.status_code == 401:
             raise AuthException(r.json()['message'])
@@ -102,30 +127,13 @@ class GithubAPI:
     """
     Main class that encapsulates Github's REST API.
     """
-    def __init__(self, user=None, password=None):
-        if user is None:
-            if 'GITHUB_USER' in os.environ:
-                _logger.debug('Github user from environment')
-                user = os.environ['GITHUB_USER']
-            else:
-                _logger.debug('Github user from prompt')
-                user = input('Username: ')
+    def __init__(self, user=None, password=None, token=None):
+        if token is not None:
+            self.auth = None
+            self.headers = {"Authorization": f"token {token}"}
         else:
-            _logger.debug('Github user from arguments')
-        if password is None:
-            if 'GITHUB_PASSWORD' in os.environ:
-                password = os.environ['GITHUB_PASSWORD']
-                _logger.debug('Github password from environment')
-            elif keyring:
-                password = keyring.get_password("skare3-github", user)
-                _logger.debug('Github user from keyring')
-            if password is None:
-                password = getpass.getpass()
-                _logger.debug('Github user from prompt')
-
-        self.user = user
-        self.auth = HTTPBasicAuth(self.user, password)
-        self.headers = {"Accept": "application/json"}
+            self.auth = HTTPBasicAuth(user, password)
+            self.headers = {"Accept": "application/json"}
         self.api_url = 'https://api.github.com'
 
     @staticmethod
