@@ -139,7 +139,15 @@ def main():
     try:
         ACTIONS[args.cmd](args)
     except Exception as e:
-        logging.getLogger('gdrive').info(e)
+        import traceback
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        trace = traceback.extract_tb(exc_traceback)
+        logging.getLogger('gdrive').info(f'Exception:')
+        logging.getLogger('gdrive').info(f'  Type: {exc_type.__name__}')
+        logging.getLogger('gdrive').info(f'  Value: {exc_value} \n')
+        for step in trace:
+            logging.getLogger('gdrive').info(f'  in {step.filename}:{step.lineno}/{step.name}:')
+            logging.getLogger('gdrive').info(f'    {step.line}')
         parser.exit(2)
 
 if __name__ == '__main__':
