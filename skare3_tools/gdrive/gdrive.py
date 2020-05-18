@@ -346,8 +346,7 @@ def get_meta(file_ids, fields=('id, name, kind, version, mimeType, createdTime, 
     res = []
     for file_id in file_ids:
         meta = DRIVE.files().get(fileId=file_id, fields=fields, supportsAllDrives=True).execute()
-        fields = [f.strip() for f in fields.split(',')]
-        meta = {k: (meta[k] if k in meta else None) for k in fields}
+        meta = {k: (meta[k] if k in meta else None) for k in [f.strip() for f in fields.split(',')]}
         res.append(meta)
     return res
 
