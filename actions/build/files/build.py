@@ -11,7 +11,7 @@ import re
 from string import Template
 from packaging import version
 import argparse
-
+import tempfile
 
 def overwrite_skare3_version(current_version, new_version, skare3_path,
                              meta_pkgs = ['ska3-flight', 'ska3-matlab', 'ska3-core']):
@@ -85,69 +85,71 @@ else:
     sys.exit(100)
 
 # fetch skare3 (make sure it is there)
-skare3_path = '/home/ska/tmp/skare3'
-if not os.path.exists(os.path.dirname(skare3_path)):
-    os.makedirs(os.path.dirname(skare3_path))
-if os.path.exists(skare3_path):
-    subprocess.check_call(['git', 'pull'], cwd=skare3_path)
-else:
-    subprocess.check_call(['git', 'clone',
-                           'https://github.com/sot/skare3.git'], cwd=os.path.dirname(skare3_path))
-    subprocess.check_call(['git', 'checkout', args.skare3_branch], cwd=skare3_path)
-
-
-if args.skare3_overwrite_version:
-    rc = re.match('(\S+)rc[0-9]+', args.skare3_overwrite_version)
-    if ':' in args.skare3_overwrite_version:
-        skare3_old_version, skare3_new_version = args.skare3_overwrite_version.split(':')
-    elif rc:
-        skare3_new_version = rc.group(0)
-        skare3_old_version = rc.group(1)
+tmp_dir = 'tmp'
+if not os.path.exists(tmp_dir):
+    os.makedirs(tmp_dir)
+with tempfile.TemporaryDirectory(dir=tmp_dir) as tmp_dir:
+    skare3_path = os.path.join(tmp_dir, 'skare3')
+    print(f'skare3_path: {skare3_path}')
+    if os.path.exists(skare3_path):
+        subprocess.check_call(['git', 'pull'], cwd=skare3_path)
     else:
-        raise Exception(f'wrong format for skare3_overwrite_version: {args.skare3_overwrite_version}')
-    skare3_new_version = skare3_new_version.split('/')[-1]
-    skare3_old_version = skare3_old_version.split('/')[-1]
-    print(f'overwriting skare3 version {skare3_old_version} -> {skare3_new_version}')
-    overwrite_skare3_version(skare3_old_version, skare3_new_version, skare3_path)
-    # committing because ska_builder.py does not accept dirty repos, but this is not ideal.
-    subprocess.check_call(['git', 'commit', '.', '-m', '"Overwriting version"'],
-                          cwd=skare3_path)
+        subprocess.check_call(['git', 'clone',
+                               'https://github.com/sot/skare3.git'], cwd=os.path.dirname(skare3_path))
+        subprocess.check_call(['git', 'checkout', args.skare3_branch], cwd=skare3_path)
 
-# do the actual building
-cmd = ['./ska_builder.py', '--github-https',
-       '--build-list', './ska3_flight_build_order.txt']
-cmd += unknown_args + [package]
-print(' '.join(cmd))
-subprocess.check_call(cmd, cwd=skare3_path)
+    if args.skare3_overwrite_version:
+        rc = re.match('(\S+)rc[0-9]+', args.skare3_overwrite_version)
+        if ':' in args.skare3_overwrite_version:
+            skare3_old_version, skare3_new_version = args.skare3_overwrite_version.split(':')
+        elif rc:
+            skare3_new_version = rc.group(0)
+            skare3_old_version = rc.group(1)
+        else:
+            raise Exception(f'wrong format for skare3_overwrite_version: {args.skare3_overwrite_version}')
+        skare3_new_version = skare3_new_version.split('/')[-1]
+        skare3_old_version = skare3_old_version.split('/')[-1]
+        print(f'overwriting skare3 version {skare3_old_version} -> {skare3_new_version}')
+        overwrite_skare3_version(skare3_old_version, skare3_new_version, skare3_path)
+        # committing because ska_builder.py does not accept dirty repos, but this is not ideal.
+        subprocess.check_call(['git', 'commit', '.', '-m', '"Overwriting version"'],
+                              cwd=skare3_path)
 
-# move resulting files to work dir
-if not os.path.exists('builds'):
-    os.makedirs('builds')
-for d in ['linux-64', 'osx-64', 'noarch']:
-    d_from = os.path.join(skare3_path, 'builds', d)
-    if os.path.exists(d_from):
-        d_to = os.path.join('builds',d)
-        if not os.path.exists(d_to):
-            os.makedirs(d_to)
-        for filename in glob.glob(os.path.join(d_from, '*')):
-            filename2 = os.path.join(d_to, os.path.basename(filename))
-            if os.path.exists(filename2):
-                os.remove(filename2)
-            shutil.move(filename, filename2)
+    # do the actual building
+    cmd = ['./ska_builder.py', '--github-https', '--force',
+           '--build-list', './ska3_flight_build_order.txt']
+    cmd += unknown_args + [package]
+    print(' '.join(cmd))
+    subprocess.check_call(cmd, cwd=skare3_path)
 
-rm = glob.glob('builds/*/*json*') + glob.glob('builds/*/.*json*')
-for r in rm:
-    os.remove(r)
+    # move resulting files to work dir
+    if not os.path.exists('builds'):
+        os.makedirs('builds')
+    for d in ['linux-64', 'osx-64', 'noarch']:
+        d_from = os.path.join(skare3_path, 'builds', d)
+        if os.path.exists(d_from):
+            d_to = os.path.join('builds',d)
+            if not os.path.exists(d_to):
+                os.makedirs(d_to)
+            for filename in glob.glob(os.path.join(d_from, '*')):
+                filename2 = os.path.join(d_to, os.path.basename(filename))
+                if os.path.exists(filename2):
+                    os.remove(filename2)
+                shutil.move(filename, filename2)
 
-# report result
-files = glob.glob('builds/linux-64/*tar.bz2*') + \
-        glob.glob('builds/osx-64/*tar.bz2*') + \
-        glob.glob('builds/noarch/*tar.bz2*')
-files = ' '.join(files)
+    rm = glob.glob('builds/*/*json*') + glob.glob('builds/*/.*json*')
+    for r in rm:
+        os.remove(r)
 
-if not files:
-    print("No files were built. Something should have been built, right?")
-    sys.exit(1)
+    # report result
+    files = glob.glob('builds/linux-64/*tar.bz2*') + \
+            glob.glob('builds/osx-64/*tar.bz2*') + \
+            glob.glob('builds/noarch/*tar.bz2*')
+    files = ' '.join(files)
 
-print(f'Built files: {files}')
-print(f'::set-output name=files::{files}')
+    if not files:
+        print("No files were built. Something should have been built, right?")
+        sys.exit(1)
+
+    print(f'Built files: {files}')
+    print(f'::set-output name=files::{files}')
