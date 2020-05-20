@@ -58,7 +58,7 @@ Known Issues
 import os
 import logging
 import pickle
-import subprocess
+import hashlib
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from googleapiclient.errors import HttpError
@@ -698,8 +698,7 @@ def download(path, destination=None, drive=None, include_trashed=False):
             os.makedirs(directory, exist_ok=True)
         else:
             if os.path.exists(outfile):
-                md5Checksum_2 = \
-                    subprocess.check_output(['md5', outfile]).decode().split('=')[1].strip()
+                md5Checksum_2 = hashlib.md5(open(outfile, 'rb').read()).hexdigest()
                 if md5Checksum_2 == md5Checksum_1:
                     continue
             # https://developers.google.com/drive/api/v3/manage-downloads
