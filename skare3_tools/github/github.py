@@ -91,6 +91,8 @@ def init(user=None, password=None, token=None):
     if GITHUB_API is None:
         if token is not None:
             api = GithubAPI(token=token)
+        elif 'GITHUB_API_TOKEN' in os.environ:
+            api = GithubAPI(token=os.environ['GITHUB_API_TOKEN'])
         elif 'GITHUB_TOKEN' in os.environ:
             api = GithubAPI(token=os.environ['GITHUB_TOKEN'])
         else:
