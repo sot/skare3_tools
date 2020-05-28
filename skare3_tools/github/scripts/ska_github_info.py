@@ -15,7 +15,7 @@ import argparse
 import subprocess
 import logging
 import datetime
-import yaml
+import jinja2
 
 
 REPO_PACKAGE_MAP = [
@@ -24,28 +24,205 @@ REPO_PACKAGE_MAP = [
 ]
 
 
-def get_repositories_info_v4(owner):
-    """
-    This should do something very similar to get_repositories_info but much faster.
-    It uses the GraphQL interface (v4) instead of the REST interface (v3)
+def _get_tag_target(tag):
+    if 'target' in tag:
+        return _get_tag_target(tag['target'])
+    else:
+        return tag['oid']
 
-    :param owner: str
-        the Github organization (e.g. 'sot' or 'acisops')
-    :return:
-    """
-    import jinja2
-    from skare3_tools.github import graphql
-    api = graphql.init()
-    query = jinja2.Template(graphql.ORG_QUERY).render(owner=owner)
-    repositories = api(query)['data']['organization']['repositories']
-    # note that in the following step I am not iterating over pages, which is oversimplifying things
-    repositories = [(r['owner']['login'], r['name']) for r in repositories['nodes']]
-    data = []
-    for owner, name in repositories:
-        print(f'{owner}/{name}')
-        data.append(api(jinja2.Template(graphql.REPO_QUERY).render(name=name, owner=owner)))
 
-    return data
+PR_QUERY = """
+{
+  repository(name: "{{ name }}", owner: "{{ owner }}") {
+    name
+    owner {
+      login
+    }
+    pullRequests(last: 100, baseRefName: "master", before: "{{ cursor }}") {
+      nodes {
+        number
+        title
+        url
+        commits(last: 100) {
+          totalCount
+          nodes {
+            commit {
+              committedDate
+              pushedDate
+              message
+            }
+          }
+        }
+        baseRefName
+        headRefName
+        state
+      }
+      pageInfo {
+        hasPreviousPage
+        hasNextPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+}
+"""
+
+
+COMMIT_QUERY = """
+{
+  repository(name: "{{ name }}", owner: "{{ owner }}") {
+    name
+    owner {
+      login
+    }
+    ref(qualifiedName: "master") {
+      target {
+        ... on Commit {
+          history(first: 100, after: "{{ cursor }}") {
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+            nodes {
+              oid
+              message
+              pushedDate
+            }
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+def get_repository_info_v4(owner_repo,
+                           since=7,
+                           use_pr_titles=True,
+                           include_unreleased_commits=False,
+                           include_commits=False):
+    owner, name = owner_repo.split('/')
+    api = github.GITHUB_API_V4
+    data_v4 = api(jinja2.Template(github.graphql.REPO_QUERY).render(name=name, owner=owner))
+    branches = [n for n in data_v4['data']['repository']['refs']['nodes'] if
+                re.match('heads/', n['name'])]
+    releases = data_v4['data']['repository']['releases']['nodes']
+    commits = data_v4['data']['repository']['ref']['target']['history']['nodes']
+    issues = data_v4['data']['repository']['issues']['nodes']
+
+    commit_data = data_v4
+    while commit_data['data']['repository']['ref']['target']['history']['pageInfo']['hasNextPage']:
+        cursor = commit_data['data']['repository']['ref']['target']['history']['pageInfo']['endCursor']
+        commit_data = api(jinja2.Template(COMMIT_QUERY).render(name=name,
+                                                               owner=owner,
+                                                               cursor=cursor))
+        commits += (commit_data['data']['repository']['ref']['target']['history']['nodes'])
+
+    pr_data = data_v4
+    pull_requests = pr_data['data']['repository']['pullRequests']['nodes']
+    while pr_data['data']['repository']['pullRequests']['pageInfo']['hasPreviousPage']:
+        cursor = pr_data['data']['repository']['pullRequests']['pageInfo']['startCursor']
+        pr_data = api(jinja2.Template(PR_QUERY).render(name=name,
+                                                           owner=owner,
+                                                           cursor=cursor))
+        pull_requests += (pr_data['data']['repository']['pullRequests']['nodes'])
+
+    for r in releases:
+        r['tag_oid'] = _get_tag_target(r['tag'])
+
+    releases = {r['tag_oid']: r for r in releases if not r['isPrerelease'] and not r['isDraft']}
+    release_info = [{
+        'release_tag': '',
+        'release_tag_date': '',
+        'commits': [],
+        'merges': []
+    }]
+
+
+
+
+    all_pull_requests = {pr['number']: pr for pr in pull_requests}
+    pull_requests = [pr for pr in pull_requests if pr['state'] not in ['CLOSED', 'MERGED']]
+    pull_requests = [{
+        'number': pr['number'],
+        'url': pr['url'],
+        'title': pr['title'],
+        'n_commits': pr['commits']['totalCount'],
+        'last_commit_date': pr['commits']['nodes'][0]['commit']['pushedDate'],
+    } for pr in pull_requests]
+    pull_requests = sorted(pull_requests, key=lambda pr: pr['number'], reverse=True)
+
+    for commit in commits:
+        sha = commit['oid']
+        if sha in releases:
+            release_info.append({
+                'release_tag': releases[sha]["tagName"],
+                'release_tag_date': releases[sha]["publishedAt"],
+                'commits': [],
+                'merges': []
+            })
+        release_info[-1]['commits'].append(commit)
+        match = re.match(
+            'Merge pull request #(?P<pr_number>.+) from (?P<branch>\S+)\n\n(?P<title>.+)',
+            commit['message'])
+        if match:
+            merge = match.groupdict()
+            merge["pr_number"] = int(merge["pr_number"])
+            if use_pr_titles:
+                if merge["pr_number"] in all_pull_requests:
+                    merge["title"] = all_pull_requests[merge["pr_number"]]['title']  #.strip()
+            release_info[-1]['merges'].append(merge)
+
+    release_tags = [r['release_tag'] for r in release_info]
+    if type(since) is int:
+        release_info = release_info[:since+1]
+    elif since in release_tags:
+        release_info = release_info[:release_tags.index(since)]
+    elif since is not None:
+        raise Exception(f'Requested repository info with since={since},'
+                        f'which is not and integer and is not one of the known releases'
+                        f'({release_tags})')
+
+    if len(release_info) > 1:
+        last_tag = release_info[1]['release_tag']
+        last_tag_date = release_info[1]['release_tag_date']
+    else:
+        last_tag = ''
+        last_tag_date = ''
+
+    # workflows are only in v4
+    headers = {'Accept': 'application/vnd.github.antiope-preview+json'}
+    workflows = github.GITHUB_API_V3.get(f'/repos/{owner}/{name}/actions/workflows',
+                                         headers=headers).json()
+    workflows = [{k: w[k] for k in ['name', 'badge_url']} for w in workflows['workflows']]
+
+    repo_info = {
+        'owner': owner,
+        'name': name,
+        'last_tag': last_tag,
+        'last_tag_date': last_tag_date,
+        'commits': len(release_info[0]['commits']),
+        'merges': len(release_info[0]['merges']),
+        'merge_info': release_info[0]['merges'],
+        'release_info': release_info,
+        'issues': len(issues),
+        'n_pull_requests': len(pull_requests),
+        'branches': len(branches),
+        'pull_requests': pull_requests,
+        'workflows': workflows
+    }
+
+    if not include_commits:
+        for r in repo_info['release_info']:
+            del r['commits']
+
+    if not include_unreleased_commits and len(repo_info['release_info']) == 1:
+        repo_info['commits'] = 0
+        repo_info['merges'] = 0
+        repo_info['merge_info'] = []
+
+    return repo_info
 
 
 def get_conda_pkg_versions_2(conda_metapackage):
@@ -123,7 +300,9 @@ def get_repository_info(owner_repo, since=7,
         whether to include commits in release_info.
     :return:
     """
-    api = github.init()
+    github.init()
+    api = github.GITHUB_API_V3
+
     owner, repo = owner_repo.split('/')
     repository = github.Repository(owner_repo)
 
@@ -244,7 +423,7 @@ def get_repository_info(owner_repo, since=7,
     return repo_info
 
 
-def get_repositories_info(repositories, conda=True):
+def get_repositories_info(repositories, conda=False, v4=False):
     matlab = {}
     flight = {}
     info = {'packages': []}
@@ -269,7 +448,10 @@ def get_repositories_info(repositories, conda=True):
         print(owner_repo)
         try:
             owner, repo = os.path.split(owner_repo)
-            repo_info = get_repository_info(owner_repo)
+            if v4:
+                repo_info = get_repository_info_v4(owner_repo)
+            else:
+                repo_info = get_repository_info(owner_repo)
             repo_info['matlab'] = matlab[repo.lower()] if repo.lower() in matlab else ''
             repo_info['flight'] = flight[repo.lower()] if repo.lower() in flight else ''
             info['packages'].append(repo_info)
@@ -292,26 +474,23 @@ def get_parser():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-o', default='repository_info.json',
                         help='Output file (default=repository_info.json)')
-    parser.add_argument('-u', help='User name')
-    parser.add_argument('-c', help='Netrc file name with credentials')
+    parser.add_argument('--token', help='Github token, or name of file that contains token')
+    parser.add_argument('--v4', action='store_true', help='Use Github API v4')
+    parser.add_argument('--no-conda', dest='conda', action='store_false',
+                        help='Do not get conda package info')
     return parser
 
 
 def main():
     args = get_parser().parse_args()
 
-    if args.c:
-        with open(args.c) as f:
-            data = yaml.load(f)
-            github.init(user=data['user'], password=data['password'])
-    else:
-        github.init(user=args.u)
+    github.init(token=args.token)
 
     orgs = [github.Organization('sot'),
             github.Organization('acisops'),
             ]
     repositories = sorted([r['full_name'] for org in orgs for r in org.repositories()])
-    info = get_repositories_info(repositories)
+    info = get_repositories_info(repositories, v4=args.v4, conda=args.conda)
     if info:
         with open(args.o, 'w') as f:
             json.dump(info, f, indent=2)

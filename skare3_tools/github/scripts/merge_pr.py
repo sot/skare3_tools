@@ -21,13 +21,13 @@ def parser():
     parse.add_argument('--merge-method',
                        help='Merge method to use. Possible values are merge, squash or rebase.')
 
-    parse.add_argument('--user')
+    parser.add_argument('--token', '-t', 'Github token, or name of file that contains token')
     return parse
 
 
 def main():
     args = parser().parse_args()
-    github.init(user=args.user)
+    github.init(token=args.token)
     repository = github.Repository(args.repository)
 
     # find the PR

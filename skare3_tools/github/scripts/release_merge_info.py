@@ -19,13 +19,13 @@ def parser():
     parse.add_argument('--repository',
                        required=True, help='repository name. Example: sot/chandra_aca')
     parse.add_argument('--sha', help='sha of the release')
-    parse.add_argument('--user', required=False)
+    parser.add_argument('--token', '-t', 'Github token, or name of file that contains token')
     return parse
 
 
 def main():
     args = parser().parse_args()
-    github.init(user=args.user)
+    github.init(token=args.token)
     repository = github.Repository(args.repository)
 
     # get all releases and find the one we are working on

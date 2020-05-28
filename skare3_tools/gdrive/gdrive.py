@@ -171,22 +171,22 @@ def get_ids(path, parent_id=None, drive=None, limit=None, include_trashed=False)
 
     .. code-block:: python
 
-      >>>> get_ids('/directory')
+      >>> get_ids('/directory')
       ['id_1']
 
-      >>>> get_ids('/directory/directory_1')
+      >>> get_ids('/directory/directory_1')
       ['id_2']
 
-      >>>> get_ids('directory_1')
+      >>> get_ids('directory_1')
       ['id_2', 'id_3', 'id_4']
 
-      >>>> get_ids('/directory/directory_1/directory_1')
+      >>> get_ids('/directory/directory_1/directory_1')
       ['id_3']
 
-      >>>> get_ids('directory_1/directory_1')
+      >>> get_ids('directory_1/directory_1')
       ['id_3', 'id_4']
 
-      >>>> get_ids('/ska3')
+      >>> get_ids('/ska3')
       []
 
     And with this structure in the cxc_ops shared drive::
@@ -199,13 +199,13 @@ def get_ids(path, parent_id=None, drive=None, limit=None, include_trashed=False)
 
     .. code-block:: python
 
-      >>>> get_ids('ska3', drive='cxc_ops')
+      >>> get_ids('ska3', drive='cxc_ops')
       ['id_1', 'id_3']
 
-      >>>> get_ids('/ska3', drive='cxc_ops')
+      >>> get_ids('/ska3', drive='cxc_ops')
       ['id_1']
 
-      >>>> get_ids('/ska3/ska3', drive='cxc_ops')
+      >>> get_ids('/ska3/ska3', drive='cxc_ops')
       ['id_3']
 
     NOTES:
