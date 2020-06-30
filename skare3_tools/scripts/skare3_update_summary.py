@@ -18,6 +18,7 @@ import json
 import argparse
 import logging
 import collections
+from skare3_tools import packages, github
 
 
 class ArgumentException(Exception):
@@ -119,29 +120,9 @@ def parser():
                        help='Either a string or a json file with dictionary of package/versions.')
     parse.add_argument('--final-version', default='last_tag',
                        help='Either a string or a json file with dictionary of package/versions.')
-    parse.add_argument('--repository-info', default='repository_info.json',
-                       help='json file output from skare3-github-info')
-    parse.add_argument('--conda-info', default=None,
-                       help='json file output from "conda search --info --json <package>"')
-    parse.add_argument('--pkg-name-map', help='Name of a file with a list of dictionaries')
+    parse.add_argument('--meta-package', default='ska3-flight')
+    parse.add_argument('--token', help='Github token, or name of file that contains token')
     return parse
-
-
-def _get_conda_info(conda_info=None):
-    if conda_info:
-        with open(conda_info, 'r') as f:
-            conda_info = json.load(f)
-            conda_packages = list(conda_info.keys())
-            conda_info = conda_info[conda_packages[0]]
-            conda_info = collections.OrderedDict([(i['version'], i) for i in conda_info])
-
-            for version in conda_info:
-                depends = [v.split('==') for v in conda_info[version]['depends']]
-                depends = {v[0].strip(): v[1].strip() for v in depends}
-                conda_info[version]['depends'] = depends
-    else:
-        conda_info = {}
-    return conda_info
 
 
 def _get_versions(version, repository_info, conda_info):
@@ -169,26 +150,24 @@ def _get_versions(version, repository_info, conda_info):
 def main():
     parse = parser()
     args = parse.parse_args()
+    github.init(token=args.token)
+
     try:
-        # assemble dictionaries to get the conda package name from a repo name and vice-versa
-        # (conda info only has conda package names, while repository_info only has github repo names)
-        repo_to_package = None
-        package_to_repo = None
-        if args.pkg_name_map:
-            with open(args.pkg_name_map, 'r') as f:
-                pkg_name_map = json.load(f)
-            repo_to_package = {n['repo']: n['package'] for n in pkg_name_map}
-            package_to_repo = {n['package']: n['repo'] for n in pkg_name_map}
+        pkg_name_map = packages.get_package_list()
+        repo_to_package = {n['repository']: n['package'] for n in pkg_name_map}
+        package_to_repo = {n['package']: n['repository'] for n in pkg_name_map}
 
-        with open(args.repository_info) as f:
-            repository_info = json.load(f)
+        repository_info = packages.get_repositories_info()
 
-        conda_info = _get_conda_info(args.conda_info)
+        conda_info = packages.get_conda_pkg_info(args.meta_package)
+        conda_info = collections.OrderedDict([(i['version'], i) for i in conda_info[args.meta_package]])
 
         # change names in conda_info to repository names
         for version in conda_info:
+            depends = [v.split('==') for v in conda_info[version]['depends']]
+            depends = {v[0].strip(): v[1].strip() for v in depends}
             conda_info[version]['depends'] = {package_to_repo[k]: v
-                                              for k, v in conda_info[version]['depends'].items()
+                                              for k, v in depends.items()
                                               if k in package_to_repo}
 
         # get the version sets (they can come from file, from repository_info or conda_info)
