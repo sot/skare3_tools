@@ -69,8 +69,8 @@ def json_cache(name,
         @wraps(func)
         def wrapper(*args, update=False, **kwargs):
             s_args = signature.bind(*args, **kwargs).arguments
-            arg_str = '-'.join([f'{a}:{s_args[a]}' for a in s_args if a not in ignore_args])
-            filename = f'{name}{arg_str}.json')
+            arg_str = '-'.join(['{a}:{v}'.format(a=a, v=s_args[a]) for a in s_args if a not in ignore_args])
+            filename = '{name}{arg_str}.json'.format(name=name, arg_str=arg_str)
             # in an ideal world, filename would be completely sanitized... this world is not ideal.
             filename = filename.replace(os.sep, '-')
             filename = os.path.join(directory, filename)
@@ -93,7 +93,7 @@ def json_cache(name,
             return result
 
         def clear_cache():
-            files = os.path.join(directory, f'{name}*.json')
+            files = os.path.join(directory, '{name}*.json'.format(name=name))
             files = glob.glob(files)
             if files:
                 subprocess.run(['rm'] + files)
@@ -101,8 +101,8 @@ def json_cache(name,
 
         def rm_cache_entry(*args, s=inspect.signature(func), **kwargs):
             s_args = s.bind(*args, **kwargs).arguments
-            arg_str = '-'.join([f'{a}:{s_args[a]}' for a in s_args if a not in ignore_args])
-            filename = os.path.join(directory, f'{name}{arg_str}.json')
+            arg_str = '-'.join(['{a}:{v}'.format(a=a, v=s_args[a]) for a in s_args if a not in ignore_args])
+            filename = os.path.join(directory, '{name}{arg_str}.json'.format(name=name, arg_str=arg_str))
             if os.path.exists(filename):
                 os.remove(filename)
         setattr(wrapper, 'rm_cache_entry', rm_cache_entry)
@@ -350,9 +350,9 @@ def _get_repository_info_v4(owner_repo,
     elif since in release_tags:
         release_info = release_info[:release_tags.index(since)]
     elif since is not None:
-        raise Exception(f'Requested repository info with since={since},'
-                        f'which is not and integer and is not one of the known releases'
-                        f'({release_tags})')
+        raise Exception('Requested repository info with since={since},'.format(since=since) +
+                        'which is not and integer and is not one of the known releases' +
+                        '({release_tags})'.format(release_tags=release_tags))
 
     if len(release_info) > 1:
         last_tag = release_info[1]['release_tag']
@@ -363,8 +363,9 @@ def _get_repository_info_v4(owner_repo,
 
     # workflows are only in v4
     headers = {'Accept': 'application/vnd.github.antiope-preview+json'}
-    workflows = github.GITHUB_API_V3.get(f'/repos/{owner}/{name}/actions/workflows',
-                                         headers=headers).json()
+    workflows = github.GITHUB_API_V3.get(
+        '/repos/{owner}/{name}/actions/workflows'.format(owner=owner, name=name),
+        headers=headers).json()
     workflows = [{k: w[k] for k in ['name', 'badge_url']} for w in workflows['workflows']]
 
     repo_info = {
@@ -464,8 +465,8 @@ def get_conda_pkg_dependencies(conda_package,
     :return: dict
     """
     out = get_conda_pkg_info(conda_package, conda_channel)
-    if conda_package not in out:
-        raise Exception(f'{conda_package} not found.')
+    if not out:
+        raise Exception('{conda_package} not found.'.format(conda_package=conda_package))
     packages = out[conda_package][-1]['depends']
     packages = dict([(p.split('==')[0].strip(), p.split('==')[1].strip())
                      for p in packages])
@@ -483,7 +484,7 @@ def _get_release_commit(repository, release_name):
     if obj['type'] == 'tag':
         obj = repository.tags(tag_sha=obj['sha'])['object']
     if obj['type'] != 'commit':
-        raise Exception(f'Object is not a commit, but a {obj["type"]}')
+        raise Exception('Object is not a commit, but a {t}'.format(t=obj["type"]))
     return obj
 
 
@@ -538,9 +539,9 @@ def _get_repository_info_v3(owner_repo,
         # only releases _after_ 'since' will be included in summary
         date_since = release_dates[since]
     else:
-        raise Exception(f'Requested repository info with since={since},'
-                        f'which is not and integer and is not one of the known releases'
-                        f'({sorted(release_dates.keys())})')
+        raise Exception('Requested repository info with since={since},'.format(since=since) +
+                        'which is not and integer and is not one of the known releases' +
+                        '({releases})'.format(releases=sorted(release_dates.keys())))
 
     release_info = [{
         'release_tag': '',
@@ -603,7 +604,9 @@ def _get_repository_info_v3(owner_repo,
                               'last_commit_date': date})
 
     headers = {'Accept': 'application/vnd.github.antiope-preview+json'}
-    workflows = api.get(f'/repos/{owner}/{repo}/actions/workflows', headers=headers).json()
+    workflows = api.get(
+        '/repos/{owner}/{repo}/actions/workflows'.format(owner=owner, repo=repo),
+        headers=headers).json()
     workflows = [{k: w[k] for k in ['name', 'badge_url']} for w in workflows['workflows']]
 
     repo_info = {
@@ -726,7 +729,8 @@ def get_repositories_info(repositories=None, version='v4', update=False):
             logging.error(e)
             raise
         except Exception as e:
-            logging.warning(f'Empty ska3-matlab: {type(e)}: {e}')
+            logging.warning('Empty {pkg}: {t}: {e}'.format(pkg=pkg, t=type(e), e=e))
+
     for owner_repo in repositories:
         # print(owner_repo)
         try:
