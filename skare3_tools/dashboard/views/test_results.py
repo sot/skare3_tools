@@ -68,7 +68,7 @@ def main():
     if os.path.isdir(args.file_in):
         args.file_in = os.path.join(args.file_in, 'all_tests.json')
     if not os.path.exists(args.file_in):
-        print(f'{args.file_in} does not exist')
+        print('{filename} does not exist'.format(filename=args.file_in))
         parser.print_help()
         parser.exit(1)
     file_out = os.path.join(os.path.dirname(args.file_in), 'test_results.html')
@@ -78,7 +78,7 @@ def main():
         out.write(_render(results, config))
     if not args.b:
         file_out = os.path.abspath(file_out)
-        webbrowser.open(f'file://{file_out}', new=2)
+        webbrowser.open('file://{file_out}'.format(file_out=file_out), new=2)
 
 
 if __name__ == '__main__':
