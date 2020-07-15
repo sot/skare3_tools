@@ -8,19 +8,20 @@ except ImportError:
 
 entry_points = {
     'console_scripts': [
-        'skare3-test-results=skare3_tools.scripts.test_results:main',
         'skare3-release-check=skare3_tools.scripts.skare3_release_check:main',
-        'skare3-test-report=skare3_tools.dashboard.views.test_results:main',
-        'gdrive=skare3_tools.gdrive.scripts.gdrive:main',
+        'skare3-test-results=skare3_tools.test_results:main',
         'skare3-github-info=skare3_tools.package_info:main',
-        'skare3-dashboard=skare3_tools.dashboard.dashboard:main',
+        'skare3-changes-summary=skare3_tools.scripts.skare3_update_summary:main',
+        'skare3-test-report=skare3_tools.dashboard.views.test_results:main',
+        'skare3-dashboard=skare3_tools.dashboard.views.dashboard:main',
+        'skare3-test-dashboard=skare3_tools.dashboard.views.test_results:main',
         'skare3-bulk=skare3_tools.scripts.bulk:main',
+        'gdrive=skare3_tools.gdrive.scripts.gdrive:main',
         'skare3-add-secrets=skare3_tools.github.scripts.add_secrets:main',
         'skare3-create-issue=skare3_tools.github.scripts.create_issue:main',
         'skare3-create-pr=skare3_tools.github.scripts.create_pr:main',
         'skare3-merge-pr=skare3_tools.github.scripts.merge_pr:main',
         'skare3-release-merge-info=skare3_tools.github.scripts.release_merge_info:main',
-        'skare3-changes-summary=skare3_tools.scripts.skare3_update_summary:main'
     ]
 }
 
