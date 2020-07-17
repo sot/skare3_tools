@@ -3,7 +3,9 @@
   <head>
     <title>Ska Packages</title>
     <link href="{{ config.static_dir }}/tabulator/dist/css/semantic-ui/tabulator_semantic-ui.min.css" rel="stylesheet">
+    <link href="{{ config.static_dir }}/skare3_table.css" rel="stylesheet">
     <script type="text/javascript" src="{{ config.static_dir }}/tabulator/dist/js/tabulator.min.js"></script>
+    <script type="text/javascript" src="{{ config.static_dir }}/skare3_table.js"></script>
 
     <style type="text/css">
         body { padding: 30px; font-size: 20px }
@@ -41,7 +43,7 @@
         var color = formatterParams['color']
         var ref = formatterParams['ref']
         if (data[ref] != "" && data["flight"] != value) {
-          cell.getElement().style.backgroundColor = color;
+          set_color_class(cell.getElement(), color);
         }
         return value;
       }
@@ -52,7 +54,7 @@
         colors = formatterParams['values'];
         for(var key in colors) {
           if (key == data) {
-            cell.getElement().style.backgroundColor = colors[key];
+            set_color_class(cell.getElement(), colors[key]);
           }
         }
         var cell_value = cell.getValue();
@@ -160,10 +162,11 @@
                 // formatter: github_link_formatter,
                 // formatterParams: {pre: 'releases/tag', append_value: true},
                 formatter: col_formatter,
-                formatterParams: {ref: "flight", color: "#52B2BF"},
+                formatterParams: {ref: "flight", color: "highlight-color"},
                 cellClick:function(e, cell){
                   window.open(cell.getData()['url_release']);
                 },
+                cssClass: "skare3-selectable",
               },
               {
                 field: "flight",
@@ -177,7 +180,7 @@
                 width: 120,
                 tooltip: "Current version in ska3-matlab",
                 formatter: col_formatter,
-                formatterParams: {ref: "flight", color: "#FFA500"}
+                formatterParams: {ref: "flight", color: "error-color"},
               },
               {
                 field: "master_version",
@@ -196,10 +199,11 @@
                 cellClick:function(e, column){
                     window.location.href = "tests";
                   },
+                cssClass: "skare3-selectable",
                 formatterParams: {
                   col: "test_status",
-                  values: {PASS: "#7DCEA0", SKIP: "#FFA500", FAIL: "#CB4335"}
-                }
+                  values: {PASS: "ok-color", SKIP: "warning-color", FAIL: "error-color"}
+                },
               },
               ]
           },
@@ -212,7 +216,7 @@
             formatter: val_formatter,
             formatterParams: {
               col: "test_status",
-              values: {PASS: "#7DCEA0", SKIP: "#FFA500", FAIL: "#CB4335"}
+              values: {PASS: "ok-color", SKIP: "warning-color", FAIL: "error-color"}
             }
           },
           //{
@@ -222,7 +226,7 @@
           //  tooltip: "Conda Build Status",
           //  formatter: color_formatter,
           //  formatterParams: {
-          //    colors: {success: "#7DCEA0", failure: "#CB4335"}
+          //    colors: {success: "ok-color", failure: "error-color"}
           //  }
           //},
           {
