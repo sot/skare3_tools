@@ -5,3 +5,4 @@ google-api-python-client
 sphinx-argparse
 jinja2
 pyyaml
+gitpython
