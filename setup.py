@@ -9,6 +9,7 @@ except ImportError:
 entry_points = {
     'console_scripts': [
         'skare3-test-results=skare3_tools.scripts.test_results:main',
+        'skare3-release-check=skare3_tools.scripts.skare3_release_check:main',
         'gdrive=skare3_tools.gdrive.scripts.gdrive:main',
         'skare3-github-info=skare3_tools.github.scripts.ska_github_info:main',
         'skare3-dashboard=skare3_tools.dashboard.dashboard:main',
