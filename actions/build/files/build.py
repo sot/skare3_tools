@@ -89,6 +89,8 @@ tmp_dir = 'tmp'
 if not os.path.exists(tmp_dir):
     os.makedirs(tmp_dir)
 with tempfile.TemporaryDirectory(dir=tmp_dir) as tmp_dir:
+    subprocess.check_call(['git', 'config', '--global', 'user.email', '"aca@cfa.harvard.edu"'])
+    subprocess.check_call(['git', 'config', '--global', 'user.name', '"Aspect CI"'])
     skare3_path = os.path.join(tmp_dir, 'skare3')
     print(f'skare3_path: {skare3_path}')
     if os.path.exists(skare3_path):
