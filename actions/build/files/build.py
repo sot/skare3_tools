@@ -114,7 +114,7 @@ with tempfile.TemporaryDirectory(dir=tmp_dir) as tmp_dir:
         # committing because ska_builder.py does not accept dirty repos, but this is not ideal.
         # and setting author so git does not complain
         subprocess.check_call(['git', 'commit', '.', '-m', '"Overwriting version"',
-                               '--author', "Aspect CI <aca@cfa.harvard.edu>"],
+                               '--author', '"Aspect CI <aca@cfa.harvard.edu>"'],
                               cwd=skare3_path)
 
     # do the actual building
