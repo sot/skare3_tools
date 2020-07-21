@@ -112,6 +112,9 @@ with tempfile.TemporaryDirectory(dir=tmp_dir) as tmp_dir:
         print(f'overwriting skare3 version {skare3_old_version} -> {skare3_new_version}')
         overwrite_skare3_version(skare3_old_version, skare3_new_version, skare3_path)
         # committing because ska_builder.py does not accept dirty repos, but this is not ideal.
+        # and setting identity so git does not complain
+        subprocess.check_call(['git', 'config', 'user.email', 'you@example.com'])
+        subprocess.check_call(['git', 'config', 'user.name', 'Your Name'])
         subprocess.check_call(['git', 'commit', '.', '-m', '"Overwriting version"'],
                               cwd=skare3_path)
 

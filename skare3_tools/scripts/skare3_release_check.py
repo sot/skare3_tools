@@ -65,13 +65,18 @@ def main():
         - release exists
         - release tag exists
         - release tag is on branch named after this release
+        - if release tag ends in rc[0-9], then release must be a prerelease
         - there is a PR named after this release
         - if GITHUB_SHA is defined, it must be the release commit.
         """
         if 'response' in release and not release['response']['ok']:
             fail.append(f'Release {tag_name} does not exist')
-        elif release['target_commitish'] != version:
-            fail.append(f'Release {tag_name} not on branch {version}')
+        else:
+            if release['target_commitish'] != version:
+                fail.append(f'Release {tag_name} not on branch {version}')
+            if re.search('rc[0-9]+$', tag_name) and not release["prerelease"]:
+                fail.append(f'Release {tag_name} is marked as a candidate, '
+                            f'but the release is not a prerelease')
         if 'response' in tag and not tag['response']['ok']:
             fail.append(f'Tag {tag_name} does not exist')
         # are these always true? release from master? release without open PR?
