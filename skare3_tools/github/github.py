@@ -103,14 +103,10 @@ def init(user=None, password=None, token=None, force=True):
         elif 'GITHUB_TOKEN' in os.environ:
             api = GithubAPI(token=os.environ['GITHUB_TOKEN'])
         else:
-            _logger.warning('Using basic auth, which is deprecated')
             if user is None:
                 if 'GITHUB_USER' in os.environ:
                     _logger.debug('Github user from environment')
                     user = os.environ['GITHUB_USER']
-                else:
-                    _logger.debug('Github user from prompt')
-                    user = input('Username: ')
             else:
                 _logger.debug('Github user from arguments')
             if password is None:
@@ -118,15 +114,23 @@ def init(user=None, password=None, token=None, force=True):
                     password = os.environ['GITHUB_PASSWORD']
                     _logger.debug('Github password from environment')
                 elif keyring:
-                    password = keyring.get_password("skare3-github", user)
-                    _logger.debug('Github user from keyring')
-                if password is None:
-                    password = getpass.getpass()
-                    _logger.debug('Github user from prompt')
+                    try:
+                        password = keyring.get_password("skare3-github", user)
+                        _logger.debug('Github user from keyring')
+                    except RuntimeError as e:
+                        import re
+                        if re.match('No recommended backend was available', str(e)):
+                            _logger.debug('keyring backend failed')
+            if user and password:
+                _logger.warning('Using basic auth, which is deprecated')
             api = GithubAPI(user=user, password=password)
         r = api.get('')
         if r.status_code == 401:
-            raise AuthException(r.json()['message'])
+            msg = r.json()['message'] + '. '
+            msg += ('Github token should be given as argument '
+                    'or set in either GITHUB_TOKEN or GITHUB_API_TOKEN '
+                    'environment variables')
+            raise AuthException(msg)
         GITHUB_API = api
         r = GITHUB_API('/user')
         user = r.json()['login']

@@ -266,8 +266,10 @@ def init(token=None, force=True):
         elif 'GITHUB_TOKEN' in os.environ:
             api = GithubAPI(token=os.environ['GITHUB_TOKEN'])
         else:
-            raise GithubException('Github token needs to be given as argument '
-                                  'or set in GITHUB_TOKEN environment variable')
+            raise GithubException('Bad credentials. '
+                                  'Github token needs to be given as argument '
+                                  'or set in either GITHUB_TOKEN or GITHUB_API_TOKEN '
+                                  'environment variables')
         response = api('{viewer {login}}')
         GITHUB_API = api
         user = response['data']['viewer']['login']
