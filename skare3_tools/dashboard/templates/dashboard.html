@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ska Packages</title>
+    <link href="{{ config.static_dir }}/tabulator/dist/css/semantic-ui/tabulator_semantic-ui.min.css" rel="stylesheet">
+    <script type="text/javascript" src="{{ config.static_dir }}/tabulator/dist/js/tabulator.min.js"></script>
+
+    <style type="text/css">
+        body { padding: 30px; font-size: 20px }
+
+        #ska_packages_table {
+          font-size: large;
+          border: 1px solid #333;
+          border-radius: 10px;
+        }
+    </style>
+  </head>
+  <body>
+    <h2>Ska Packages</h2>
+    <p>
+    Date: {{info.time}} </br>
+    </p>
+
+    <div id="ska_packages_table" style="width:auto"></div>
+    <script type="text/javascript">
+
+      function color_formatter(cell, formatterParams){
+        var value = cell.getValue();
+        var colors = formatterParams['colors']
+        for(var key in colors) {
+          if (key == value) {
+            cell.getElement().style.backgroundColor = colors[key];
+          }
+        }
+        return value;
+      }
+
+      function col_formatter(cell, formatterParams){
+        var data = cell.getRow().getData();
+        var value = cell.getValue();
+        var color = formatterParams['color']
+        var ref = formatterParams['ref']
+        if (data[ref] != "" && data["flight"] != value) {
+          cell.getElement().style.backgroundColor = color;
+        }
+        return value;
+      }
+
+      function val_formatter(cell, formatterParams){
+        var col = formatterParams['col'];
+        var data = cell.getRow().getData()[col];
+        colors = formatterParams['values'];
+        for(var key in colors) {
+          if (key == data) {
+            cell.getElement().style.backgroundColor = colors[key];
+          }
+        }
+        var cell_value = cell.getValue();
+        return cell_value;
+      }
+
+      function github_link_formatter(cell, formatterParams){
+        var data = cell.getRow().getData();
+        var value = cell.getValue();
+        var url = `https://github.com/${data["owner"]}/${data["pkg"]}`;
+        if ("pre" in formatterParams && formatterParams["pre"] != "") {
+          url = url + `/${formatterParams["pre"]}`;
+        }
+        if ("append_value" in formatterParams && formatterParams["append_value"]) {
+          url = url + `/${value}`;
+        }
+        return `<a href='${url}'>${value}</a>`;
+      }
+
+      function column_sorter(a, b, aRow, bRow, column, dir, sorterParams) {
+        col = sorterParams['col']
+        return aRow.getData()[col] - bRow.getData()[col];
+      }
+
+      var table = new Tabulator("#ska_packages_table", {
+        dataTree:true,
+        height: "auto",
+        responsiveLayout:"hide",
+        //layout:"fitDataFill",
+        layout:"fitColumns",
+        // persistence:{
+        //   sort:true, //Enable sort persistence
+	//   columns:true, //Enable column layout persistence
+        // },
+        columns:[
+          {
+            field: "id",
+            title: "Full Name",
+            visible: false
+          },
+          {
+            field: "pkg",
+            title: "Package",
+            width:240,
+            formatter: github_link_formatter
+          },
+          {
+            field: "owner",
+            title: "Owner",
+            headerVertical:true,
+            visible: false,
+            width:50,
+            hozAlign:"center",
+          },
+          {
+            field: "branches",
+            title: "Branches",
+            formatter: github_link_formatter,
+            formatterParams: {pre: 'branches'},
+            tooltip: "Number of branches",
+            headerVertical:true,
+            visible: false,
+            width:20,
+            hozAlign:"center",
+          },
+          {
+            field: "issues",
+            title: "Issues",
+            formatter: github_link_formatter,
+            formatterParams: {pre: 'issues'},
+            tooltip: "Number of open issues",
+            headerVertical:true,
+            width:60,
+            hozAlign:"center",
+          },
+          {
+            field: "pr",
+            title: "PRs",
+            formatter: github_link_formatter,
+            formatterParams: {pre: 'pulls'},
+            tooltip: "Number of open pull requests",
+            headerVertical:true,
+            visible: false,
+            width:20,
+            hozAlign:"center",
+          },
+          {
+            field: "commits",
+            title: "commits",
+            tooltip: "Commits since last release",
+            headerVertical:true,
+            visible: false,
+            width:20,
+            hozAlign:"center",
+
+          },
+          {
+            title: 'Versions',
+            columns: [
+              {
+                field: "tag",
+                title: "Release",
+                width: 120,
+                tooltip: "Latest release",
+                // formatter: github_link_formatter,
+                // formatterParams: {pre: 'releases/tag', append_value: true},
+                formatter: col_formatter,
+                formatterParams: {ref: "flight", color: "#52B2BF"},
+                cellClick:function(e, cell){
+                  window.open(cell.getData()['url_release']);
+                },
+              },
+              {
+                field: "flight",
+                title: "Flight",
+                width: 120,
+                tooltip: "Current version in ska3-flight",
+              },
+              {
+                field: "matlab",
+                title: "Matlab",
+                width: 120,
+                tooltip: "Current version in ska3-matlab",
+                formatter: col_formatter,
+                formatterParams: {ref: "flight", color: "#FFA500"}
+              },
+              {
+                field: "master_version",
+                title: "Master",
+                width: 220,
+                visible: false,
+                tooltip: "Current version in ska3-masters",
+              },
+              {
+                field: "test_version",
+                title: "Test",
+                width: 220,
+                tooltip: "Latest version in ska3-flight testr",
+                visible: true,
+                formatter: val_formatter,
+                cellClick:function(e, column){
+                    window.location.href = "tests";
+                  },
+                formatterParams: {
+                  col: "test_status",
+                  values: {PASS: "#7DCEA0", SKIP: "#FFA500", FAIL: "#CB4335"}
+                }
+              },
+              ]
+          },
+          {
+            field: "test_status",
+            title: "Status",
+            width: 120,
+            visible: false,
+            tooltip: "Result from ska3-flight testr",
+            formatter: val_formatter,
+            formatterParams: {
+              col: "test_status",
+              values: {PASS: "#7DCEA0", SKIP: "#FFA500", FAIL: "#CB4335"}
+            }
+          },
+          //{
+          //  field: "conda_build",
+          //  title: "Build",
+          //  width: 120,
+          //  tooltip: "Conda Build Status",
+          //  formatter: color_formatter,
+          //  formatterParams: {
+          //    colors: {success: "#7DCEA0", failure: "#CB4335"}
+          //  }
+          //},
+          {
+            field: "date",
+            title: "Last Release Date",
+            width: 220,
+            tooltip: "Date of the latest release",
+          },
+          {
+            field: "merge_info",
+            title: "Merges since Release",
+            tooltip: "Merges since last release",
+            formatter:"html",
+          },
+          {
+            field: "pr_info",
+            title: "Open Pull Requests",
+            tooltip: "Open Pull Requests",
+            formatter:"html",
+          },
+          {
+            field: "build_status",
+            title: "Conda Package",
+            width: 180,
+            tooltip: "Conda Package Building",
+            formatter:"html"
+          },
+        ],
+
+      });
+
+      var tableData = [
+        {% for pkg in info.packages %}
+        {
+          id: "{{ pkg.owner }}/{{ pkg.name }}",
+          pkg: "{{ pkg.name }}",
+          owner: "{{ pkg.owner }}",
+          branches: {{ pkg.branches }},
+          issues: {{ pkg.issues }},
+          pr: {{ pkg.n_pull_requests }},
+          tag: "{{ pkg.last_tag }}",
+          flight: "{{ pkg.flight }}",
+          matlab: "{{ pkg.matlab }}",
+          master_version: "{{ pkg.master_version }}",
+          test_version: "{{ pkg.test_version }}",
+          test_status: "{{ pkg.test_status }}",
+          date: "{{ pkg.last_tag_date }}",
+          commits: {{ pkg.commits }},
+          merges: {{ pkg.merges }},
+          merge_info: "{% for merge in pkg.merge_info %} PR #{{ merge.pr_number }} <a href='https://github.com/{{ pkg.owner }}/{{ pkg.name }}/pull/{{ merge.pr_number }}' target='_blank'> {{ merge.title }} </a> <br/> {% endfor %}",
+          build_status: "<img alt='' src='https://github.com/{{ pkg.owner }}/{{ pkg.name }}/workflows/Conda%20build/badge.svg'>",
+          pr_info: "{% for pr in pkg.pull_requests %} {{ pr.last_commit_date }} - PR #{{ pr.number }} <a href='{{ pr.url }}' target='_blank'> {{ pr.title }} </a> <br/> {% endfor %}",
+          formatterParams: {owner: 'sot'},
+          conda_build: "",
+          url_release: "https://github.com/{{ pkg.owner }}/{{ pkg.name }}/releases",
+        },
+        {% endfor %}
+      ];
+
+      table.setData(tableData);
+
+      //function fetch_workflow_id(pkg) {
+      //  url = "https://api.github.com/repos/" + pkg + "/actions/workflows"
+      //  return fetch(url).then(response => response.json()).then(data=>workflow_id(data, "Conda build"));
+      //};
+
+      //function workflow_id(workflows, name) {
+      //  let l = workflows["workflows"].length;
+      //  for (let i = 0; i < l; i++) {
+      //    return workflows["workflows"][i]['id'];
+      //  }
+      //}
+
+      //function last_workflow(pkg, id) {
+      //  url = "https://api.github.com/repos/" + pkg + "/actions/workflows/" + id + "/runs"
+      //  return fetch(url).then(response => response.json()).then(data => data['workflow_runs'][0]);
+      //}
+
+      //for (let i = 0; i < tableData.length; i++) {
+      //  console.log(tableData[i]['id']);
+      //  let repo = tableData[i]['id']
+      //  fetch_workflow_id(repo)
+      //    .then(workflow_id => last_workflow(repo, workflow_id))
+      //    .then(workflow => table.updateData([{id: repo, conda_build:workflow['conclusion']}]));
+      //}
+
+    </script>
+  </body>
+</html>

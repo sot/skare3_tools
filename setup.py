@@ -10,6 +10,7 @@ entry_points = {
     'console_scripts': [
         'skare3-test-results=skare3_tools.scripts.test_results:main',
         'skare3-release-check=skare3_tools.scripts.skare3_release_check:main',
+        'skare3-test-report=skare3_tools.dashboard.views.test_results:main',
         'gdrive=skare3_tools.gdrive.scripts.gdrive:main',
         'skare3-github-info=skare3_tools.package_info:main',
         'skare3-dashboard=skare3_tools.dashboard.dashboard:main',
@@ -34,11 +35,14 @@ setup(name='skare3_tools',
                 'skare3_tools.gdrive.scripts',
                 'skare3_tools.github.scripts',
                 'skare3_tools.dashboard',
+                'skare3_tools.dashboard.views',
                 'skare3_tools.tests'],
       package_data={'skare3_tools.tests': ['data/*.txt', 'data/*.dat',
                                            'data/*.fits.gz', 'data/*.pkl'],
                     'skare3_tools.gdrive': ['*.pkl'],
-                    'skare3_tools.dashboard': ['static/*', 'templates/*']
+                    'skare3_tools.dashboard': ['static/*', 'static/*/*',
+                                               'static/*/*/*', 'static/*/*/*/*',
+                                               'static/*/*/*/*/*', 'templates/*']
                     },
       license=("New BSD/3-clause BSD License\nCopyright (c) 2019"
                " Smithsonian Astrophysical Observatory\nAll rights reserved."),
