@@ -1,9 +1,11 @@
-skare3-github-info -c /home/jgonzale/.chandra_xray_github -o /proj/sot/ska/jgonzalez/skare3_repository_info.json
-skare3-dashboard -i /proj/sot/ska/jgonzalez/skare3_repository_info.json -t /proj/sot/ska/www/ASPECT_ICXC/skare3/testr/logs/last/test_results.json -o /proj/sot/ska/jgonzalez/index.html
-/proj/sot/ska/jgonzalez/git/skare3_tools/skare3_tools/dashboard/test_results.py -i /proj/sot/ska/www/ASPECT_ICXC/skare3/testr/logs/last/test_results.json -o /proj/sot/ska/jgonzalez/test_results.html
+source $HOME/.ci-auth
+last=`readlink -f /proj/sot/ska/www/ASPECT_ICXC/skare3/testr/logs/last`
+last=$(basename -- $last)
+skare3-dashboard
+skare3-test-dashboard -b /proj/sot/ska/www/ASPECT_ICXC/skare3/testr/logs/${last} --log-dir https://icxc.cfa.harvard.edu/aspect/skare3/testr/logs/${last} --static-dir /mta/ASPECT/skare3/dashboard/static
 
-mv /proj/sot/ska/jgonzalez/index.html /proj/sot/ska/www/ASPECT/skare3/dashboard
-mv /proj/sot/ska/jgonzalez/test_results.html /proj/sot/ska/www/ASPECT/skare3/dashboard
+mv index.html /proj/sot/ska/www/ASPECT/skare3/dashboard/
+mv /proj/sot/ska/www/ASPECT_ICXC/skare3/testr/logs/last/test_results.html /proj/sot/ska/www/ASPECT/skare3/dashboard/tests/index.html
 
 echo files copied to /proj/sot/ska/www/ASPECT/skare3/dashboard
 echo dashboard at https://cxc.cfa.harvard.edu/mta/ASPECT/skare3/dashboard/
