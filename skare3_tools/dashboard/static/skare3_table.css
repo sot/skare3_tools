@@ -1,0 +1,51 @@
+body { padding: 30px; font-size: 20px }
+
+#ska_packages_table {
+  font-size: large;
+  border: 1px solid #333;
+  border-radius: 10px;
+}
+
+.tabulator-cell {
+  cursor: default;
+}
+
+.tabulator .tabulator-row.tabulator-selectable .error-color {
+  background-color: rgb(223, 43, 35);
+}
+
+.tabulator .tabulator-row.tabulator-selectable:hover .error-color {
+  background-color: rgb(168, 43, 35);
+}
+
+.tabulator .tabulator-row.tabulator-selectable .warning-color {
+  background-color: rgb(255, 173, 51);
+}
+
+.tabulator .tabulator-row.tabulator-selectable:hover .warning-color {
+  background-color: rgb(255, 153, 0);
+}
+
+.tabulator .tabulator-row.tabulator-selectable .ok-color {
+  background-color: rgb(152, 230, 152);
+}
+
+.tabulator .tabulator-row.tabulator-selectable:hover .ok-color {
+  background-color: rgb(111, 220, 111);
+}
+
+.tabulator .tabulator-row.tabulator-selectable .highlight-color {
+  background-color: rgb(102, 179, 255);
+}
+
+.tabulator .tabulator-row.tabulator-selectable:hover .highlight-color {
+  background-color: rgb(51, 153, 255);
+}
+
+.skare3-selectable {
+  cursor: pointer;
+}
+
+.skare3-not-selectable {
+  cursor: default;
+}

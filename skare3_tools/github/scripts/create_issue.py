@@ -18,7 +18,7 @@ def parser():
     parse.add_argument('--title', help='Issue Title. Ignored if --latest-release is given')
     parse.add_argument('--body', help='Issue Description. Ignored if --latest-release is given')
     parse.add_argument('--label', default=[], action='append')
-    parse.add_argument('--user', required=False)
+    parser.add_argument('--token', '-t', 'Github token, or name of file that contains token')
     return parse
 
 
@@ -31,7 +31,7 @@ def ok_or_exit(response, msg):
 
 def main():
     args = parser().parse_args()
-    github.init(user=args.user)
+    github.init(token=args.token)
     if args.latest_release:
         release = github.Repository(args.latest_release) .releases(latest=True)
         ok_or_exit(release, f'Failed to create issue after latest release of {args.latest_release}')

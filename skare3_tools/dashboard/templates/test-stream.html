@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ska Test Report</title>
+    <link href="/static/tabulator/dist/css/semantic-ui/tabulator_semantic-ui.min.css" rel="stylesheet">
+    <script type="text/javascript" src="/static/tabulator/dist/js/tabulator.min.js"></script>
+
+    <style type="text/css">
+        body { padding: 30px; font-size: 20px }
+
+        #ska_packages_table {
+          font-size: large;
+          border: 1px solid #333;
+          border-radius: 10px;
+        }
+    </style>
+  </head>
+  <body>
+    <h2>Ska Test Report</h2>
+
+    <div id="ska_packages_table" style="width:auto"></div>
+    <script type="text/javascript">
+
+      function test_status_formatter(cell, formatterParams){
+        var data = cell.getRow().getData();
+        var value = cell.getValue();
+        if (value == "pass") {
+          cell.getElement().style.backgroundColor = "#7DCEA0";
+        }
+        else if (value == "skipped") {
+          cell.getElement().style.backgroundColor = "#FCF3CF";
+        }
+        else if (value == "fail") {
+          cell.getElement().style.backgroundColor = "#CB4335";
+        }
+        return value;
+      }
+
+      var table = new Tabulator("#ska_packages_table", {
+        dataTree:true,
+        height: "800",
+        //responsiveLayout:"hide",
+        layout:"fitColumns",
+        persistenceID:"view-name",
+        dataTreeStartExpanded:false,
+        columns:[
+          {
+            field: "name",
+            title: "Name",
+          },
+          {%- for col in data.columns%}
+          {
+            field: "{{ col }}",
+            title: "{{ col }}",
+            formatter: test_status_formatter,
+          },
+          {%- endfor %}
+        ],
+
+      });
+
+      var tableData = [
+        {%- for test_suite in data.test_suites%}
+        {{ '{' }}
+          {{ 'name' }}: "{{ test_suite.name }}",
+          {{ 'status' }}: "{{ test_suite.status }}",
+          {{ '_children' }}: [
+          {%- for test in test_suite.test_cases %}
+            {{ '{' }}
+            {%- for col in test %}
+            "{{- col[0] }}": "{{ col[1] }}",
+            {%- endfor %}
+            {{- '},' }}
+          {%- endfor %} ]
+        {{ '},' }}
+        {%- endfor %}
+      ];
+
+      table.setData(tableData);
+
+    </script>
+  </body>
+</html>

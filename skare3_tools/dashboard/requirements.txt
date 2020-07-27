@@ -1,0 +1,4 @@
+flask
+setuptools_scm
+ipython
+flask_restful

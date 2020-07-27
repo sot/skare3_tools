@@ -17,68 +17,6 @@ _logger = logging.getLogger('github')
 GITHUB_API = None
 
 
-# The following is a general query to get information about a repository
-# To write new queries, the best is to go to https://developer.github.com/v4/explorer/
-# and experiment a bit
-REPO_QUERY = """
-{
-  repository(name: "{{ name }}", owner: "{{ owner }}") {
-    name
-    owner {
-      login
-    }
-    refs(refPrefix: "refs/", first: 100) {
-      totalCount
-      nodes {
-        name
-        associatedPullRequests(first: 100) {
-          nodes {
-            number
-            title
-            headRefName
-            baseRefName
-            state
-            mergeCommit {
-              oid
-              message
-            }
-          }
-          pageInfo {
-            hasNextPage
-            endCursor
-          }
-        }
-      }
-      pageInfo {
-        endCursor
-        hasNextPage
-      }
-    }
-    releases(first: 100) {
-      totalCount
-      nodes {
-        name
-        tagName
-        createdAt
-        publishedAt
-        isPrerelease
-        isDraft
-        id
-        url
-        tag {
-          id
-        }
-      }
-      pageInfo {
-        endCursor
-        hasNextPage
-      }
-    }
-  }
-}
-
-"""
-
 REPO_ISSUES_QUERY = """
 {
   repository(name: "{{ name }}", owner: "{{ owner }}") {
@@ -166,28 +104,176 @@ RATE_LIMIT_QUERY = """
 }
 """
 
-def init(token=None):
+# The following is a general query to get information about a repository
+# To write new queries, the best is to go to https://developer.github.com/v4/explorer/
+# and experiment a bit
+REPO_QUERY = """
+{
+  repository(name: "{{ name }}", owner: "{{ owner }}") {
+    name
+    owner {
+      login
+    }
+    pushedAt
+    updatedAt
+    refs(refPrefix: "refs/", first: 100) {
+      totalCount
+      nodes {
+        name
+        associatedPullRequests(first: 100) {
+          nodes {
+            number
+            title
+            headRefName
+            baseRefName
+            state
+            mergeCommit {
+              oid
+              message
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+    releases(first: 100) {
+      totalCount
+      nodes {
+        name
+        tagName
+        createdAt
+        publishedAt
+        isPrerelease
+        isDraft
+        id
+        url
+        tag {
+          target {
+            ... on Commit {
+              oid
+            }
+            ... on Tag {
+              oid
+              target {
+                ... on Commit {
+                  oid
+                }
+                ... on Tag {
+                  oid
+                  target {
+                    ... on Commit {
+                      oid
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+    pullRequests(last: 100) {
+      nodes {
+        number
+        title
+        url
+        commits(last: 100) {
+          totalCount
+          nodes {
+            commit {
+              committedDate
+              pushedDate
+              message
+            }
+          }
+        }
+        baseRefName
+        headRefName
+        state
+      }
+      pageInfo {
+        hasPreviousPage
+        hasNextPage
+        startCursor
+        endCursor
+      }
+    }
+    issues(first: 100, states: OPEN) {
+      nodes {
+        author {
+          login
+        }
+        closed
+        number
+        state
+        title
+        milestone {
+          title
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+    ref(qualifiedName: "master") {
+      target {
+        ... on Commit {
+          history(first: 100) {
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+            nodes {
+              oid
+              message
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+"""
+
+
+def init(token=None, force=True):
     """
     Initialize the Github API.
 
     :param token: str
+    :param force: bool
     :return: GithubAPI
     """
     global GITHUB_API
-    if GITHUB_API is None:
+    if GITHUB_API is None or force:
         if token is not None:
-            api = GithubAPI(token=token)
+            api = GithubAPI(token=os.path.expandvars(token))
         elif 'GITHUB_API_TOKEN' in os.environ:
             api = GithubAPI(token=os.environ['GITHUB_API_TOKEN'])
         elif 'GITHUB_TOKEN' in os.environ:
             api = GithubAPI(token=os.environ['GITHUB_TOKEN'])
         else:
-            raise GithubException('Github token needs to be given as argument '
-                                  'or set in GITHUB_TOKEN environment variable')
+            raise GithubException('Bad credentials. '
+                                  'Github token needs to be given as argument '
+                                  'or set in either GITHUB_TOKEN or GITHUB_API_TOKEN '
+                                  'environment variables')
         response = api('{viewer {login}}')
         GITHUB_API = api
         user = response['data']['viewer']['login']
-        _logger.info(f'Github interface initialized (user={user})')
+        _logger.debug(f'Github interface initialized (user={user})')
     return GITHUB_API
 
 

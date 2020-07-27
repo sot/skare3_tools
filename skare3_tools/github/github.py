@@ -11,12 +11,12 @@ Example Usage
 .. code-block:: python
 
       >>> from skare3_tools import github
-      >>> github.init(user='javierggt')
+      >>> github.init(token='c7hvg6pqi3fhqwv0wvlgp4mk9agwbqk1gxc331iz')
       Password:
       >>> repo = github.Repository('sot/Chandra.Maneuver')
       >>> releases = repo.releases()
       >>> for release in releases:
-      ...:     print(release['name'])
+      ...     print(release['name'])
       Release 3.7.2
       Release 3.7.1 with one test fix for 32 bit platform compat.
       Version 3.7
@@ -28,7 +28,7 @@ Example Usage
       ...                                 body='The description goes here')
       >>> prs = repo.pull_requests()
       >>> for pr in prs:
-      ...:    print(f"PR #{pr['number']}: {pr['title']}")
+      ...     print(f"PR #{pr['number']}: {pr['title']}")
       PR #1: Make namespace package native
 
 It is also possible to use the API directly, in case there is no appropriate high-level method:
@@ -36,7 +36,7 @@ It is also possible to use the API directly, in case there is no appropriate hig
 .. code-block:: python
 
       >>> from skare3_tools import github
-      >>> api = github.init(user='javierggt')
+      >>> api = github.init(token='c7hvg6pqi3fhqwv0wvlgp4mk9agwbqk1gxc331iz')
       >>> last_tag = api.get('/repos/sot/Chandra.Maneuver/releases/latest').json()
       >>> last_tag['tag_name']
       '3.7.2'
@@ -67,10 +67,15 @@ _logger = logging.getLogger('github')
 GITHUB_API = None
 
 
-def init(user=None, password=None, token=None):
+def init(user=None, password=None, token=None, force=True):
     """
     Initialize the Github API.
 
+    If not token is provided, it tries the following:
+    - look for GITHUB_API_TOKEN environmental variable
+    - look for GITHUB_TOKEN environmental variable
+
+    If that fails, try with user/password (deprecated)
     If no user name is provided, it tries the following:
 
     - look for GITHUB_USER environmental variable
@@ -83,27 +88,25 @@ def init(user=None, password=None, token=None):
 
     If user name or password can not be determined, an AuthException is raised.
 
-    :param user: str
-    :param password: str
+    :param user: str (deprecated)
+    :param password: str (deprecated)
+    :param token: str
+    :param force: bool
     :return: GithubAPI
     """
     global GITHUB_API
-    if GITHUB_API is None:
+    if GITHUB_API is None or force:
         if token is not None:
-            api = GithubAPI(token=token)
+            api = GithubAPI(token=os.path.expandvars(token))
         elif 'GITHUB_API_TOKEN' in os.environ:
             api = GithubAPI(token=os.environ['GITHUB_API_TOKEN'])
         elif 'GITHUB_TOKEN' in os.environ:
             api = GithubAPI(token=os.environ['GITHUB_TOKEN'])
         else:
-            _logger.warning('Using basic auth, which is deprecated')
             if user is None:
                 if 'GITHUB_USER' in os.environ:
                     _logger.debug('Github user from environment')
                     user = os.environ['GITHUB_USER']
-                else:
-                    _logger.debug('Github user from prompt')
-                    user = input('Username: ')
             else:
                 _logger.debug('Github user from arguments')
             if password is None:
@@ -111,17 +114,27 @@ def init(user=None, password=None, token=None):
                     password = os.environ['GITHUB_PASSWORD']
                     _logger.debug('Github password from environment')
                 elif keyring:
-                    password = keyring.get_password("skare3-github", user)
-                    _logger.debug('Github user from keyring')
-                if password is None:
-                    password = getpass.getpass()
-                    _logger.debug('Github user from prompt')
+                    try:
+                        password = keyring.get_password("skare3-github", user)
+                        _logger.debug('Github user from keyring')
+                    except RuntimeError as e:
+                        import re
+                        if re.match('No recommended backend was available', str(e)):
+                            _logger.debug('keyring backend failed')
+            if user and password:
+                _logger.warning('Using basic auth, which is deprecated')
             api = GithubAPI(user=user, password=password)
         r = api.get('')
         if r.status_code == 401:
-            raise AuthException(r.json()['message'])
+            msg = r.json()['message'] + '. '
+            msg += ('Github token should be given as argument '
+                    'or set in either GITHUB_TOKEN or GITHUB_API_TOKEN '
+                    'environment variables')
+            raise AuthException(msg)
         GITHUB_API = api
-        _logger.info(f'Github interface initialized (user={user}')
+        r = GITHUB_API('/user')
+        user = r.json()['login']
+        _logger.debug(f'Github interface initialized (user={user})')
     return GITHUB_API
 
 

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ska Test Report</title>
+    <link href="{{ config.static_dir }}/tabulator/dist/css/semantic-ui/tabulator_semantic-ui.min.css" rel="stylesheet">
+    <link href="{{ config.static_dir }}/skare3_table.css" rel="stylesheet">
+    <script type="text/javascript" src="{{ config.static_dir }}/tabulator/dist/js/tabulator.min.js"></script>
+    <script type="text/javascript" src="{{ config.static_dir }}/skare3_table.js"></script>
+
+    <style type="text/css">
+        body { padding: 30px; font-size: 20px }
+
+        #ska_packages_table {
+          font-size: large;
+          border: 1px solid #333;
+          border-radius: 10px;
+        }
+    </style>
+  </head>
+  <body>
+    <h2>Ska Test Report</h2>
+
+    <table>
+      <tr> <td> Date: </td> <td> {{ data.run_info.date }} </td> </tr>
+      <tr> <td> Hostname: </td> <td> {{ data.run_info.hostname }} </td> </tr>
+      <tr> <td> System: </td> <td> {{ data.run_info.system }} </td> </tr>
+      <tr> <td> Architecture: </td> <td> {{ data.run_info.architecture }} </td> </tr>
+      <tr> <td> ska version: </td> <td> {{ data.run_info.ska_version }} </td> </tr>
+      <tr> <td> tags: </td> <td> {%- for t in data.run_info.tags%} {{ t }} {% endfor %}</td> </tr>
+    </table>
+
+    <div id="ska_packages_table" style="width:auto"></div>
+    <script type="text/javascript">
+      function show_log(e, row) {
+        if (row.getData()['log'] != '') {
+          window.open("{{ config.log_dir }}/" + row.getData()['log']);
+        }
+      }
+
+      function test_status_formatter(cell, formatterParams){
+        var data = cell.getRow().getData();
+        var value = cell.getValue();
+        if (value == "pass") {
+          set_color_class(cell.getElement(), "ok-color");
+        }
+        else if (value == "skipped") {
+          set_color_class(cell.getElement(), "warning-color");
+        }
+        else if (value == "fail") {
+          set_color_class(cell.getElement(), "error-color");
+        }
+        return value;
+      }
+
+      function count_formatter(cell, formatterParams){
+        var data = cell.getRow().getData();
+        var value = cell.getValue();
+        if (value > 0) {
+          set_color_class(cell.getElement(), formatterParams["color"]);
+        }
+        return value;
+      }
+
+      var table = new Tabulator("#ska_packages_table", {
+        rowClick:show_log,
+        dataTree:true,
+        height: "1000",
+        //responsiveLayout:"hide",
+        layout:"fitColumns",
+        persistenceID:"view-name",
+        columns:[
+          {
+            field: "name",
+            title: "Name",
+            formatter:"html"
+          },
+          {
+            field: "pass",
+            title: "Passed",
+          },
+          {
+            field: "skip",
+            title: "Skipped",
+            formatter: count_formatter,
+            formatterParams:{color:["warning-color"]},
+          },
+          {
+            field: "fail",
+            title: "Failed",
+            formatter: count_formatter,
+            formatterParams:{color:["error-color"]},
+          },
+          {
+            field: "status",
+            title: "Status",
+            formatter: test_status_formatter,
+          },
+          {
+            field: "message",
+            title: "",
+          },
+        ],
+
+      });
+
+      var tableData = [
+        {%- for test_suite in data.test_suites%}
+        {{ '{' }}
+          {{ 'name' }}: " <a href='{{ config.log_dir }}/{{ test_suite.log }}'>{{ test_suite.name }} </a>",
+          {{ 'pass' }}: {{ test_suite.pass }},
+          {{ 'skip' }}: {{ test_suite.skip }},
+          {{ 'fail' }}: {{ test_suite.fail }},
+          {{ 'status' }}: "{{ test_suite.status }}",
+          {{- 'log' }}: "{{ test_suite.log }}",
+          {{ '_children' }}: [
+          {%- for test in test_suite.test_cases %}
+            {{ '{' }}
+            {{- 'name' }}: " <a href='{{ test.log }}'>{{ test.name }} </a>",
+            {{- 'status' }}: "{{ test.status }}",
+            {{- 'log' }}: "{{ test.log }}",
+            {{- 'message' }}: "{{ test.message }}",
+            {{- '},' }}
+          {%- endfor %} ]
+        {{ '},' }}
+        {%- endfor %}
+      ];
+
+      table.setData(tableData);
+
+    </script>
+  </body>
+</html>

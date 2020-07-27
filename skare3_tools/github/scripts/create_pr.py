@@ -16,13 +16,13 @@ def parser():
     parse.add_argument('--head', help='branch you are merging from', required=True)
     parse.add_argument('--base', help='branch you are merging to', required=True)
     parse.add_argument('--body', required=True)
-    parse.add_argument('--user', required=False)
+    parser.add_argument('--token', '-t', 'Github token, or name of file that contains token')
     return parse
 
 
 def main():
     args = parser().parse_args()
-    github.init(user=args.user)
+    github.init(token=args.token)
     repository = github.Repository(args.repository)
     pr = repository.pull_requests.create(title=args.title,
                                          head=args.head,
