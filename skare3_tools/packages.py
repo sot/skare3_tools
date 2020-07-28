@@ -142,8 +142,9 @@ def _conda_package_list(update=True):
             'owner': None
         }
         if 'about' in info and 'home' in info['about']:
-            home = info['about']['home']
-            matches = [re.match('git@github.com:(?P<org>[^/]+)/(?P<repo>\S+)', home),
+            home = info['about']['home'].strip()
+            matches = [re.match('git@github.com:(?P<org>[^/]+)/(?P<repo>\S+)\.git$', home),
+                       re.match('git@github.com:(?P<org>[^/]+)/(?P<repo>\S+)$', home),
                        re.match('https?://github.com/(?P<org>[^/]+)/(?P<repo>[^/]+)/?', home)]
             m = {}
             for m in matches:
