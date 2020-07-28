@@ -121,6 +121,7 @@ def parser():
     parse.add_argument('--final-version', default='last_tag',
                        help='Either a string or a json file with dictionary of package/versions.')
     parse.add_argument('--meta-package', default='ska3-flight')
+    parse.add_argument('--conda-channel', default='test')
     parse.add_argument('--token', help='Github token, or name of file that contains token')
     return parse
 
@@ -159,7 +160,8 @@ def main():
 
         repository_info = packages.get_repositories_info()
 
-        conda_info = packages.get_conda_pkg_info(args.meta_package)
+        conda_info = packages.get_conda_pkg_info(args.meta_package,
+                                                 conda_channel=args.conda_channel)
         conda_info = collections.OrderedDict([(i['version'], i) for i in conda_info[args.meta_package]])
 
         # change names in conda_info to repository names
