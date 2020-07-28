@@ -752,9 +752,6 @@ def get_parser():
     parser.add_argument('-o', default='repository_info.json',
                         help='Output file (default=repository_info.json)')
     parser.add_argument('--token', help='Github token, or name of file that contains token')
-    parser.add_argument('--v4', action='store_true', help='Use Github API v4')
-    parser.add_argument('--no-conda', dest='conda', action='store_false',
-                        help='Do not get conda package info')
     return parser
 
 
@@ -763,7 +760,7 @@ def main():
 
     github.init(token=args.token)
 
-    info = get_repositories_info(v4=args.v4, conda=args.conda)
+    info = get_repositories_info()
     if info:
         with open(args.o, 'w') as f:
             json.dump(info, f, indent=2)

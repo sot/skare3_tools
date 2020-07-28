@@ -10,7 +10,7 @@ entry_points = {
     'console_scripts': [
         'skare3-release-check=skare3_tools.scripts.skare3_release_check:main',
         'skare3-test-results=skare3_tools.test_results:main',
-        'skare3-github-info=skare3_tools.package_info:main',
+        'skare3-github-info=skare3_tools.packages:main',
         'skare3-changes-summary=skare3_tools.scripts.skare3_update_summary:main',
         'skare3-test-report=skare3_tools.dashboard.views.test_results:main',
         'skare3-dashboard=skare3_tools.dashboard.views.dashboard:main',
