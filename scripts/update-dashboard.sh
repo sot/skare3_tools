@@ -7,5 +7,5 @@ skare3-test-dashboard -b /proj/sot/ska/www/ASPECT_ICXC/skare3/testr/logs/${last}
 mv index.html /proj/sot/ska/www/ASPECT/skare3/dashboard/
 mv /proj/sot/ska/www/ASPECT_ICXC/skare3/testr/logs/last/test_results.html /proj/sot/ska/www/ASPECT/skare3/dashboard/tests/index.html
 
-echo files copied to /proj/sot/ska/www/ASPECT/skare3/dashboard
-echo dashboard at https://cxc.cfa.harvard.edu/mta/ASPECT/skare3/dashboard/
+# echo files copied to /proj/sot/ska/www/ASPECT/skare3/dashboard
+# echo dashboard at https://cxc.cfa.harvard.edu/mta/ASPECT/skare3/dashboard/
