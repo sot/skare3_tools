@@ -79,7 +79,6 @@ if 'CONDA_PASSWORD' in os.environ:
     with open(condarc_in) as condarc_in, open(condarc, 'w') as condarc:
         for l in condarc_in.readlines():
             condarc.write(l.replace('${CONDA_PASSWORD}', os.environ['CONDA_PASSWORD']))
-            condarc.write(l.replace('${CONDA_PASSWORD}', os.environ['CONDA_PASSWORD']))
 else:
     print('Conda password needs to be given as environmental variable CONDA_PASSWORD')
     sys.exit(100)
