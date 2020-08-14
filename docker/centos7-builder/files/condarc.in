@@ -1,0 +1,4 @@
+binstar_upload: false
+channels:
+  - https://ska:${CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/shiny
+  - defaults
