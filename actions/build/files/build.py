@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import sys
 import os
@@ -120,7 +120,7 @@ with tempfile.TemporaryDirectory(dir=tmp_dir) as tmp_dir:
 
     # do the actual building
     cmd = ['./ska_builder.py', '--github-https', '--force',
-           '--build-list', './ska3_flight_build_order.txt']
+           '--build-list', 'ska3_flight_build_order.txt']
     cmd += unknown_args + [package]
     print(' '.join(cmd))
     subprocess.check_call(cmd, cwd=skare3_path)
