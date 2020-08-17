@@ -134,7 +134,8 @@ def _conda_package_list(update=True):
                                       'skare3', 'pkg_defs', '*', 'meta.yaml'))
     all_info = []
     for f in all_meta:
-        info = yaml.load(jinja2.Template(open(f).read()).render())
+        macro = '{% macro compiler(arg) %}{% endmacro %}\n'
+        info = yaml.load(jinja2.Template(macro + open(f).read()).render())
         pkg_info = {
             'name': os.path.basename(os.path.dirname(f)),
             'package': info['package']['name'],
