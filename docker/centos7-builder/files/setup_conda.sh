@@ -10,4 +10,3 @@ bash Miniconda3-4.3.21-MacOSX-x86_64.sh -b
 export PATH=${HOME}/miniconda3/bin:$PATH
 conda install python=3.6.2 conda=4.3.21 -q --yes
 conda install ska3_builder -q --yes
-

@@ -51,8 +51,10 @@ def _render(tests, config):
 
 def get_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('file_in', default='all_tests.json')
-    parser.add_argument('-b', action='store_true', default=False)
+    parser.add_argument('-i', dest='file_in')
+    parser.add_argument('-o', dest='file_out')
+    parser.add_argument('-b', action='store_true', default=False,
+                        help='Batch mode: do not open a browser window with the result')
     parser.add_argument('--log-dir', default='.')
     parser.add_argument('--static-dir', default=os.path.join(os.path.dirname(dashboard.__file__), 'static'))
     return parser
@@ -65,20 +67,32 @@ def main():
         'static_dir': args.static_dir,
         'log_dir': args.log_dir
     }
-    if os.path.isdir(args.file_in):
+    if args.file_in and os.path.isdir(args.file_in):
         args.file_in = os.path.join(args.file_in, 'all_tests.json')
-    if not os.path.exists(args.file_in):
+
+    if args.file_out is None:
+        if args.file_in:
+            args.file_out = os.path.join(os.path.dirname(args.file_in), 'test_results.html')
+        else:
+            args.file_out = 'test_results.html'
+
+    if args.file_in and not os.path.exists(args.file_in):
         print('{filename} does not exist'.format(filename=args.file_in))
         parser.print_help()
         parser.exit(1)
-    file_out = os.path.join(os.path.dirname(args.file_in), 'test_results.html')
-    with open(args.file_in, 'r') as f:
-        results = json.load(f)
-    with open(file_out, 'w') as out:
+
+    if not args.file_in:
+        results = tr.get()[-1]
+    else:
+        with open(args.file_in, 'r') as f:
+            results = json.load(f)
+
+    with open(args.file_out, 'w') as out:
         out.write(_render(results, config))
+
     if not args.b:
-        file_out = os.path.abspath(file_out)
-        webbrowser.open('file://{file_out}'.format(file_out=file_out), new=2)
+        file_out = os.path.abspath(args.file_out)
+        webbrowser.open('file://{file_out}'.format(file_out=args.file_out), new=2)
 
 
 if __name__ == '__main__':

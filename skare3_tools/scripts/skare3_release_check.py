@@ -69,27 +69,31 @@ def main():
         - there is a PR named after this release
         - if GITHUB_SHA is defined, it must be the release commit.
         """
-        if 'response' in release and not release['response']['ok']:
-            fail.append(f'Release {tag_name} does not exist')
-        else:
-            if release['target_commitish'] != version:
-                fail.append(f'Release {tag_name} not on branch {version}')
-            if re.search('rc[0-9]+$', tag_name) and not release["prerelease"]:
-                fail.append(f'Release {tag_name} is marked as a candidate, '
-                            f'but the release is not a prerelease')
-        if 'response' in tag and not tag['response']['ok']:
-            fail.append(f'Tag {tag_name} does not exist')
-        # are these always true? release from master? release without open PR?
-        if 'response' in pulls and not pulls['response']['ok']:
-            fail.append(f'There is no pull request from sot:{version}')
-        # when workflow triggered by release, GITHUB_SHA must have the release commit sha
-        if 'GITHUB_SHA' in os.environ:
-            if os.environ['GITHUB_SHA'] != tag['object']['sha']:
-                fail.append(f"Tag {tag_name} sha differs from sha in GITHUB_SHA: "
-                            f"{tag['object']['sha']} != {os.environ['GITHUB_SHA']}")
-        elif git_repo.active_branch.name != version:
-            fail.append(f'Current branch is different from release branch '
-                        f'({git_repo.active_branch.name} != {version})')
+        try:
+            if 'response' in release and not release['response']['ok']:
+                fail.append(f'Release {tag_name} does not exist')
+            else:
+                if release['target_commitish'] != version:
+                    fail.append(f'Release {tag_name} not on branch {version}')
+                if re.search('rc[0-9]+$', tag_name) and not release["prerelease"]:
+                    fail.append(f'Release {tag_name} is marked as a candidate, '
+                                f'but the release is not a prerelease')
+            if 'response' in tag and not tag['response']['ok']:
+                fail.append(f'Tag {tag_name} does not exist')
+            # are these always true? release from master? release without open PR?
+            if 'response' in pulls and not pulls['response']['ok']:
+                fail.append(f'There is no pull request from sot:{version}')
+            # when workflow triggered by release, GITHUB_SHA must have the release commit sha
+            if 'GITHUB_SHA' in os.environ:
+                if os.environ['GITHUB_SHA'] != tag['object']['sha']:
+                    fail.append(f"Tag {tag_name} sha differs from sha in GITHUB_SHA: "
+                                f"{tag['object']['sha']} != {os.environ['GITHUB_SHA']}")
+            elif git_repo.active_branch.name != version:
+                fail.append(f'Current branch is different from release branch '
+                            f'({git_repo.active_branch.name} != {version})')
+        except Exception as e:
+            exc_type = sys.exc_info()[0].__name__
+            fail.append(f'Unexpected error ({exc_type}): {e}')
         for f in fail:
             logging.warning(f)
         if fail:

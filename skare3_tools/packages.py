@@ -134,7 +134,8 @@ def _conda_package_list(update=True):
                                       'skare3', 'pkg_defs', '*', 'meta.yaml'))
     all_info = []
     for f in all_meta:
-        info = yaml.load(jinja2.Template(open(f).read()).render())
+        macro = '{% macro compiler(arg) %}{% endmacro %}\n'
+        info = yaml.load(jinja2.Template(macro + open(f).read()).render())
         pkg_info = {
             'name': os.path.basename(os.path.dirname(f)),
             'package': info['package']['name'],
@@ -142,8 +143,9 @@ def _conda_package_list(update=True):
             'owner': None
         }
         if 'about' in info and 'home' in info['about']:
-            home = info['about']['home']
-            matches = [re.match('git@github.com:(?P<org>[^/]+)/(?P<repo>\S+)', home),
+            home = info['about']['home'].strip()
+            matches = [re.match('git@github.com:(?P<org>[^/]+)/(?P<repo>\S+)\.git$', home),
+                       re.match('git@github.com:(?P<org>[^/]+)/(?P<repo>\S+)$', home),
                        re.match('https?://github.com/(?P<org>[^/]+)/(?P<repo>[^/]+)/?', home)]
             m = {}
             for m in matches:
@@ -752,9 +754,6 @@ def get_parser():
     parser.add_argument('-o', default='repository_info.json',
                         help='Output file (default=repository_info.json)')
     parser.add_argument('--token', help='Github token, or name of file that contains token')
-    parser.add_argument('--v4', action='store_true', help='Use Github API v4')
-    parser.add_argument('--no-conda', dest='conda', action='store_false',
-                        help='Do not get conda package info')
     return parser
 
 
@@ -763,7 +762,7 @@ def main():
 
     github.init(token=args.token)
 
-    info = get_repositories_info(v4=args.v4, conda=args.conda)
+    info = get_repositories_info()
     if info:
         with open(args.o, 'w') as f:
             json.dump(info, f, indent=2)
