@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import sys
 import os
@@ -119,35 +119,42 @@ with tempfile.TemporaryDirectory(dir=tmp_dir) as tmp_dir:
                               cwd=skare3_path)
 
     # do the actual building
-    cmd = ['./ska_builder.py', '--github-https', '--force',
-           '--build-list', './ska3_flight_build_order.txt']
+    cmd = ['python', 'ska_builder.py', '--github-https', '--force',
+           '--build-list', 'ska3_flight_build_order.txt']
     cmd += unknown_args + [package]
     print(' '.join(cmd))
     subprocess.check_call(cmd, cwd=skare3_path)
 
+    print('SKARE3 conda process finished')
     # move resulting files to work dir
     if not os.path.exists('builds'):
         os.makedirs('builds')
-    for d in ['linux-64', 'osx-64', 'noarch']:
+    for d in ['linux-64', 'osx-64', 'noarch', 'win-64']:
+        print(d)
         d_from = os.path.join(skare3_path, 'builds', d)
+        d_to = os.path.join('builds',d)
+        if not os.path.exists(d_to):
+            os.makedirs(d_to)
+        # I do this to make sure the directory is not empty
+        with open(os.path.join(d_to, '.ensure-non-empty-dir'), 'w'):
+            pass
         if os.path.exists(d_from):
-            d_to = os.path.join('builds',d)
-            if not os.path.exists(d_to):
-                os.makedirs(d_to)
+            print(f'SKARE3 moving {d_from} -> {d_to}')
             for filename in glob.glob(os.path.join(d_from, '*')):
                 filename2 = os.path.join(d_to, os.path.basename(filename))
                 if os.path.exists(filename2):
                     os.remove(filename2)
                 shutil.move(filename, filename2)
-
-    rm = glob.glob('builds/*/*json*') + glob.glob('builds/*/.*json*')
+    print('SKARE3 done')
+    rm = glob.glob(os.path.join('builds', '*', '*json*')) + glob.glob(os.path.join('builds', '*', '.*json*'))
     for r in rm:
         os.remove(r)
 
     # report result
-    files = glob.glob('builds/linux-64/*tar.bz2*') + \
-            glob.glob('builds/osx-64/*tar.bz2*') + \
-            glob.glob('builds/noarch/*tar.bz2*')
+    files = glob.glob(os.path.join('builds', 'linux-64', '*tar.bz2*')) + \
+            glob.glob(os.path.join('builds', 'osx-64', '*tar.bz2*')) + \
+            glob.glob(os.path.join('builds', 'noarch', '*tar.bz2*')) + \
+            glob.glob(os.path.join('builds', 'win-64', '*tar.bz2*'))
     files = ' '.join(files)
 
     if not files:
