@@ -16,7 +16,7 @@ def parser():
     parse.add_argument('--head', help='branch you are merging from', required=True)
     parse.add_argument('--base', help='branch you are merging to', required=True)
     parse.add_argument('--body', required=True)
-    parser.add_argument('--token', '-t', 'Github token, or name of file that contains token')
+    parse.add_argument('--token', '-t', help='Github token, or name of file that contains token')
     return parse
 
 
@@ -31,7 +31,7 @@ def main():
                                          )
 
     if not pr['response']['ok']:
-        print('Failed to create pull request')
+        print(f'Failed to create pull request: {pr["response"]}')
         sys.exit(1)
     print(f"created pull request {pr['number']} at {pr['html_url']}")
 
