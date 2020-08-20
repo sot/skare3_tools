@@ -135,7 +135,7 @@ def _conda_package_list(update=True):
     all_info = []
     for f in all_meta:
         macro = '{% macro compiler(arg) %}{% endmacro %}\n'
-        info = yaml.load(jinja2.Template(macro + open(f).read()).render())
+        info = yaml.load(jinja2.Template(macro + open(f).read()).render(), Loader=yaml.FullLoader)
         pkg_info = {
             'name': os.path.basename(os.path.dirname(f)),
             'package': info['package']['name'],

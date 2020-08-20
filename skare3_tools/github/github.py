@@ -844,7 +844,18 @@ class Checks(_EndpointGroup):
                          ref=ref)
 
 class DispatchEvent(_EndpointGroup):
+    """
+    Create a repository dispatch event
+    """
     def __call__(self, event_type, client_payload={}):
+        """
+        Create a repository dispatch event
+
+        :param event_type: str
+            A custom webhook event name.
+        :param client_payload: dict
+            JSON payload with extra information about the webhook event.
+        """
         params = {'event_type': event_type,
                   'client_payload': client_payload}
         return self._post('/repos/:owner/:repo/dispatches',
