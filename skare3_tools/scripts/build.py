@@ -54,6 +54,7 @@ def get_parser():
     parser.add_argument('package')
     parser.add_argument('--skare3-overwrite-version', default=None)
     parser.add_argument('--skare3-branch', default='master')
+    return parser
 
 
 def main():
