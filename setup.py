@@ -8,6 +8,7 @@ except ImportError:
 
 entry_points = {
     'console_scripts': [
+        'skare3-build=skare3_tools.scripts.build:main',
         'skare3-release-check=skare3_tools.scripts.skare3_release_check:main',
         'skare3-test-results=skare3_tools.test_results:main',
         'skare3-github-info=skare3_tools.packages:main',
@@ -16,7 +17,6 @@ entry_points = {
         'skare3-dashboard=skare3_tools.dashboard.views.dashboard:main',
         'skare3-test-dashboard=skare3_tools.dashboard.views.test_results:main',
         'skare3-bulk=skare3_tools.scripts.bulk:main',
-        'gdrive=skare3_tools.gdrive.scripts.gdrive:main',
         'skare3-add-secrets=skare3_tools.github.scripts.add_secrets:main',
         'skare3-create-issue=skare3_tools.github.scripts.create_issue:main',
         'skare3-create-pr=skare3_tools.github.scripts.create_pr:main',
@@ -31,16 +31,13 @@ setup(name='skare3_tools',
       author_email='javier.gonzalez@cfa.harvard.edu',
       packages=['skare3_tools',
                 'skare3_tools.scripts',
-                'skare3_tools.gdrive',
                 'skare3_tools.github',
-                'skare3_tools.gdrive.scripts',
                 'skare3_tools.github.scripts',
                 'skare3_tools.dashboard',
                 'skare3_tools.dashboard.views',
                 'skare3_tools.tests'],
       package_data={'skare3_tools.tests': ['data/*.txt', 'data/*.dat',
                                            'data/*.fits.gz', 'data/*.pkl'],
-                    'skare3_tools.gdrive': ['*.pkl'],
                     'skare3_tools.dashboard': ['static/*', 'static/*/*',
                                                'static/*/*/*', 'static/*/*/*/*',
                                                'static/*/*/*/*/*', 'templates/*']
