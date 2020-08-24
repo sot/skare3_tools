@@ -35,7 +35,7 @@ RUN : "${CONDA_PASSWORD:?Conda password must be given at build time (e.g. --buil
     conda create -y -n ska-builder setuptools_scm gitpython conda-build jinja2 pyyaml python=3.8 numpy
 
 RUN conda run -n ska-builder conda install -y jinja2 pyyaml packaging gitpython
-RUN conda run -n ska-builder conda install -y -c https://icxc.cfa.harvard.edu/aspect/ska3-conda/masters -c defaults -c conda-forge skare3_tools
+RUN conda run -n ska-builder conda install -y -c https://ska:${CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/masters -c defaults -c conda-forge skare3_tools
 RUN conda init
 
 
