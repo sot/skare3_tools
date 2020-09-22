@@ -76,10 +76,3 @@ skare3-dashboard
 .. argparse::
    :ref: skare3_tools.dashboard.views.dashboard.get_parser
    :prog: skare3-dashboard
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
