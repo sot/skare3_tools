@@ -20,6 +20,7 @@ jobs:
         run: rm -fr gh-pages/docs/*
       - name: build
         run: |
+          eval "$(/export/jgonzale/github-workflows/miniconda3-shiny/bin/conda shell.bash hook)"
           conda activate ska3-masters
           make html
         working-directory: source/docs
