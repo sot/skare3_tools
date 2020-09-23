@@ -26,6 +26,7 @@ jobs:
         working-directory: source/docs
         env:
           PYTHONPATH: ${{ github.workspace }}/source
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: copy
         run: cp -fr source/docs/_build/html/* gh-pages/docs
       - name: Commit changes
