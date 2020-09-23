@@ -21,7 +21,7 @@ def parser():
     parse.add_argument('--merge-method',
                        help='Merge method to use. Possible values are merge, squash or rebase.')
 
-    parser.add_argument('--token', '-t', 'Github token, or name of file that contains token')
+    parse.add_argument('--token', '-t', help='Github token, or name of file that contains token')
     return parse
 
 
