@@ -22,11 +22,13 @@ Github API
 Github Scripts
 ^^^^^^^^^^^^^^
 
-skare3-github-info
-""""""""""""""""""
+skare3-create-issue
+"""""""""""""""""""
+
 .. argparse::
-   :ref: skare3_tools.packages.get_parser
-   :prog: skare3-github-info
+   :ref: skare3_tools.github.scripts.create_issue.parser
+   :prog: skare3-create-issue
+
 
 Github API Documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -63,6 +65,20 @@ Repositories Details
 .. autoclass:: skare3_tools.github.github.Checks
    :members: __call__
 
+
+Packages
+--------
+
+.. automodule:: skare3_tools.packages
+
+Packages Scripts
+^^^^^^^^^^^^^^^^
+
+skare3-github-info
+""""""""""""""""""
+.. argparse::
+   :ref: skare3_tools.packages.get_parser
+   :prog: skare3-github-info
 
 Dashboard
 ---------
