@@ -29,13 +29,6 @@ skare3-create-issue
    :ref: skare3_tools.github.scripts.create_issue.parser
    :prog: skare3-create-issue
 
-skare3-add-secrets
-"""""""""""""""""""
-
-.. argparse::
-   :ref: skare3_tools.github.scripts.add_secrets.parser
-   :prog: skare3-add-secrets
-
 skare3-create-issue
 """""""""""""""""""
 
@@ -44,7 +37,7 @@ skare3-create-issue
    :prog: skare3-create-issue
 
 skare3-create-pr
-"""""""""""""""""""
+""""""""""""""""
 
 .. argparse::
    :ref: skare3_tools.github.scripts.create_pr.parser
