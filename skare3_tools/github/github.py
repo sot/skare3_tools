@@ -131,10 +131,16 @@ def init(user=None, password=None, token=None, force=True):
                     'or set in either GITHUB_TOKEN or GITHUB_API_TOKEN '
                     'environment variables')
             raise AuthException(msg)
+        if not r.ok:
+            msg = r.json()['message']
+            raise AuthException(msg)
         GITHUB_API = api
-        r = GITHUB_API('/user')
-        user = r.json()['login']
-        _logger.debug(f'Github interface initialized (user={user})')
+        r = GITHUB_API('/user').json()
+        if 'login' in r:
+            user = r['login']
+            _logger.debug(f'Github interface initialized (user={user})')
+        else:
+            _logger.info(f'Github interface initialized: {r}')
     return GITHUB_API
 
 
