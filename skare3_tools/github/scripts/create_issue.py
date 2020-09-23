@@ -18,7 +18,7 @@ def parser():
     parse.add_argument('--title', help='Issue Title. Ignored if --latest-release is given')
     parse.add_argument('--body', help='Issue Description. Ignored if --latest-release is given')
     parse.add_argument('--label', default=[], action='append')
-    parser.add_argument('--token', '-t', 'Github token, or name of file that contains token')
+    parse.add_argument('--token', '-t', help='Github token, or name of file that contains token')
     return parse
 
 
