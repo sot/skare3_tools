@@ -751,7 +751,6 @@ def get_parser():
 SkaRE3 Github information tool.
 
 This script queries Github and a few other sources to determine the status of all packages.
-NOTE: Running within ska3-flight or ska3-matlab will cause errors that produce wrong results.
 """
 
     parser = argparse.ArgumentParser(description=description)
