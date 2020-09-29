@@ -1,7 +1,12 @@
 ---
 name: Deploy Docs
-on: push
-
+on:
+  release:
+    types:
+    - created
+  repository_dispatch:
+    types:
+    - build-docs
 
 jobs:
   build-linux:
