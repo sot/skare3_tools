@@ -272,8 +272,11 @@ def init(token=None, force=True):
                                   'environment variables')
         response = api('{viewer {login}}')
         GITHUB_API = api
-        user = response['data']['viewer']['login']
-        _logger.debug(f'Github interface initialized (user={user})')
+        try:
+            user = response['data']['viewer']['login']
+            _logger.debug(f'Github interface initialized (user={user})')
+        except:
+            _logger.info(f'Github interface initialized ({response})')
     return GITHUB_API
 
 

@@ -19,7 +19,7 @@ def parser():
     parse.add_argument('--repository',
                        required=True, help='repository name. Example: sot/chandra_aca')
     parse.add_argument('--sha', help='sha of the release')
-    parser.add_argument('--token', '-t', 'Github token, or name of file that contains token')
+    parse.add_argument('--token', '-t', help='Github token, or name of file that contains token')
     return parse
 
 

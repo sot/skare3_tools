@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 """
-SkaRE3 Github information tool.
-
-This script queries Github and a few other sources to determine the status of all packages.
-NOTE: Running within ska3-flight or ska3-matlab will cause errors that produce wrong results.
+Module to keep track of all package information (repository, conda package info, etc).
 """
 
 import sys
@@ -750,7 +747,13 @@ def get_repositories_info(repositories=None, version='v4', update=False):
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(description=__doc__)
+    description = """
+SkaRE3 Github information tool.
+
+This script queries Github and a few other sources to determine the status of all packages.
+"""
+
+    parser = argparse.ArgumentParser(description=description)
     parser.add_argument('-o', default='repository_info.json',
                         help='Output file (default=repository_info.json)')
     parser.add_argument('--token', help='Github token, or name of file that contains token')
