@@ -300,10 +300,11 @@ def _get_repository_info_v4(owner_repo,
                                                         cursor=cursor))
         pull_requests += (pr_data['data']['repository']['pullRequests']['nodes'])
 
+    releases = [r for r in releases if not r['isPrerelease'] and not r['isDraft']]
     for r in releases:
         r['tag_oid'] = _get_tag_target(r['tag'])
 
-    releases = {r['tag_oid']: r for r in releases if not r['isPrerelease'] and not r['isDraft']}
+    releases = {r['tag_oid']: r for r in releases}
     release_info = [{
         'release_tag': '',
         'release_tag_date': '',
