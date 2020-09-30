@@ -43,7 +43,6 @@ It is also possible to use the API directly, in case there is no appropriate hig
 """
 
 import logging
-import getpass
 import os
 import requests
 import urllib

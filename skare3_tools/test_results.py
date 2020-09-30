@@ -6,7 +6,6 @@ Gather test results from log file.
 import os
 import json
 import argparse
-import datetime
 import shutil
 import hashlib
 
