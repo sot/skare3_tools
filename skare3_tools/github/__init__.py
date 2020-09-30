@@ -1,16 +1,11 @@
-from .github import *
+from .github import Repository
 
-from . import graphql
+from . import graphql, github
 
-GITHUB_API_V3 = None
-GITHUB_API_V4 = None
+GITHUB_API_V3 = github.GITHUB_API
+GITHUB_API_V4 = graphql.GITHUB_API
 
 
 def init(token=None):
-    global GITHUB_API_V3
-    global GITHUB_API_V4
-    from . import github, graphql
-    GITHUB_API_V3 = github.init(token, force=True)
-    GITHUB_API_V4 = graphql.init(token, force=True)
-
-init()
+    GITHUB_API_V3.init(token=token, force=True)
+    GITHUB_API_V4.init(token=token, force=True)

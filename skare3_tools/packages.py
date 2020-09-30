@@ -512,7 +512,6 @@ def _get_repository_info_v3(owner_repo,
         whether to include commits in release_info.
     :return:
     """
-    github.init()
     api = github.GITHUB_API_V3
 
     owner, repo = owner_repo.split('/')
