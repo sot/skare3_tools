@@ -39,6 +39,7 @@ def main():
     if i_1 is None:
         raise Exception(f'Release with sha {args.sha} was not found')
 
+    print(f'release: {releases[i_1]}')
     # get all commits between this release and the previous one, if any.
     kwargs = {'until': repository.commits(ref=release_shas[i_1])['commit']['author']['date']}
     if i_1 + 1 < len(releases):
