@@ -37,7 +37,7 @@ def main():
         ok_or_exit(release, f'Failed to create issue after latest release of {args.latest_release}')
         args.title = f"Update {args.latest_release} to {release['name']}"
         args.body = release['body']
-    if not args.title or not args.body:
+    elif not args.title or not args.body:
         print('Issue title and body are required unless using --latest-release option.')
         sys.exit(2)
     repository = github.Repository(args.repository)
