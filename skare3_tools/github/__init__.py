@@ -1,4 +1,4 @@
-from .github import Repository
+from .github import Repository, Organization
 
 from . import graphql, github
 
