@@ -115,7 +115,7 @@
           {{ '_children' }}: [
           {%- for test in test_suite.test_cases %}
             {{ '{' }}
-            {{- 'name' }}: " <a href='{{ test.log }}'>{{ test.name }} </a>",
+            {{- 'name' }}: "{{ test.name }}",
             {{- 'status' }}: "{{ test.status }}",
             {{- 'log' }}: "{{ test.log }}",
             {{- 'message' }}: "{{ test.message }}",
