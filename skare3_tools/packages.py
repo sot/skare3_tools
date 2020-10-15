@@ -1,6 +1,72 @@
 #!/usr/bin/env python3
 """
-Module to keep track of all package information (repository, conda package info, etc).
+A module to keep track of all package information (repository, conda package info, etc).
+
+Package List
+------------
+
+One of the main purposes of this module is to maintain a list of "packages". Some packages have an
+associated github repository, which can be owned by one or more organizations. Some packages
+have an associated conda package, which is listed in one or more conda channels. The package list is
+the union of the conda packages and the github repositories. The name of the package, the name of
+the repository and the name of the conda package might not be the same.
+
+To assemble the package list, this module uses:
+
+- All skare3/pkg_defs/\*/meta.yaml files within the skare3 repository
+- the list of all repositories for a given list of organizations (sot, acisops)
+
+The package list is cached locally. The cache expires after one day.
+To use this module to get the package list, use :func:`~skare3_tools.packages.get_package_list`::
+
+    >>> from skare3_tools import packages
+    >>> pkgs = packages.get_package_list()
+    >>> pkgs[0]
+    {'name': 'ska3-core',
+     'package': 'ska3-core',
+     'repository': None,
+     'owner': None}
+
+Package Info
+------------
+
+Some information about each package is cached locally. The cache expires whenever there is an
+"update" or a "push" to the associated Github repository. The information includes information such
+as the number of open pull requests, number of branches. It also includes versions available in
+conda channels.
+
+To get the current information associated with a package using
+:func:`~skare3_tools.packages.get_repository_info`::
+
+    >>> from skare3_tools import packages
+    >>> pkg = packages.get_repository_info('sot/Quaternion')
+    >>> pkg.keys()
+    dict_keys(['owner', 'name', 'pushed_at', 'updated_at', 'last_tag', 'last_tag_date',
+    'commits', 'merges', 'merge_info', 'release_info', 'issues', 'n_pull_requests',
+    'branches', 'pull_requests', 'workflows', 'master_version'])
+
+The information on all packages can be accessed with
+:func:`~skare3_tools.packages.get_repositories_info`::
+
+    >>> from skare3_tools import packages
+    >>> pkg = packages.get_repositories_info()
+
+Conda Info
+----------
+
+As part of the call to get_repository_info, the conda package versions are also fetched. This is
+done with :func:`~skare3_tools.packages.get_conda_pkg_info`, something like::
+
+    >>> from skare3_tools import packages
+    >>> info = packages.get_conda_pkg_info('quaternion')
+
+By default, this function looks for information on packages from a set of channels specified as
+the "main" channels. Extra sets of channels (i.e.: test, masters, shiny) can be specified as part
+of the :ref:`Configuration`, in which case one can do::
+
+    >>> from skare3_tools import packages
+    >>> info = packages.get_conda_pkg_info('quaternion', conda_channel='masters')
+
 """
 
 import sys
@@ -44,7 +110,7 @@ def json_cache(name,
     :param ignore: list
         list of argument names to ignore in the cache entry identifier
     :param expires: dict
-        a dictionary that can be given to datetime.timedelta(**expires)
+        a dictionary that can be given to datetime.timedelta(\*\*expires)
         If the cache entry is older than this interval, it is updated.
     :param update_policy: callable
         A callable taking two arguments: (filename, result), which returns True if the cache entry
@@ -651,6 +717,13 @@ _LAST_UPDATED_QUERY = jinja2.Template("""
 
 
 def repository_info_is_outdated(_, pkg_info):
+    """
+    Cache update policy that returns True if the Github repository has been updated or pushed into.
+
+    :param _:
+    :param pkg_info: dict. As returned from :func:`~skare3_tools.packages.get_repository_info`.
+    :return:
+    """
     result = github.GITHUB_API_V4(_LAST_UPDATED_QUERY.render(**pkg_info))
     result = result['data']['repository']
     outdated = (pkg_info['pushed_at'] < result['pushedAt'] or

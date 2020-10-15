@@ -1,8 +1,71 @@
 """
-This is a thin wrapper for `Github's GraphQL API`_.
-Given the flexibility of the GraphQL interface, this module is a collection of standard queries.
+This is a thin wrapper for `Github's GraphQL API`_ (V4).
 
-.. _`Github's REST API`: https://developer.github.com/v4/
+This module does not build the query for you. This is because the possibilities afforded by GraphQL
+are large and it makes no sense to re-invent them. The easiest way to assemble a new query is to use
+`Github's GraphQL Explorer`_. For example, to get the homepage URL of a repository:
+
+.. code-block:: python
+
+    >>> from skare3_tools.github import graphql
+    >>> query = \"""{
+    ...   repository(name: "test-actions", owner: "sot") {
+    ...     homepageUrl
+    ...     id
+    ...   }
+    ... }\"""
+    >>> response = graphql.GITHUB_API(query)
+    >>> response
+    {'data': {'repository': {'homepageUrl': None,
+    'id': 'MDEwOlJlcG9zaXRvcnkyMDkwMjE1NDQ='}}}
+
+and to set the homepage URL of a repository:
+
+    >>> from skare3_tools.github import graphql
+    >>> query = \"""mutation {
+    ...   updateRepository(input: {repositoryId: "MDEwOlJlcG9zaXRvcnkyMDkwMjE1NDQ=",
+    ...                             homepageUrl: "https://github.com/sot/test-actions"})
+    ...   {
+    ...     repository {
+    ...       id
+    ...       homepageUrl
+    ...     }
+    ...   }
+    ... }
+    ... \"""
+    >>> response = graphql.GITHUB_API(query)
+    >>> response
+    {'data': {'updateRepository': {'repository': {'id': 'MDEwOlJlcG9zaXRvcnkyMDkwMjE1NDQ=',
+    'homepageUrl': 'https://github.com/sot/test-actions'}}}}
+
+
+
+Given the flexibility of the GraphQL interface, this module includes a small collection of common
+queries. Each query in the collection is a string that should be used as a jinja2 template. For
+example, to get a list all pull requests of a repository:
+
+.. code-block:: python
+
+    >>> import jinja2
+    >>> from skare3_tools.github import graphql
+    >>> query = jinja2.Template(graphql.REPO_PR_QUERY).render(owner='sot', name='Quaternion')
+    >>> response = graphql.GITHUB_API(query)
+    >>> response['data']['repository']['pullRequests']['nodes'][0]
+    {'baseRefName': 'master',
+     'headRefName': 'modernize',
+     'title': 'Add delta quaternion method and other package modernization',
+     'number': 2,
+     'state': 'MERGED'}
+
+THere is a (possibly incomplete) list of queries (with the template parameters in parentheses):
+
+- REPO_ISSUES_QUERY(name, owner, label)
+- REPO_PR_QUERY(name, owner)
+- ORG_QUERY(owner)
+- REPO_QUERY(owner, name)
+
+.. _`Github's GraphQL API`: https://developer.github.com/v4/
+.. _`Github's GraphQL Explorer`: https://developer.github.com/v4/explorer/
 
 """
 
@@ -48,6 +111,7 @@ REPO_ISSUES_QUERY = """
   }
 }
 """
+"""query all issues in repository (name, owner, label)"""
 
 REPO_PR_QUERY = """
 {
@@ -72,6 +136,7 @@ REPO_PR_QUERY = """
   }
 }
 """
+"""query all pull requests in repository (name, owner)"""
 
 ORG_QUERY = """
 {
@@ -92,6 +157,7 @@ ORG_QUERY = """
   }
 }
 """
+"""query all repositories in an organization (owner)"""
 
 RATE_LIMIT_QUERY = """
 {
@@ -250,16 +316,26 @@ REPO_QUERY = """
 }
 
 """
+"""A general query to get information about a repository (owner, name)"""
 
 
 def init(token=None, force=True):
+    """
+    Initialize the API.
+
+    :param token: str
+        a Github auth token
+    :param force: bool
+        override a previously initialized API
+    :return:
+    """
     GITHUB_API.init(token, force)
     return GITHUB_API
 
 
 class GithubAPI:
     """
-    Main class that encapsulates Github's REST API.
+    Main class that encapsulates Github's GraphQL API.
     """
     def __init__(self, token=None):
         self.initialized = False
@@ -274,6 +350,11 @@ class GithubAPI:
                 raise
 
     def __bool__(self):
+        """
+        Returns True if API is initialized.
+
+        :return: bool
+        """
         return self.initialized
 
     def init(self, token=None, force=True):
@@ -320,6 +401,15 @@ class GithubAPI:
             raise GithubException(f'Error: {response.reason} ({response.status_code})')
 
     def __call__(self, query, headers=(), **kwargs):
+        """
+        Call the API (encapsulates a requests call, including headers and error checking).
+
+        :param query: str
+            GraphQL query
+        :param headers: dict
+        :param kwargs: dict
+        :return:
+        """
         if not self.initialized:
             raise Exception('GithubAPI authentication credentials are not initialized')
 
@@ -335,3 +425,4 @@ class GithubAPI:
 
 
 GITHUB_API = GithubAPI()
+"""THE API"""

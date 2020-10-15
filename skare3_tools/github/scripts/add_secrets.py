@@ -2,10 +2,13 @@
 """
 A script to add encrypted secrets to Github repositories.
 
-At this moment, Github's API does not have an endpoint for setting secrets.
-This script circumvents this limitation by using
+At some point, Github's API did not have an endpoint for setting secrets.
+This script circumvented this limitation by using
 `Selenium with Python <https://selenium-python.readthedocs.io/>`_
-together with `ChromeDriver <https://sites.google.com/a/chromium.org/chromedriver>`.
+together with `ChromeDriver <https://sites.google.com/a/chromium.org/chromedriver>`. While this is
+not strictly needed anymore, it is left because it is an example on how to deal with cases like
+this.
+
 
 To use it, you need to have Chrome installed,
 `install Selenium <https://selenium-python.readthedocs.io/installation.html>`_, and you need to get

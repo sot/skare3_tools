@@ -1,3 +1,76 @@
+"""
+The configuration is automatically set with default values which specify the location of the skare3
+repository, the different conda channels used, the Github organizations who own the packages, and
+the directory where to store cached data. This happens the first time this module is imported.
+
+Normally, a user does not need to do anything except to add an environment variable with the
+standard password to conda channels called CONDA_PASSWORD.
+
+The configuration is saved in JSON format, in the location:
+
+- specifyed by the SKARE3_TOOLS_DATA environmental variable,
+- or:
+
+  - Linux/Mac OS: ~/.skare3
+  - windows: %LOCALAPPDATA%\\skare3
+
+The default looks like this:
+
+.. code-block:: JSON
+
+    {
+      "config_version": 1,
+      "repository": "https://github.com/sot/skare3",
+      "conda_channels": {
+        "masters": [
+          "https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/masters"
+        ],
+        "main": [
+          "https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/shiny"
+        ],
+        "dull": [
+          "https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda"
+        ],
+        "test": [
+          "https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda",
+          "https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/test"
+        ]
+      },
+      "organizations": [
+        "sot",
+        "acisops"
+      ],
+      "data_dir": ""
+    }
+
+
+Cache Directory
+---------------
+
+The cached data is stored in the same directory as the configuration, unless otherwise specified in
+the configuration itself (i.e.: one can have the config in ~/.skare3 and set 'data_dir' in this
+configuration to some other directory).
+
+Conda Channels
+---------------
+
+Conda channels are specified as a dictionary, with identifying strings as keys, and list of URL
+strings as values:
+
+.. code-block:: JSON
+
+    {
+      "conda_channels": {
+        "masters": [
+          "https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/masters"
+         ],
+        "main": [
+          "https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda"
+        ]
+      },
+    }
+"""
+
 import os
 import json
 
@@ -43,6 +116,14 @@ def _app_data_dir_():
 
 
 def init(config=None, reset=False):
+    """
+
+    :param config: dict.
+        A dictionary with configuration entries (used to "update" the current config, not replace).
+    :param reset: bool.
+        Flag to "reset" the configuration (from defaults).
+    :return:
+    """
     global CONFIG
     app_data_dir = _app_data_dir_()
     if app_data_dir is None:

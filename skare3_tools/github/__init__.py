@@ -1,3 +1,15 @@
+"""
+A wrapper for Github's APIs and a collection of scripts.
+
+In order to use it, one needs to give it an `authentication token`_. The token is usually given
+using the GITHUB_API_TOKEN environmental variable. You can optionally initialize the API with a
+given token::
+
+    >>> from skare3_tools import github
+    >>> github.init(token='c7hvg6pqi3fhqwv0wvlgp4mk9agwbqk1gxc331iz')  # this is optional
+
+.. _`authentication token`: https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token
+"""
 from .github import Repository, Organization
 
 from . import graphql, github

@@ -1,18 +1,15 @@
 """
-This is a thin wrapper for `Github's REST API`_. It is intended to be easy to extend.
+This is a thin wrapper for `Github's REST API`_ (V3). It is intended to be easy to extend.
 It does not impose much structure on top of what is shown in their online documentation,
 and it should be easy to see the correspondence between both.
 
 .. _`Github's REST API`: https://developer.github.com/v3/
 
-Example Usage
-^^^^^^^^^^^^^^
+As an example, this is how one gets a list of releases and pull requests for a repository:
 
 .. code-block:: python
 
       >>> from skare3_tools import github
-      >>> github.init(token='c7hvg6pqi3fhqwv0wvlgp4mk9agwbqk1gxc331iz')
-      Password:
       >>> repo = github.Repository('sot/Chandra.Maneuver')
       >>> releases = repo.releases()
       >>> for release in releases:
@@ -36,8 +33,7 @@ It is also possible to use the API directly, in case there is no appropriate hig
 .. code-block:: python
 
       >>> from skare3_tools import github
-      >>> api = github.init(token='c7hvg6pqi3fhqwv0wvlgp4mk9agwbqk1gxc331iz')
-      >>> last_tag = api.get('/repos/sot/Chandra.Maneuver/releases/latest').json()
+      >>> last_tag = github.GITHUB_API_V3.get('/repos/sot/Chandra.Maneuver/releases/latest').json()
       >>> last_tag['tag_name']
       '3.7.2'
 """
@@ -66,6 +62,15 @@ _logger = logging.getLogger('github')
 
 
 def init(user=None, password=None, token=None, force=True):
+    """
+    Initialize the API.
+
+    :param token: str
+        a Github auth token
+    :param force: bool
+        override a previously initialized API
+    :return:
+    """
     GITHUB_API.init(user, password, token, force)
     return GITHUB_API
 

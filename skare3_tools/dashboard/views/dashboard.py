@@ -54,8 +54,12 @@ def dashboard(config=None):
 
 
 def get_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-o', metavar='FILENAME', help="Output file (index.html)", default='index.html')
+    parser = argparse.ArgumentParser(
+        description="Produce a single html page with package information"
+    )
+    parser.add_argument('-o', metavar='FILENAME',
+                        help="Output file (default: index.html)",
+                        default='index.html')
     return parser
 
 
