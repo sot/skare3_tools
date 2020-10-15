@@ -1,0 +1,446 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Github &#8212; SkaRE3 Tools 0.1.dev1+g81bfeff documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-astropy.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Packages" href="packages.html" />
+    <link rel="prev" title="SkaRE3 Tools" href="index.html" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,600' rel='stylesheet' type='text/css'/>
+
+  </head><body>
+<div class="topbar">
+  <a class="brand" title="Documentation Home" href="index.html"><span id="logotext1">Ska! </span><span id="logotext2">SkaRE3</span><span id="logotext3">Tools</span></a>
+  <ul>
+    
+    <li><a class="home" title="Homepage" href="https://cxc.cfa.harvard.edu/mta/ASPECT/tool_doc">
+        <span id="logotext1">ska</span><span id="logotext2">tools</span>
+    </a></li>
+    <li><a title="General Index" href="genindex.html">Index</a></li>
+    <li><a title="Module Index" href="py-modindex.html">Modules</a></li>
+    <li>
+      
+      
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+      
+    </li>
+  </ul>
+</div>
+
+<div class="related">
+    <h3>Navigation</h3>
+    <ul>
+      <li class="right">
+	<a href="packages.html" title="Packages">
+	  next &raquo;
+	</a>
+      </li>
+      <li class="right">
+	<a href="index.html" title="SkaRE3 Tools">
+	  &laquo; previous
+	</a>
+	 |
+      </li>
+      <li>
+	<a href="index.html">SkaRE3 Tools 0.1.dev1+g81bfeff documentation</a>
+	 &#187;
+      </li>
+      
+      <li>Github</li> 
+    </ul>
+</div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-skare3_tools.github">
+<span id="github"></span><h1>Github<a class="headerlink" href="#module-skare3_tools.github" title="Permalink to this headline">¶</a></h1>
+<p>A wrapper for Github’s APIs and a collection of scripts.</p>
+<p>In order to use it, one needs to give it an <a class="reference external" href="https://docs.github.com/en/free-pro-team&#64;latest/github/authenticating-to-github/creating-a-personal-access-token">authentication token</a>. The token is usually given
+using the GITHUB_API_TOKEN environmental variable. You can optionally initialize the API with a
+given token:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">github</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">github</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="s1">&#39;c7hvg6pqi3fhqwv0wvlgp4mk9agwbqk1gxc331iz&#39;</span><span class="p">)</span>  <span class="c1"># this is optional</span>
+</pre></div>
+</div>
+<div class="section" id="module-skare3_tools.github.github">
+<span id="rest-interface-v3"></span><h2>REST Interface (V3)<a class="headerlink" href="#module-skare3_tools.github.github" title="Permalink to this headline">¶</a></h2>
+<p>This is a thin wrapper for <a class="reference external" href="https://developer.github.com/v3/">Github’s REST API</a> (V3). It is intended to be easy to extend.
+It does not impose much structure on top of what is shown in their online documentation,
+and it should be easy to see the correspondence between both.</p>
+<p>As an example, this is how one gets a list of releases and pull requests for a repository:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">github</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">repo</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">Repository</span><span class="p">(</span><span class="s1">&#39;sot/Chandra.Maneuver&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">releases</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">releases</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">release</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">release</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+<span class="go">Release 3.7.2</span>
+<span class="go">Release 3.7.1 with one test fix for 32 bit platform compat.</span>
+<span class="go">Version 3.7</span>
+<span class="go">Version 0.6</span>
+<span class="go">Version 0.05</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">prs</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">pull_requests</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Make namespace package native&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">head</span><span class="o">=</span><span class="s1">&#39;namespace&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">base</span><span class="o">=</span><span class="s1">&#39;master&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">body</span><span class="o">=</span><span class="s1">&#39;The description goes here&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">prs</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">pull_requests</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">prs</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PR #</span><span class="si">{</span><span class="n">pr</span><span class="p">[</span><span class="s1">&#39;number&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">pr</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="go">PR #1: Make namespace package native</span>
+</pre></div>
+</div>
+<p>It is also possible to use the API directly, in case there is no appropriate high-level method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">github</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">last_tag</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">GITHUB_API_V3</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;/repos/sot/Chandra.Maneuver/releases/latest&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">last_tag</span><span class="p">[</span><span class="s1">&#39;tag_name&#39;</span><span class="p">]</span>
+<span class="go">&#39;3.7.2&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="module-skare3_tools.github.graphql">
+<span id="graphql-interface-v4"></span><h2>GraphQL Interface (V4)<a class="headerlink" href="#module-skare3_tools.github.graphql" title="Permalink to this headline">¶</a></h2>
+<p>This is a thin wrapper for <a class="reference external" href="https://developer.github.com/v4/">Github’s GraphQL API</a> (V4).</p>
+<p>This module does not build the query for you. This is because the possibilities afforded by GraphQL
+are large and it makes no sense to re-invent them. The easiest way to assemble a new query is to use
+<a class="reference external" href="https://developer.github.com/v4/explorer/">Github’s GraphQL Explorer</a>. For example, to get the homepage URL of a repository:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools.github</span> <span class="kn">import</span> <span class="n">graphql</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;{</span>
+<span class="gp">... </span><span class="s2">  repository(name: &quot;test-actions&quot;, owner: &quot;sot&quot;) {</span>
+<span class="gp">... </span><span class="s2">    homepageUrl</span>
+<span class="gp">... </span><span class="s2">    id</span>
+<span class="gp">... </span><span class="s2">  }</span>
+<span class="gp">... </span><span class="s2">}&quot;&quot;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span> <span class="o">=</span> <span class="n">graphql</span><span class="o">.</span><span class="n">GITHUB_API</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span>
+<span class="go">{&#39;data&#39;: {&#39;repository&#39;: {&#39;homepageUrl&#39;: None,</span>
+<span class="go">&#39;id&#39;: &#39;MDEwOlJlcG9zaXRvcnkyMDkwMjE1NDQ=&#39;}}}</span>
+</pre></div>
+</div>
+<p>and to set the homepage URL of a repository:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools.github</span> <span class="kn">import</span> <span class="n">graphql</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;mutation {</span>
+<span class="gp">... </span><span class="s2">  updateRepository(input: {repositoryId: &quot;MDEwOlJlcG9zaXRvcnkyMDkwMjE1NDQ=&quot;,</span>
+<span class="gp">... </span><span class="s2">                            homepageUrl: &quot;https://github.com/sot/test-actions&quot;})</span>
+<span class="gp">... </span><span class="s2">  {</span>
+<span class="gp">... </span><span class="s2">    repository {</span>
+<span class="gp">... </span><span class="s2">      id</span>
+<span class="gp">... </span><span class="s2">      homepageUrl</span>
+<span class="gp">... </span><span class="s2">    }</span>
+<span class="gp">... </span><span class="s2">  }</span>
+<span class="gp">... </span><span class="s2">}</span>
+<span class="gp">... </span><span class="s2">&quot;&quot;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span> <span class="o">=</span> <span class="n">graphql</span><span class="o">.</span><span class="n">GITHUB_API</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span>
+<span class="go">{&#39;data&#39;: {&#39;updateRepository&#39;: {&#39;repository&#39;: {&#39;id&#39;: &#39;MDEwOlJlcG9zaXRvcnkyMDkwMjE1NDQ=&#39;,</span>
+<span class="go">&#39;homepageUrl&#39;: &#39;https://github.com/sot/test-actions&#39;}}}}</span>
+</pre></div>
+</div>
+<p>Given the flexibility of the GraphQL interface, this module includes a small collection of common
+queries. Each query in the collection is a string that should be used as a jinja2 template. For
+example, to get a list all pull requests of a repository:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">jinja2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools.github</span> <span class="kn">import</span> <span class="n">graphql</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">graphql</span><span class="o">.</span><span class="n">REPO_PR_QUERY</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">owner</span><span class="o">=</span><span class="s1">&#39;sot&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Quaternion&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span> <span class="o">=</span> <span class="n">graphql</span><span class="o">.</span><span class="n">GITHUB_API</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;pullRequests&#39;</span><span class="p">][</span><span class="s1">&#39;nodes&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">{&#39;baseRefName&#39;: &#39;master&#39;,</span>
+<span class="go"> &#39;headRefName&#39;: &#39;modernize&#39;,</span>
+<span class="go"> &#39;title&#39;: &#39;Add delta quaternion method and other package modernization&#39;,</span>
+<span class="go"> &#39;number&#39;: 2,</span>
+<span class="go"> &#39;state&#39;: &#39;MERGED&#39;}</span>
+</pre></div>
+</div>
+<p>THere is a (possibly incomplete) list of queries (with the template parameters in parentheses):</p>
+<ul class="simple">
+<li><p>REPO_ISSUES_QUERY(name, owner, label)</p></li>
+<li><p>REPO_PR_QUERY(name, owner)</p></li>
+<li><p>ORG_QUERY(owner)</p></li>
+<li><p>REPO_QUERY(owner, name)</p></li>
+</ul>
+</div>
+<div class="section" id="github-scripts">
+<h2>Github Scripts<a class="headerlink" href="#github-scripts" title="Permalink to this headline">¶</a></h2>
+<p>Some of these scripts are superseded by <a class="reference external" href="https://cli.github.com/">Github’s own CLI</a>,
+while some provide functionality specific to Ska. At the very least,
+the exemplify the usage of the API.</p>
+<div class="section" id="skare3-create-issue">
+<h3>skare3-create-issue<a class="headerlink" href="#skare3-create-issue" title="Permalink to this headline">¶</a></h3>
+<p><p>Create a github issue</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">create</span><span class="o">-</span><span class="n">issue</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="o">--</span><span class="n">repository</span> <span class="n">REPOSITORY</span>
+                           <span class="p">[</span><span class="o">--</span><span class="n">latest</span><span class="o">-</span><span class="n">release</span> <span class="n">LATEST_RELEASE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">title</span> <span class="n">TITLE</span><span class="p">]</span>
+                           <span class="p">[</span><span class="o">--</span><span class="n">body</span> <span class="n">BODY</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">label</span> <span class="n">LABEL</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="Named Arguments">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h4>
+<dl class="option-list">
+<dt><kbd>--repository</kbd></dt>
+<dd><p>repository name. Example: sot/chandra_aca</p>
+</dd>
+<dt><kbd>--latest-release</kbd></dt>
+<dd><p>Repository name (owner/repo). The latest release of this repodetermines the title and body of issue. Title/body are ignored.</p>
+</dd>
+<dt><kbd>--title</kbd></dt>
+<dd><p>Issue Title. Ignored if –latest-release is given</p>
+</dd>
+<dt><kbd>--body</kbd></dt>
+<dd><p>Issue Description. Ignored if –latest-release is given</p>
+</dd>
+<dt><kbd>--label</kbd></dt>
+<dd><p>Default: []</p>
+</dd>
+<dt><kbd>--token, -t</kbd></dt>
+<dd><p>Github token, or name of file that contains token</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="skare3-create-pr">
+<h3>skare3-create-pr<a class="headerlink" href="#skare3-create-pr" title="Permalink to this headline">¶</a></h3>
+<p><p>Create a pull request</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">create</span><span class="o">-</span><span class="n">pr</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="o">--</span><span class="n">repository</span> <span class="n">REPOSITORY</span> <span class="o">--</span><span class="n">title</span> <span class="n">TITLE</span> <span class="o">--</span><span class="n">head</span> <span class="n">HEAD</span>
+                        <span class="o">--</span><span class="n">base</span> <span class="n">BASE</span> <span class="o">--</span><span class="n">body</span> <span class="n">BODY</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="Named Arguments">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h4>
+<dl class="option-list">
+<dt><kbd>--repository</kbd></dt>
+<dd><p>repository name. Example: sot/chandra_aca</p>
+</dd>
+<dt><kbd>--title</kbd></dt>
+<dd></dd>
+<dt><kbd>--head</kbd></dt>
+<dd><p>branch you are merging from</p>
+</dd>
+<dt><kbd>--base</kbd></dt>
+<dd><p>branch you are merging to</p>
+</dd>
+<dt><kbd>--body</kbd></dt>
+<dd></dd>
+<dt><kbd>--token, -t</kbd></dt>
+<dd><p>Github token, or name of file that contains token</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="skare3-merge-pr">
+<h3>skare3-merge-pr<a class="headerlink" href="#skare3-merge-pr" title="Permalink to this headline">¶</a></h3>
+<p><p>Create a pull request</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">__main__</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="o">--</span><span class="n">repository</span> <span class="n">REPOSITORY</span> <span class="p">[</span><span class="o">--</span><span class="n">pull</span><span class="o">-</span><span class="n">number</span> <span class="n">PULL_NUMBER</span><span class="p">]</span>
+                   <span class="p">[</span><span class="o">--</span><span class="n">head</span> <span class="n">HEAD</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">base</span> <span class="n">BASE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">commit</span><span class="o">-</span><span class="n">title</span> <span class="n">COMMIT_TITLE</span><span class="p">]</span>
+                   <span class="p">[</span><span class="o">--</span><span class="n">commit</span><span class="o">-</span><span class="n">message</span> <span class="n">COMMIT_MESSAGE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">sha</span> <span class="n">SHA</span><span class="p">]</span>
+                   <span class="p">[</span><span class="o">--</span><span class="n">merge</span><span class="o">-</span><span class="n">method</span> <span class="n">MERGE_METHOD</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="Named Arguments">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h4>
+<dl class="option-list">
+<dt><kbd>--repository</kbd></dt>
+<dd><p>repository name. Example: sot/chandra_aca</p>
+</dd>
+<dt><kbd>--pull-number</kbd></dt>
+<dd><p>pull number</p>
+</dd>
+<dt><kbd>--head</kbd></dt>
+<dd><p>branch you are merging from</p>
+</dd>
+<dt><kbd>--base</kbd></dt>
+<dd><p>branch you are merging to</p>
+</dd>
+<dt><kbd>--commit-title</kbd></dt>
+<dd><p>Optional. Filled from PR.</p>
+</dd>
+<dt><kbd>--commit-message</kbd></dt>
+<dd><p>Optional. Filled from PR.</p>
+</dd>
+<dt><kbd>--sha</kbd></dt>
+<dd><p>SHA that pull request head must match to allow merge.</p>
+</dd>
+<dt><kbd>--merge-method</kbd></dt>
+<dd><p>Merge method to use. Possible values are merge, squash or rebase.</p>
+</dd>
+<dt><kbd>--token, -t</kbd></dt>
+<dd><p>Github token, or name of file that contains token</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="skare3-release-merge-info">
+<h3>skare3-release-merge-info<a class="headerlink" href="#skare3-release-merge-info" title="Permalink to this headline">¶</a></h3>
+<p><p>Amend a release description to mention merges after previous release.</p>
+<p>This script takes the sha of a release. It checks the commits between the time of this release and
+time of the previous release. If there is no previous release, it will look into all commits.
+Note that the releases could be on different branches, so the assumption is that all releases
+come from the same branch.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">__main__</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="o">--</span><span class="n">repository</span> <span class="n">REPOSITORY</span> <span class="p">[</span><span class="o">--</span><span class="n">sha</span> <span class="n">SHA</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="Named Arguments">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h4>
+<dl class="option-list">
+<dt><kbd>--repository</kbd></dt>
+<dd><p>repository name. Example: sot/chandra_aca</p>
+</dd>
+<dt><kbd>--sha</kbd></dt>
+<dd><p>sha of the release</p>
+</dd>
+<dt><kbd>--token, -t</kbd></dt>
+<dd><p>Github token, or name of file that contains token</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="skare3-add-secrets">
+<h3>skare3-add-secrets<a class="headerlink" href="#skare3-add-secrets" title="Permalink to this headline">¶</a></h3>
+<p><p>A script to add encrypted secrets to Github repositories.</p>
+<p>At some point, Github’s API did not have an endpoint for setting secrets.
+This script circumvented this limitation by using
+<a class="reference external" href="https://selenium-python.readthedocs.io/">Selenium with Python</a>
+together with <cite>ChromeDriver &lt;https://sites.google.com/a/chromium.org/chromedriver&gt;</cite>. While this is
+not strictly needed anymore, it is left because it is an example on how to deal with cases like
+this.</p>
+<p>To use it, you need to have Chrome installed,
+<a class="reference external" href="https://selenium-python.readthedocs.io/installation.html">install Selenium</a>, and you need to get
+<a class="reference external" href="https://sites.google.com/a/chromium.org/chromedriver/downloads">a version of ChromeDriver</a>
+matching your Chrome version. I suppose it could work with other browsers but I have not tried it.</p>
+<p>A valid YAML file looks like this:</p>
+<blockquote>
+<div><p>SECRET_NAME: the secret value</p>
+<dl class="simple">
+<dt>SECRET_TWO: |</dt><dd><p>another value
+asdf</p>
+</dd>
+</dl>
+</div></blockquote>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">add</span><span class="o">-</span><span class="n">secrets</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">secrets</span> <span class="n">SECRETS</span><span class="p">]</span> <span class="o">--</span><span class="n">user</span> <span class="n">USER</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">quit</span><span class="p">]</span>
+                          <span class="n">repositories</span> <span class="p">[</span><span class="n">repositories</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="Positional Arguments">
+<h4>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this headline">¶</a></h4>
+<dl class="option-list">
+<dt><kbd>repositories</kbd></dt>
+<dd></dd>
+</dl>
+</div>
+<div class="section" id="Named Arguments">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h4>
+<dl class="option-list">
+<dt><kbd>--secrets</kbd></dt>
+<dd><p>JSON file with all secrets</p>
+<p>Default: “secrets.json”</p>
+</dd>
+<dt><kbd>--user</kbd></dt>
+<dd><p>Github user name</p>
+</dd>
+<dt><kbd>--no-quit</kbd></dt>
+<dd><p>Do not close chrome browser at the end</p>
+<p>Default: True</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
+<ul>
+<li><a class="reference internal" href="#">Github</a><ul>
+<li><a class="reference internal" href="#module-skare3_tools.github.github">REST Interface (V3)</a></li>
+<li><a class="reference internal" href="#module-skare3_tools.github.graphql">GraphQL Interface (V4)</a></li>
+<li><a class="reference internal" href="#github-scripts">Github Scripts</a><ul>
+<li><a class="reference internal" href="#skare3-create-issue">skare3-create-issue</a><ul>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#skare3-create-pr">skare3-create-pr</a><ul>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#skare3-merge-pr">skare3-merge-pr</a><ul>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#skare3-release-merge-info">skare3-release-merge-info</a><ul>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#skare3-add-secrets">skare3-add-secrets</a><ul>
+<li><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">SkaRE3 Tools</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="packages.html"
+                        title="next chapter">Packages</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/github.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<footer class="footer">
+  <p class="pull-right">
+    <a href="_sources/github.rst.txt"
+       rel="nofollow">Page Source</a> &nbsp;
+    <a href="#">Back to Top</a></p>
+  <p>
+    &copy; Copyright 2020, Javier Gonzalez.<br/>
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 3.1.2. &nbsp;
+  </p>
+</footer>
+  </body>
+</html>

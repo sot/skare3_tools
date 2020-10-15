@@ -1,0 +1,310 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scripts &#8212; SkaRE3 Tools 0.1.dev1+g81bfeff documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-astropy.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration" href="config.html" />
+    <link rel="prev" title="Test Results" href="test_results.html" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,600' rel='stylesheet' type='text/css'/>
+
+  </head><body>
+<div class="topbar">
+  <a class="brand" title="Documentation Home" href="index.html"><span id="logotext1">Ska! </span><span id="logotext2">SkaRE3</span><span id="logotext3">Tools</span></a>
+  <ul>
+    
+    <li><a class="home" title="Homepage" href="https://cxc.cfa.harvard.edu/mta/ASPECT/tool_doc">
+        <span id="logotext1">ska</span><span id="logotext2">tools</span>
+    </a></li>
+    <li><a title="General Index" href="genindex.html">Index</a></li>
+    <li><a title="Module Index" href="py-modindex.html">Modules</a></li>
+    <li>
+      
+      
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+      
+    </li>
+  </ul>
+</div>
+
+<div class="related">
+    <h3>Navigation</h3>
+    <ul>
+      <li class="right">
+	<a href="config.html" title="Configuration">
+	  next &raquo;
+	</a>
+      </li>
+      <li class="right">
+	<a href="test_results.html" title="Test Results">
+	  &laquo; previous
+	</a>
+	 |
+      </li>
+      <li>
+	<a href="index.html">SkaRE3 Tools 0.1.dev1+g81bfeff documentation</a>
+	 &#187;
+      </li>
+      
+      <li>Scripts</li> 
+    </ul>
+</div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="scripts">
+<h1>Scripts<a class="headerlink" href="#scripts" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="skare3-bulk">
+<span id="id1"></span><h2><a class="reference internal" href="#skare3-bulk"><span class="std std-ref">skare3-bulk</span></a><a class="headerlink" href="#skare3-bulk" title="Permalink to this headline">¶</a></h2>
+<p><p>Script to run the same command in a collection of subdirectories.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">bulk</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">repositories</span> <span class="n">REPOSITORIES</span><span class="p">]</span> <span class="n">cmd</span> <span class="p">[</span><span class="n">cmd</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="Positional Arguments">
+<h3>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>cmd</kbd></dt>
+<dd><p>The command to run</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="Named Arguments">
+<h3>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--repositories</kbd></dt>
+<dd><p>the name of the subdirectories</p>
+<p>Default: “git_repositories”</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="skare3-build">
+<span id="id2"></span><h2><a class="reference internal" href="#skare3-build"><span class="std std-ref">skare3-build</span></a><a class="headerlink" href="#skare3-build" title="Permalink to this headline">¶</a></h2>
+<p><p>Script to wrap the standard skare3 building script.</p>
+<p>This script differs in a few ways from the standard build:</p>
+<ul class="simple">
+<li><p>The input is a github repository, and the corresponding conda package name is inferred.</p></li>
+<li><p>The package version of some conda packages can be overwritten. This is used when building a
+release candidate (with an added ‘rc’ at the end of the version) without modifying meta.yml.</p></li>
+<li><p>Replace CONDA_PASSWORD in conda channel URLs on the fly (older conda versions failed to do this)</p></li>
+<li><p>ensure there are non-empty directories linux-64, osx-64, noarch, and win-64 in the output</p></li>
+</ul>
+<p><strong>WARNING</strong> This script has the side effect of setting git’s global username and email.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">build</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">skare3</span><span class="o">-</span><span class="n">overwrite</span><span class="o">-</span><span class="n">version</span> <span class="n">SKARE3_OVERWRITE_VERSION</span><span class="p">]</span>
+                    <span class="p">[</span><span class="o">--</span><span class="n">skare3</span><span class="o">-</span><span class="n">branch</span> <span class="n">SKARE3_BRANCH</span><span class="p">]</span>
+                    <span class="n">package</span>
+</pre></div>
+</div>
+<div class="section" id="Positional Arguments">
+<h3>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>package</kbd></dt>
+<dd><p>The repository name in format {owner}/{name}</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="Named Arguments">
+<h3>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--skare3-overwrite-version</kbd></dt>
+<dd><p>the version of the resulting conda package</p>
+</dd>
+<dt><kbd>--skare3-branch</kbd></dt>
+<dd><p>The branch to build (default: master</p>
+<p>Default: “master”</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="skare3-release-check">
+<span id="id3"></span><h2><a class="reference internal" href="#skare3-release-check"><span class="std std-ref">skare3-release-check</span></a><a class="headerlink" href="#skare3-release-check" title="Permalink to this headline">¶</a></h2>
+<p><p>Check the environment and conda configuration files to determine which packages to build, if any.
+It also does a sanity check, checking whether the release is from a branch with the same name,
+and whether the release and tag exist.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">release</span><span class="o">-</span><span class="n">check</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="o">--</span><span class="n">version</span> <span class="n">VERSION</span> <span class="p">[</span><span class="o">--</span><span class="n">skare3</span><span class="o">-</span><span class="n">path</span> <span class="n">SKARE3_PATH</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">--</span><span class="n">repository</span> <span class="n">REPOSITORY</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">check</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="Named Arguments">
+<h3>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--version</kbd></dt>
+<dd><p>Target version to build</p>
+</dd>
+<dt><kbd>--skare3-path</kbd></dt>
+<dd><p>skare3 directory</p>
+<p>Default: “.”</p>
+</dd>
+<dt><kbd>--repository</kbd></dt>
+<dd><p>Default: “sot/skare3”</p>
+</dd>
+<dt><kbd>--token, -t</kbd></dt>
+<dd><p>Github token, or name of file that contains token</p>
+</dd>
+<dt><kbd>--no-check</kbd></dt>
+<dd><p>Checks for CI</p>
+<p>Default: True</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="skare3-changes-summary">
+<span id="id4"></span><h2><a class="reference internal" href="#skare3-changes-summary"><span class="std std-ref">skare3-changes-summary</span></a><a class="headerlink" href="#skare3-changes-summary" title="Permalink to this headline">¶</a></h2>
+<p><p>Produce a list of changes for all packages between two sets of versions.</p>
+<p>The sets of versions can be specified in a few ways: 1. one string of flight, matlab, last_tag,
+2. one string that must correspond to a package in conda-info file 3. the name of a json file
+containing a dictionary of versions indexed by package names (which can be created doing
+“conda search –info –json ska3-flight”, for example).</p>
+<p>The changes come from a json file created with skare3-github-info.</p>
+<p>This script requires a “name map” JSON file, which contains a list of dictionaries, one per package.
+Each dictionary lists the different names by which this package is known (pyton module, github repo,
+conda package). This is to merge information from conda and github.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">changes</span><span class="o">-</span><span class="n">summary</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">initial</span><span class="o">-</span><span class="n">version</span> <span class="n">INITIAL_VERSION</span><span class="p">]</span>
+                              <span class="p">[</span><span class="o">--</span><span class="n">final</span><span class="o">-</span><span class="n">version</span> <span class="n">FINAL_VERSION</span><span class="p">]</span>
+                              <span class="p">[</span><span class="o">--</span><span class="n">meta</span><span class="o">-</span><span class="n">package</span> <span class="n">META_PACKAGE</span><span class="p">]</span>
+                              <span class="p">[</span><span class="o">--</span><span class="n">conda</span><span class="o">-</span><span class="n">channel</span> <span class="n">CONDA_CHANNEL</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="Named Arguments">
+<h3>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--initial-version</kbd></dt>
+<dd><p>Either a string or a json file with dictionary of package/versions.</p>
+<p>Default: “flight”</p>
+</dd>
+<dt><kbd>--final-version</kbd></dt>
+<dd><p>Either a string or a json file with dictionary of package/versions.</p>
+<p>Default: “last_tag”</p>
+</dd>
+<dt><kbd>--meta-package</kbd></dt>
+<dd><p>Default: “ska3-flight”</p>
+</dd>
+<dt><kbd>--conda-channel</kbd></dt>
+<dd><p>Default: “test”</p>
+</dd>
+<dt><kbd>--token</kbd></dt>
+<dd><p>Github token, or name of file that contains token</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="skare3-git-pass">
+<span id="id5"></span><h2><a class="reference internal" href="#skare3-git-pass"><span class="std std-ref">skare3-git-pass</span></a><a class="headerlink" href="#skare3-git-pass" title="Permalink to this headline">¶</a></h2>
+<p><p>Utility script to provide username/password when authenticating git.
+This script reads the GIT_USERNAME and GIT_PASSWORD environmental variables
+and returns the corresponding value when requested.</p>
+<p>If one sets the GIT_ASKPASS environmental variable to point to this script, and sets GIT_USERNAME
+and GIT_PASSWORD, git takes care of the rest.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">git</span><span class="o">-</span><span class="k">pass</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">{</span><span class="n">username</span><span class="p">,</span><span class="n">password</span><span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="Positional Arguments">
+<h3>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>what</kbd></dt>
+<dd><p>Possible choices: username, password</p>
+<p>What is being requested (either password or username).</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
+<ul>
+<li><a class="reference internal" href="#">Scripts</a><ul>
+<li><a class="reference internal" href="#skare3-bulk"><span class="xref std std-ref">skare3-bulk</span></a><ul>
+<li><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#skare3-build"><span class="xref std std-ref">skare3-build</span></a><ul>
+<li><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#skare3-release-check"><span class="xref std std-ref">skare3-release-check</span></a><ul>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#skare3-changes-summary"><span class="xref std std-ref">skare3-changes-summary</span></a><ul>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#skare3-git-pass"><span class="xref std std-ref">skare3-git-pass</span></a><ul>
+<li><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="test_results.html"
+                        title="previous chapter">Test Results</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="config.html"
+                        title="next chapter">Configuration</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/scripts.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<footer class="footer">
+  <p class="pull-right">
+    <a href="_sources/scripts.rst.txt"
+       rel="nofollow">Page Source</a> &nbsp;
+    <a href="#">Back to Top</a></p>
+  <p>
+    &copy; Copyright 2020, Javier Gonzalez.<br/>
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 3.1.2. &nbsp;
+  </p>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Results &#8212; SkaRE3 Tools 0.1.dev1+g81bfeff documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-astropy.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Scripts" href="scripts.html" />
+    <link rel="prev" title="Dashboard" href="dash.html" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,600' rel='stylesheet' type='text/css'/>
+
+  </head><body>
+<div class="topbar">
+  <a class="brand" title="Documentation Home" href="index.html"><span id="logotext1">Ska! </span><span id="logotext2">SkaRE3</span><span id="logotext3">Tools</span></a>
+  <ul>
+    
+    <li><a class="home" title="Homepage" href="https://cxc.cfa.harvard.edu/mta/ASPECT/tool_doc">
+        <span id="logotext1">ska</span><span id="logotext2">tools</span>
+    </a></li>
+    <li><a title="General Index" href="genindex.html">Index</a></li>
+    <li><a title="Module Index" href="py-modindex.html">Modules</a></li>
+    <li>
+      
+      
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+      
+    </li>
+  </ul>
+</div>
+
+<div class="related">
+    <h3>Navigation</h3>
+    <ul>
+      <li class="right">
+	<a href="scripts.html" title="Scripts">
+	  next &raquo;
+	</a>
+      </li>
+      <li class="right">
+	<a href="dash.html" title="Dashboard">
+	  &laquo; previous
+	</a>
+	 |
+      </li>
+      <li>
+	<a href="index.html">SkaRE3 Tools 0.1.dev1+g81bfeff documentation</a>
+	 &#187;
+      </li>
+      
+      <li>Test Results</li> 
+    </ul>
+</div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-skare3_tools.test_results">
+<span id="test-results"></span><h1>Test Results<a class="headerlink" href="#module-skare3_tools.test_results" title="Permalink to this headline">¶</a></h1>
+<p>This module includes a very primitive database of test
+results. It is assumed that test results are grouped in “test suites”, which are just a group of
+tests run together.</p>
+<p>Tests are grouped in “streams” which can be viewed as the same set of tests performed repeatedly
+For example: daily regression tests can be a stream, unit tests upon merging to master can be
+another, and release tests can be yet another. All test suites can also be given “tags” that allow
+a more arbitrary grouping.</p>
+<p>To add a test suite to the database, one normally uses the <a class="reference internal" href="#skare3-test-results"><span class="std std-ref">skare3-test-results</span></a> script,
+which basically does this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">test_results</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test_results</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;test_logs/&#39;</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="s1">&#39;ska3-masters&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And to retrieve all tests for a stream:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">test_results</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test_results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">stream</span><span class="o">=</span><span class="s1">&#39;ska3-masters&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="scripts">
+<h2>Scripts<a class="headerlink" href="#scripts" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="skare3-test-results">
+<span id="id1"></span><h3><a class="reference internal" href="#skare3-test-results"><span class="std std-ref">skare3-test-results</span></a><a class="headerlink" href="#skare3-test-results" title="Permalink to this headline">¶</a></h3>
+<p><p>Add the test results from a given directory to the database.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">test</span><span class="o">-</span><span class="n">results</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="o">--</span><span class="n">stream</span> <span class="n">STREAM</span> <span class="p">[</span><span class="o">--</span><span class="n">tag</span> <span class="n">TAGS</span><span class="p">]</span> <span class="n">directory</span>
+</pre></div>
+</div>
+<div class="section" id="Positional Arguments">
+<h4>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this headline">¶</a></h4>
+<dl class="option-list">
+<dt><kbd>directory</kbd></dt>
+<dd><p>The directory containing all test result logs.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="Named Arguments">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h4>
+<dl class="option-list">
+<dt><kbd>--stream</kbd></dt>
+<dd><p>The named stream this test suite belongs to.</p>
+</dd>
+<dt><kbd>--tag</kbd></dt>
+<dd><p>Optional string tags to refer to this test suite in the future.</p>
+<p>Default: []</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
+<ul>
+<li><a class="reference internal" href="#">Test Results</a><ul>
+<li><a class="reference internal" href="#scripts">Scripts</a><ul>
+<li><a class="reference internal" href="#skare3-test-results"><span class="xref std std-ref">skare3-test-results</span></a><ul>
+<li><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dash.html"
+                        title="previous chapter">Dashboard</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="scripts.html"
+                        title="next chapter">Scripts</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/test_results.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<footer class="footer">
+  <p class="pull-right">
+    <a href="_sources/test_results.rst.txt"
+       rel="nofollow">Page Source</a> &nbsp;
+    <a href="#">Back to Top</a></p>
+  <p>
+    &copy; Copyright 2020, Javier Gonzalez.<br/>
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 3.1.2. &nbsp;
+  </p>
+</footer>
+  </body>
+</html>

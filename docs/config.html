@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration &#8212; SkaRE3 Tools 0.1.dev1+g81bfeff documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-astropy.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API" href="api.html" />
+    <link rel="prev" title="Scripts" href="scripts.html" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,600' rel='stylesheet' type='text/css'/>
+
+  </head><body>
+<div class="topbar">
+  <a class="brand" title="Documentation Home" href="index.html"><span id="logotext1">Ska! </span><span id="logotext2">SkaRE3</span><span id="logotext3">Tools</span></a>
+  <ul>
+    
+    <li><a class="home" title="Homepage" href="https://cxc.cfa.harvard.edu/mta/ASPECT/tool_doc">
+        <span id="logotext1">ska</span><span id="logotext2">tools</span>
+    </a></li>
+    <li><a title="General Index" href="genindex.html">Index</a></li>
+    <li><a title="Module Index" href="py-modindex.html">Modules</a></li>
+    <li>
+      
+      
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+      
+    </li>
+  </ul>
+</div>
+
+<div class="related">
+    <h3>Navigation</h3>
+    <ul>
+      <li class="right">
+	<a href="api.html" title="API">
+	  next &raquo;
+	</a>
+      </li>
+      <li class="right">
+	<a href="scripts.html" title="Scripts">
+	  &laquo; previous
+	</a>
+	 |
+      </li>
+      <li>
+	<a href="index.html">SkaRE3 Tools 0.1.dev1+g81bfeff documentation</a>
+	 &#187;
+      </li>
+      
+      <li>Configuration</li> 
+    </ul>
+</div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="configuration">
+<span id="id1"></span><h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-skare3_tools.config"></span><p>The configuration is automatically set with default values which specify the location of the skare3
+repository, the different conda channels used, the Github organizations who own the packages, and
+the directory where to store cached data. This happens the first time this module is imported.</p>
+<p>Normally, a user does not need to do anything except to add an environment variable with the
+standard password to conda channels called CONDA_PASSWORD.</p>
+<p>The configuration is saved in JSON format, in the location:</p>
+<ul class="simple">
+<li><p>specifyed by the SKARE3_TOOLS_DATA environmental variable,</p></li>
+<li><p>or:</p>
+<ul>
+<li><p>Linux/Mac OS: ~/.skare3</p></li>
+<li><p>windows: %LOCALAPPDATA%skare3</p></li>
+</ul>
+</li>
+</ul>
+<p>The default looks like this:</p>
+<div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;config_version&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="nt">&quot;repository&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/sot/skare3&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;conda_channels&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;masters&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/masters&quot;</span>
+    <span class="p">],</span>
+    <span class="nt">&quot;main&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/shiny&quot;</span>
+    <span class="p">],</span>
+    <span class="nt">&quot;dull&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda&quot;</span>
+    <span class="p">],</span>
+    <span class="nt">&quot;test&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/test&quot;</span>
+    <span class="p">]</span>
+  <span class="p">},</span>
+  <span class="nt">&quot;organizations&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">&quot;sot&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;acisops&quot;</span>
+  <span class="p">],</span>
+  <span class="nt">&quot;data_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="cache-directory">
+<h2>Cache Directory<a class="headerlink" href="#cache-directory" title="Permalink to this headline">¶</a></h2>
+<p>The cached data is stored in the same directory as the configuration, unless otherwise specified in
+the configuration itself (i.e.: one can have the config in ~/.skare3 and set ‘data_dir’ in this
+configuration to some other directory).</p>
+</div>
+<div class="section" id="conda-channels">
+<h2>Conda Channels<a class="headerlink" href="#conda-channels" title="Permalink to this headline">¶</a></h2>
+<p>Conda channels are specified as a dictionary, with identifying strings as keys, and list of URL
+strings as values:</p>
+<div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;conda_channels&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;masters&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/masters&quot;</span>
+     <span class="p">],</span>
+    <span class="nt">&quot;main&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda&quot;</span>
+    <span class="p">]</span>
+  <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
+<ul>
+<li><a class="reference internal" href="#">Configuration</a><ul>
+<li><a class="reference internal" href="#cache-directory">Cache Directory</a></li>
+<li><a class="reference internal" href="#conda-channels">Conda Channels</a></li>
+</ul>
+</li>
+</ul>
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="scripts.html"
+                        title="previous chapter">Scripts</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="next chapter">API</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/config.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<footer class="footer">
+  <p class="pull-right">
+    <a href="_sources/config.rst.txt"
+       rel="nofollow">Page Source</a> &nbsp;
+    <a href="#">Back to Top</a></p>
+  <p>
+    &copy; Copyright 2020, Javier Gonzalez.<br/>
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 3.1.2. &nbsp;
+  </p>
+</footer>
+  </body>
+</html>

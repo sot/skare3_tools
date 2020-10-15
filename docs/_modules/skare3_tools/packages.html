@@ -1,0 +1,942 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>skare3_tools.packages &#8212; SkaRE3 Tools 0.1.dev1+g81bfeff documentation</title>
+    <link rel="stylesheet" href="../../_static/bootstrap-astropy.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <script type="text/javascript" src="../../_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,600' rel='stylesheet' type='text/css'/>
+
+  </head><body>
+<div class="topbar">
+  <a class="brand" title="Documentation Home" href="../../index.html"><span id="logotext1">Ska! </span><span id="logotext2">SkaRE3</span><span id="logotext3">Tools</span></a>
+  <ul>
+    
+    <li><a class="home" title="Homepage" href="https://cxc.cfa.harvard.edu/mta/ASPECT/tool_doc">
+        <span id="logotext1">ska</span><span id="logotext2">tools</span>
+    </a></li>
+    <li><a title="General Index" href="../../genindex.html">Index</a></li>
+    <li><a title="Module Index" href="../../py-modindex.html">Modules</a></li>
+    <li>
+      
+      
+<form action="../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+      
+    </li>
+  </ul>
+</div>
+
+<div class="related">
+    <h3>Navigation</h3>
+    <ul>
+      <li>
+	<a href="../../index.html">SkaRE3 Tools 0.1.dev1+g81bfeff documentation</a>
+	 &#187;
+      </li>
+      <li><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+      
+       
+    </ul>
+</div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for skare3_tools.packages</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A module to keep track of all package information (repository, conda package info, etc).</span>
+
+<span class="sd">Package List</span>
+<span class="sd">------------</span>
+
+<span class="sd">One of the main purposes of this module is to maintain a list of &quot;packages&quot;. Some packages have an</span>
+<span class="sd">associated github repository, which can be owned by one or more organizations. Some packages</span>
+<span class="sd">have an associated conda package, which is listed in one or more conda channels. The package list is</span>
+<span class="sd">the union of the conda packages and the github repositories. The name of the package, the name of</span>
+<span class="sd">the repository and the name of the conda package might not be the same.</span>
+
+<span class="sd">To assemble the package list, this module uses:</span>
+
+<span class="sd">- All skare3/pkg_defs/\*/meta.yaml files within the skare3 repository</span>
+<span class="sd">- the list of all repositories for a given list of organizations (sot, acisops)</span>
+
+<span class="sd">The package list is cached locally. The cache expires after one day.</span>
+<span class="sd">To use this module to get the package list, use :func:`~skare3_tools.packages.get_package_list`::</span>
+
+<span class="sd">    &gt;&gt;&gt; from skare3_tools import packages</span>
+<span class="sd">    &gt;&gt;&gt; pkgs = packages.get_package_list()</span>
+<span class="sd">    &gt;&gt;&gt; pkgs[0]</span>
+<span class="sd">    {&#39;name&#39;: &#39;ska3-core&#39;,</span>
+<span class="sd">     &#39;package&#39;: &#39;ska3-core&#39;,</span>
+<span class="sd">     &#39;repository&#39;: None,</span>
+<span class="sd">     &#39;owner&#39;: None}</span>
+
+<span class="sd">Package Info</span>
+<span class="sd">------------</span>
+
+<span class="sd">Some information about each package is cached locally. The cache expires whenever there is an</span>
+<span class="sd">&quot;update&quot; or a &quot;push&quot; to the associated Github repository. The information includes information such</span>
+<span class="sd">as the number of open pull requests, number of branches. It also includes versions available in</span>
+<span class="sd">conda channels.</span>
+
+<span class="sd">To get the current information associated with a package using</span>
+<span class="sd">:func:`~skare3_tools.packages.get_repository_info`::</span>
+
+<span class="sd">    &gt;&gt;&gt; from skare3_tools import packages</span>
+<span class="sd">    &gt;&gt;&gt; pkg = packages.get_repository_info(&#39;sot/Quaternion&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; pkg.keys()</span>
+<span class="sd">    dict_keys([&#39;owner&#39;, &#39;name&#39;, &#39;pushed_at&#39;, &#39;updated_at&#39;, &#39;last_tag&#39;, &#39;last_tag_date&#39;,</span>
+<span class="sd">    &#39;commits&#39;, &#39;merges&#39;, &#39;merge_info&#39;, &#39;release_info&#39;, &#39;issues&#39;, &#39;n_pull_requests&#39;,</span>
+<span class="sd">    &#39;branches&#39;, &#39;pull_requests&#39;, &#39;workflows&#39;, &#39;master_version&#39;])</span>
+
+<span class="sd">The information on all packages can be accessed with</span>
+<span class="sd">:func:`~skare3_tools.packages.get_repositories_info`::</span>
+
+<span class="sd">    &gt;&gt;&gt; from skare3_tools import packages</span>
+<span class="sd">    &gt;&gt;&gt; pkg = packages.get_repositories_info()</span>
+
+<span class="sd">Conda Info</span>
+<span class="sd">----------</span>
+
+<span class="sd">As part of the call to get_repository_info, the conda package versions are also fetched. This is</span>
+<span class="sd">done with :func:`~skare3_tools.packages.get_conda_pkg_info`, something like::</span>
+
+<span class="sd">    &gt;&gt;&gt; from skare3_tools import packages</span>
+<span class="sd">    &gt;&gt;&gt; info = packages.get_conda_pkg_info(&#39;quaternion&#39;)</span>
+
+<span class="sd">By default, this function looks for information on packages from a set of channels specified as</span>
+<span class="sd">the &quot;main&quot; channels. Extra sets of channels (i.e.: test, masters, shiny) can be specified as part</span>
+<span class="sd">of the :ref:`Configuration`, in which case one can do::</span>
+
+<span class="sd">    &gt;&gt;&gt; from skare3_tools import packages</span>
+<span class="sd">    &gt;&gt;&gt; info = packages.get_conda_pkg_info(&#39;quaternion&#39;, conda_channel=&#39;masters&#39;)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">jinja2</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">github</span>
+<span class="kn">from</span> <span class="nn">skare3_tools.config</span> <span class="kn">import</span> <span class="n">CONFIG</span>
+
+
+<span class="k">class</span> <span class="nc">NetworkException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="json_cache"><a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.json_cache">[docs]</a><span class="k">def</span> <span class="nf">json_cache</span><span class="p">(</span><span class="n">name</span><span class="p">,</span>
+               <span class="n">directory</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+               <span class="n">ignore</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">expires</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">update_policy</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decorator to cache function results in json format.</span>
+
+<span class="sd">    This decorator adds an &#39;update&#39; argument to decorated functions. update is False by default,</span>
+<span class="sd">    but one can set it to True to force-update the cache entry.</span>
+
+<span class="sd">    Data is saved in json files. The file names can include a special separator character to denote</span>
+<span class="sd">    the function arguments. Currently that character is &#39;:&#39;.</span>
+
+<span class="sd">    :param name:</span>
+<span class="sd">    :param directory: str</span>
+<span class="sd">        path where to save json file. Either absolute or relative to CONFIG[&#39;data_dir&#39;]</span>
+<span class="sd">    :param ignore: list</span>
+<span class="sd">        list of argument names to ignore in the cache entry identifier</span>
+<span class="sd">    :param expires: dict</span>
+<span class="sd">        a dictionary that can be given to datetime.timedelta(\*\*expires)</span>
+<span class="sd">        If the cache entry is older than this interval, it is updated.</span>
+<span class="sd">    :param update_policy: callable</span>
+<span class="sd">        A callable taking two arguments: (filename, result), which returns True if the cache entry</span>
+<span class="sd">        should be updated.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+    <span class="kn">import</span> <span class="nn">inspect</span>
+    <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;data_dir&#39;</span><span class="p">],</span> <span class="n">directory</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore</span><span class="p">:</span>
+        <span class="n">ignore</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">expires</span><span class="p">:</span>
+        <span class="n">expires</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="o">**</span><span class="n">expires</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">decorator_cache</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">ignore_args</span><span class="o">=</span><span class="n">ignore</span><span class="p">,</span> <span class="n">expiration</span><span class="o">=</span><span class="n">expires</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">):</span>
+        <span class="n">signature</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">+=</span> <span class="s1">&#39;::&#39;</span>
+
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">s_args</span> <span class="o">=</span> <span class="n">signature</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">arguments</span>
+            <span class="n">arg_str</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;</span><span class="si">{a}</span><span class="s1">:</span><span class="si">{v}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">s_args</span><span class="p">[</span><span class="n">a</span><span class="p">])</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">s_args</span> <span class="k">if</span> <span class="n">a</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_args</span><span class="p">])</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{name}{arg_str}</span><span class="s1">.json&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">arg_str</span><span class="o">=</span><span class="n">arg_str</span><span class="p">)</span>
+            <span class="c1"># in an ideal world, filename would be completely sanitized... this world is not ideal.</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">expiration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                <span class="n">m_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+                <span class="n">update</span> <span class="o">=</span> <span class="n">update</span> <span class="ow">or</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">m_time</span> <span class="o">&gt;</span> <span class="n">expiration</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">update_policy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">update</span> <span class="o">=</span> <span class="n">update</span> <span class="ow">or</span> <span class="n">update_policy</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">update</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">directory_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">directory_out</span><span class="p">):</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">directory_out</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">def</span> <span class="nf">clear_cache</span><span class="p">():</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{name}</span><span class="s1">*.json&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">))</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">files</span><span class="p">:</span>
+                <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s1">&#39;rm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">files</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">wrapper</span><span class="p">,</span> <span class="s1">&#39;clear_cache&#39;</span><span class="p">,</span> <span class="n">clear_cache</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">rm_cache_entry</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">s_args</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">arguments</span>
+            <span class="n">arg_str</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;</span><span class="si">{a}</span><span class="s1">:</span><span class="si">{v}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">s_args</span><span class="p">[</span><span class="n">a</span><span class="p">])</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">s_args</span> <span class="k">if</span> <span class="n">a</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_args</span><span class="p">])</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{name}{arg_str}</span><span class="s1">.json&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">arg_str</span><span class="o">=</span><span class="n">arg_str</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">wrapper</span><span class="p">,</span> <span class="s1">&#39;rm_cache_entry&#39;</span><span class="p">,</span> <span class="n">rm_cache_entry</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wrapper</span>
+    <span class="k">return</span> <span class="n">decorator_cache</span></div>
+
+
+<span class="k">def</span> <span class="nf">_ensure_skare3_local_repo</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">repo_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;data_dir&#39;</span><span class="p">],</span> <span class="s1">&#39;skare3&#39;</span><span class="p">)</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">repo_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">parent</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">repo_dir</span><span class="p">):</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s1">&#39;git&#39;</span><span class="p">,</span> <span class="s1">&#39;clone&#39;</span><span class="p">,</span> <span class="s1">&#39;https://github.com/sot/skare3&#39;</span><span class="p">,</span> <span class="n">repo_dir</span><span class="p">],</span>
+                           <span class="n">cwd</span><span class="o">=</span><span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;data_dir&#39;</span><span class="p">],</span>
+                           <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                           <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">update</span><span class="p">:</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s1">&#39;git&#39;</span><span class="p">,</span> <span class="s1">&#39;pull&#39;</span><span class="p">],</span>
+                           <span class="n">cwd</span><span class="o">=</span><span class="n">repo_dir</span><span class="p">,</span>
+                           <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                           <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">repo_dir</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_conda_package_list</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">_ensure_skare3_local_repo</span><span class="p">(</span><span class="n">update</span><span class="p">)</span>
+    <span class="n">all_meta</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;data_dir&#39;</span><span class="p">],</span>
+                                      <span class="s1">&#39;skare3&#39;</span><span class="p">,</span> <span class="s1">&#39;pkg_defs&#39;</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s1">&#39;meta.yaml&#39;</span><span class="p">))</span>
+    <span class="n">all_info</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">all_meta</span><span class="p">:</span>
+        <span class="n">macro</span> <span class="o">=</span> <span class="s1">&#39;{% macro compiler(arg) %}{</span><span class="si">% e</span><span class="s1">ndmacro %}</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">macro</span> <span class="o">+</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">render</span><span class="p">(),</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+        <span class="n">pkg_info</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">f</span><span class="p">)),</span>
+            <span class="s1">&#39;package&#39;</span><span class="p">:</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;package&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;repository&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;owner&#39;</span><span class="p">:</span> <span class="kc">None</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="s1">&#39;about&#39;</span> <span class="ow">in</span> <span class="n">info</span> <span class="ow">and</span> <span class="s1">&#39;home&#39;</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;about&#39;</span><span class="p">]:</span>
+            <span class="n">home</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;about&#39;</span><span class="p">][</span><span class="s1">&#39;home&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;git@github.com:(?P&lt;org&gt;[^/]+)/(?P&lt;repo&gt;\S+)\.git$&#39;</span><span class="p">,</span> <span class="n">home</span><span class="p">),</span>
+                       <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;git@github.com:(?P&lt;org&gt;[^/]+)/(?P&lt;repo&gt;\S+)$&#39;</span><span class="p">,</span> <span class="n">home</span><span class="p">),</span>
+                       <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;https?://github.com/(?P&lt;org&gt;[^/]+)/(?P&lt;repo&gt;[^/]+)/?&#39;</span><span class="p">,</span> <span class="n">home</span><span class="p">)]</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+                    <span class="n">m</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">groupdict</span><span class="p">()</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+                <span class="n">pkg_info</span><span class="p">[</span><span class="s1">&#39;owner&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="s1">&#39;org&#39;</span><span class="p">]</span>
+                <span class="n">pkg_info</span><span class="p">[</span><span class="s1">&#39;repository&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{org}</span><span class="s1">/</span><span class="si">{repo}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">m</span><span class="p">)</span>
+                <span class="n">pkg_info</span><span class="p">[</span><span class="s1">&#39;home&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;about&#39;</span><span class="p">][</span><span class="s1">&#39;home&#39;</span><span class="p">]</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#    pkg_info[&#39;home&#39;] = &#39;&#39;</span>
+        <span class="c1"># print(f, pkg_info[&#39;repository&#39;])</span>
+        <span class="n">all_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pkg_info</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">all_info</span>
+
+
+<div class="viewcode-block" id="get_package_list"><a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_package_list">[docs]</a><span class="nd">@json_cache</span><span class="p">(</span><span class="s1">&#39;pkg_name_map&#39;</span><span class="p">,</span>
+            <span class="n">expires</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;days&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+<span class="k">def</span> <span class="nf">get_package_list</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a list of dictionaries, one per package.</span>
+
+<span class="sd">    :return: dict</span>
+<span class="sd">        Dictionary contains only basic information</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">all_packages</span> <span class="o">=</span> <span class="n">_conda_package_list</span><span class="p">()</span>
+    <span class="n">full_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;repository&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">all_packages</span><span class="p">]</span>
+    <span class="n">organizations</span> <span class="o">=</span> <span class="p">[</span><span class="n">github</span><span class="o">.</span><span class="n">Organization</span><span class="p">(</span><span class="n">org</span><span class="p">)</span> <span class="k">for</span> <span class="n">org</span> <span class="ow">in</span> <span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;organizations&#39;</span><span class="p">]]</span>
+    <span class="n">repositories</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">org</span> <span class="ow">in</span> <span class="n">organizations</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">org</span><span class="o">.</span><span class="n">repositories</span><span class="p">()]</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">repositories</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;full_name&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">full_names</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">all_packages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;full_name&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;package&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;repository&#39;</span><span class="p">:</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;full_name&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;owner&#39;</span><span class="p">:</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;owner&#39;</span><span class="p">][</span><span class="s1">&#39;login&#39;</span><span class="p">]</span>
+        <span class="p">})</span>
+    <span class="n">all_packages</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">all_packages</span><span class="p">,</span>
+                          <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;repository&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;repository&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                                         <span class="n">p</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">all_packages</span></div>
+
+
+<span class="k">def</span> <span class="nf">_get_tag_target</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s1">&#39;target&#39;</span> <span class="ow">in</span> <span class="n">tag</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_get_tag_target</span><span class="p">(</span><span class="n">tag</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tag</span><span class="p">[</span><span class="s1">&#39;oid&#39;</span><span class="p">]</span>
+
+
+<span class="n">_PR_QUERY</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">{</span>
+<span class="s2">  repository(name: &quot;{{ name }}&quot;, owner: &quot;{{ owner }}&quot;) {</span>
+<span class="s2">    name</span>
+<span class="s2">    owner {</span>
+<span class="s2">      login</span>
+<span class="s2">    }</span>
+<span class="s2">    pullRequests(last: 100, baseRefName: &quot;master&quot;, before: &quot;{{ cursor }}&quot;) {</span>
+<span class="s2">      nodes {</span>
+<span class="s2">        number</span>
+<span class="s2">        title</span>
+<span class="s2">        url</span>
+<span class="s2">        commits(last: 100) {</span>
+<span class="s2">          totalCount</span>
+<span class="s2">          nodes {</span>
+<span class="s2">            commit {</span>
+<span class="s2">              committedDate</span>
+<span class="s2">              pushedDate</span>
+<span class="s2">              message</span>
+<span class="s2">            }</span>
+<span class="s2">          }</span>
+<span class="s2">        }</span>
+<span class="s2">        baseRefName</span>
+<span class="s2">        headRefName</span>
+<span class="s2">        state</span>
+<span class="s2">      }</span>
+<span class="s2">      pageInfo {</span>
+<span class="s2">        hasPreviousPage</span>
+<span class="s2">        hasNextPage</span>
+<span class="s2">        startCursor</span>
+<span class="s2">        endCursor</span>
+<span class="s2">      }</span>
+<span class="s2">    }</span>
+<span class="s2">  }</span>
+<span class="s2">}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<span class="n">_COMMIT_QUERY</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">{</span>
+<span class="s2">  repository(name: &quot;{{ name }}&quot;, owner: &quot;{{ owner }}&quot;) {</span>
+<span class="s2">    name</span>
+<span class="s2">    owner {</span>
+<span class="s2">      login</span>
+<span class="s2">    }</span>
+<span class="s2">    ref(qualifiedName: &quot;master&quot;) {</span>
+<span class="s2">      target {</span>
+<span class="s2">        ... on Commit {</span>
+<span class="s2">          history(first: 100, after: &quot;{{ cursor }}&quot;) {</span>
+<span class="s2">            pageInfo {</span>
+<span class="s2">              hasNextPage</span>
+<span class="s2">              endCursor</span>
+<span class="s2">            }</span>
+<span class="s2">            nodes {</span>
+<span class="s2">              oid</span>
+<span class="s2">              message</span>
+<span class="s2">              pushedDate</span>
+<span class="s2">            }</span>
+<span class="s2">          }</span>
+<span class="s2">        }</span>
+<span class="s2">      }</span>
+<span class="s2">    }</span>
+<span class="s2">  }</span>
+<span class="s2">}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">_get_repository_info_v4</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span>
+                            <span class="n">since</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+                            <span class="n">use_pr_titles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="n">include_unreleased_commits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">include_commits</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">owner</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">owner_repo</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">GITHUB_API_V4</span>
+    <span class="n">data_v4</span> <span class="o">=</span> <span class="n">api</span><span class="p">(</span><span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">github</span><span class="o">.</span><span class="n">graphql</span><span class="o">.</span><span class="n">REPO_QUERY</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s1">&#39;errors&#39;</span> <span class="ow">in</span> <span class="n">data_v4</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">data_v4</span><span class="p">[</span><span class="s1">&#39;errors&#39;</span><span class="p">]])</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">data_v4</span><span class="p">[</span><span class="s1">&#39;errors&#39;</span><span class="p">]))</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">branches</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">data_v4</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;refs&#39;</span><span class="p">][</span><span class="s1">&#39;nodes&#39;</span><span class="p">]</span> <span class="k">if</span>
+                <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;heads/&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])]</span>
+    <span class="n">releases</span> <span class="o">=</span> <span class="n">data_v4</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;releases&#39;</span><span class="p">][</span><span class="s1">&#39;nodes&#39;</span><span class="p">]</span>
+    <span class="n">commits</span> <span class="o">=</span> <span class="n">data_v4</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;ref&#39;</span><span class="p">][</span><span class="s1">&#39;target&#39;</span><span class="p">][</span><span class="s1">&#39;history&#39;</span><span class="p">][</span><span class="s1">&#39;nodes&#39;</span><span class="p">]</span>
+    <span class="n">issues</span> <span class="o">=</span> <span class="n">data_v4</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;issues&#39;</span><span class="p">][</span><span class="s1">&#39;nodes&#39;</span><span class="p">]</span>
+
+    <span class="n">commit_data</span> <span class="o">=</span> <span class="n">data_v4</span>
+    <span class="k">while</span> <span class="n">commit_data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;ref&#39;</span><span class="p">][</span><span class="s1">&#39;target&#39;</span><span class="p">][</span><span class="s1">&#39;history&#39;</span><span class="p">][</span><span class="s1">&#39;pageInfo&#39;</span><span class="p">][</span><span class="s1">&#39;hasNextPage&#39;</span><span class="p">]:</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">commit_data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;ref&#39;</span><span class="p">][</span><span class="s1">&#39;target&#39;</span><span class="p">][</span><span class="s1">&#39;history&#39;</span><span class="p">][</span><span class="s1">&#39;pageInfo&#39;</span><span class="p">][</span><span class="s1">&#39;endCursor&#39;</span><span class="p">]</span>
+        <span class="n">commit_data</span> <span class="o">=</span> <span class="n">api</span><span class="p">(</span><span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">_COMMIT_QUERY</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                                                                <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
+                                                                <span class="n">cursor</span><span class="o">=</span><span class="n">cursor</span><span class="p">))</span>
+        <span class="n">commits</span> <span class="o">+=</span> <span class="p">(</span><span class="n">commit_data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;ref&#39;</span><span class="p">][</span><span class="s1">&#39;target&#39;</span><span class="p">][</span><span class="s1">&#39;history&#39;</span><span class="p">][</span><span class="s1">&#39;nodes&#39;</span><span class="p">])</span>
+
+    <span class="n">pr_data</span> <span class="o">=</span> <span class="n">data_v4</span>
+    <span class="n">pull_requests</span> <span class="o">=</span> <span class="n">pr_data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;pullRequests&#39;</span><span class="p">][</span><span class="s1">&#39;nodes&#39;</span><span class="p">]</span>
+    <span class="k">while</span> <span class="n">pr_data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;pullRequests&#39;</span><span class="p">][</span><span class="s1">&#39;pageInfo&#39;</span><span class="p">][</span><span class="s1">&#39;hasPreviousPage&#39;</span><span class="p">]:</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">pr_data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;pullRequests&#39;</span><span class="p">][</span><span class="s1">&#39;pageInfo&#39;</span><span class="p">][</span><span class="s1">&#39;startCursor&#39;</span><span class="p">]</span>
+        <span class="n">pr_data</span> <span class="o">=</span> <span class="n">api</span><span class="p">(</span><span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">_PR_QUERY</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                                                        <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
+                                                        <span class="n">cursor</span><span class="o">=</span><span class="n">cursor</span><span class="p">))</span>
+        <span class="n">pull_requests</span> <span class="o">+=</span> <span class="p">(</span><span class="n">pr_data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;pullRequests&#39;</span><span class="p">][</span><span class="s1">&#39;nodes&#39;</span><span class="p">])</span>
+
+    <span class="n">releases</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">releases</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;isPrerelease&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;isDraft&#39;</span><span class="p">]]</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">:</span>
+        <span class="n">r</span><span class="p">[</span><span class="s1">&#39;tag_oid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_get_tag_target</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;tag&#39;</span><span class="p">])</span>
+
+    <span class="n">releases</span> <span class="o">=</span> <span class="p">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;tag_oid&#39;</span><span class="p">]:</span> <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">}</span>
+    <span class="n">release_info</span> <span class="o">=</span> <span class="p">[{</span>
+        <span class="s1">&#39;release_tag&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;release_tag_date&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;commits&#39;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s1">&#39;merges&#39;</span><span class="p">:</span> <span class="p">[]</span>
+    <span class="p">}]</span>
+
+    <span class="n">all_pull_requests</span> <span class="o">=</span> <span class="p">{</span><span class="n">pr</span><span class="p">[</span><span class="s1">&#39;number&#39;</span><span class="p">]:</span> <span class="n">pr</span> <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">pull_requests</span><span class="p">}</span>
+    <span class="n">pull_requests</span> <span class="o">=</span> <span class="p">[</span><span class="n">pr</span> <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">pull_requests</span> <span class="k">if</span> <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;state&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;CLOSED&#39;</span><span class="p">,</span> <span class="s1">&#39;MERGED&#39;</span><span class="p">]]</span>
+    <span class="n">pull_requests</span> <span class="o">=</span> <span class="p">[{</span>
+        <span class="s1">&#39;number&#39;</span><span class="p">:</span> <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;number&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;n_commits&#39;</span><span class="p">:</span> <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;commits&#39;</span><span class="p">][</span><span class="s1">&#39;totalCount&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;last_commit_date&#39;</span><span class="p">:</span> <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;commits&#39;</span><span class="p">][</span><span class="s1">&#39;nodes&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;commit&#39;</span><span class="p">][</span><span class="s1">&#39;pushedDate&#39;</span><span class="p">],</span>
+    <span class="p">}</span> <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">pull_requests</span><span class="p">]</span>
+    <span class="n">pull_requests</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">pull_requests</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">pr</span><span class="p">:</span> <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;number&#39;</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">commit</span> <span class="ow">in</span> <span class="n">commits</span><span class="p">:</span>
+        <span class="n">sha</span> <span class="o">=</span> <span class="n">commit</span><span class="p">[</span><span class="s1">&#39;oid&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">sha</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">:</span>
+            <span class="n">release_info</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;release_tag&#39;</span><span class="p">:</span> <span class="n">releases</span><span class="p">[</span><span class="n">sha</span><span class="p">][</span><span class="s2">&quot;tagName&quot;</span><span class="p">],</span>
+                <span class="s1">&#39;release_tag_date&#39;</span><span class="p">:</span> <span class="n">releases</span><span class="p">[</span><span class="n">sha</span><span class="p">][</span><span class="s2">&quot;publishedAt&quot;</span><span class="p">],</span>
+                <span class="s1">&#39;commits&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s1">&#39;merges&#39;</span><span class="p">:</span> <span class="p">[]</span>
+            <span class="p">})</span>
+        <span class="n">release_info</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;commits&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">commit</span><span class="p">)</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span>
+            <span class="s1">&#39;Merge pull request #(?P&lt;pr_number&gt;.+) from (?P&lt;branch&gt;\S+)</span><span class="se">\n\n</span><span class="s1">(?P&lt;title&gt;.+)&#39;</span><span class="p">,</span>
+            <span class="n">commit</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="n">merge</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groupdict</span><span class="p">()</span>
+            <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">use_pr_titles</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_pull_requests</span><span class="p">:</span>
+                    <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_pull_requests</span><span class="p">[</span><span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]][</span><span class="s1">&#39;title&#39;</span><span class="p">]</span>  <span class="c1"># .strip()</span>
+            <span class="n">release_info</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;merges&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">merge</span><span class="p">)</span>
+
+    <span class="n">release_tags</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;release_tag&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">release_info</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">since</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">release_info</span> <span class="o">=</span> <span class="n">release_info</span><span class="p">[:</span><span class="n">since</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">since</span> <span class="ow">in</span> <span class="n">release_tags</span><span class="p">:</span>
+        <span class="n">release_info</span> <span class="o">=</span> <span class="n">release_info</span><span class="p">[:</span><span class="n">release_tags</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">since</span><span class="p">)]</span>
+    <span class="k">elif</span> <span class="n">since</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Requested repository info with since=</span><span class="si">{since}</span><span class="s1">,&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="n">since</span><span class="p">)</span> <span class="o">+</span>
+                        <span class="s1">&#39;which is not and integer and is not one of the known releases&#39;</span> <span class="o">+</span>
+                        <span class="s1">&#39;(</span><span class="si">{release_tags}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">release_tags</span><span class="o">=</span><span class="n">release_tags</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">release_info</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">last_tag</span> <span class="o">=</span> <span class="n">release_info</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;release_tag&#39;</span><span class="p">]</span>
+        <span class="n">last_tag_date</span> <span class="o">=</span> <span class="n">release_info</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;release_tag_date&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">last_tag</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">last_tag_date</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="c1"># workflows are only in v4</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/vnd.github.antiope-preview+json&#39;</span><span class="p">}</span>
+    <span class="n">workflows</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">GITHUB_API_V3</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s1">&#39;/repos/</span><span class="si">{owner}</span><span class="s1">/</span><span class="si">{name}</span><span class="s1">/actions/workflows&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">),</span>
+        <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="n">workflows</span> <span class="o">=</span> <span class="p">[{</span><span class="n">k</span><span class="p">:</span> <span class="n">w</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;badge_url&#39;</span><span class="p">]}</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">workflows</span><span class="p">[</span><span class="s1">&#39;workflows&#39;</span><span class="p">]]</span>
+
+    <span class="n">repo_info</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;owner&#39;</span><span class="p">:</span> <span class="n">owner</span><span class="p">,</span>
+        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+        <span class="s1">&#39;pushed_at&#39;</span><span class="p">:</span> <span class="n">data_v4</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;pushedAt&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;updated_at&#39;</span><span class="p">:</span> <span class="n">data_v4</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;updatedAt&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;last_tag&#39;</span><span class="p">:</span> <span class="n">last_tag</span><span class="p">,</span>
+        <span class="s1">&#39;last_tag_date&#39;</span><span class="p">:</span> <span class="n">last_tag_date</span><span class="p">,</span>
+        <span class="s1">&#39;commits&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">release_info</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;commits&#39;</span><span class="p">]),</span>
+        <span class="s1">&#39;merges&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">release_info</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;merges&#39;</span><span class="p">]),</span>
+        <span class="s1">&#39;merge_info&#39;</span><span class="p">:</span> <span class="n">release_info</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;merges&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;release_info&#39;</span><span class="p">:</span> <span class="n">release_info</span><span class="p">,</span>
+        <span class="s1">&#39;issues&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">issues</span><span class="p">),</span>
+        <span class="s1">&#39;n_pull_requests&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">pull_requests</span><span class="p">),</span>
+        <span class="s1">&#39;branches&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">branches</span><span class="p">),</span>
+        <span class="s1">&#39;pull_requests&#39;</span><span class="p">:</span> <span class="n">pull_requests</span><span class="p">,</span>
+        <span class="s1">&#39;workflows&#39;</span><span class="p">:</span> <span class="n">workflows</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">include_commits</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">repo_info</span><span class="p">[</span><span class="s1">&#39;release_info&#39;</span><span class="p">]:</span>
+            <span class="k">del</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;commits&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">include_unreleased_commits</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">repo_info</span><span class="p">[</span><span class="s1">&#39;release_info&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">repo_info</span><span class="p">[</span><span class="s1">&#39;commits&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">repo_info</span><span class="p">[</span><span class="s1">&#39;merges&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">repo_info</span><span class="p">[</span><span class="s1">&#39;merge_info&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">return</span> <span class="n">repo_info</span>
+
+
+<div class="viewcode-block" id="get_conda_pkg_info"><a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_conda_pkg_info">[docs]</a><span class="k">def</span> <span class="nf">get_conda_pkg_info</span><span class="p">(</span><span class="n">conda_package</span><span class="p">,</span>
+                       <span class="n">conda_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get information on a conda package.</span>
+
+<span class="sd">    :param conda_package: str</span>
+<span class="sd">        Name of conda package</span>
+<span class="sd">    :param conda_channel: str</span>
+<span class="sd">        url of the channel</span>
+<span class="sd">    :return: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">minor</span> <span class="o">&gt;=</span> <span class="mi">7</span><span class="p">:</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;capture_output&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;stdout&#39;</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">}</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;conda&#39;</span><span class="p">,</span> <span class="s1">&#39;search&#39;</span><span class="p">,</span> <span class="n">conda_package</span><span class="p">,</span> <span class="s1">&#39;--override-channels&#39;</span><span class="p">,</span> <span class="s1">&#39;--json&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">conda_channel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">conda_channels</span> <span class="o">=</span> <span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;conda_channels&#39;</span><span class="p">][</span><span class="s1">&#39;main&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">conda_channel</span> <span class="ow">in</span> <span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;conda_channels&#39;</span><span class="p">]:</span>
+        <span class="n">conda_channels</span> <span class="o">=</span> <span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;conda_channels&#39;</span><span class="p">][</span><span class="n">conda_channel</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">conda_channels</span> <span class="o">=</span> <span class="p">[</span><span class="n">conda_channel</span><span class="p">]</span>
+    <span class="n">unreachable</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">conda_channels</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># this clears the exception we just caugh and raises another one</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Missing expected environmental variable: </span><span class="si">{e}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span> <span class="kn">from</span> <span class="bp">None</span>
+        <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">ConnectTimeout</span><span class="p">:</span>
+            <span class="n">c2</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+            <span class="n">c2</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlunparse</span><span class="p">((</span><span class="n">c2</span><span class="o">.</span><span class="n">scheme</span><span class="p">,</span>
+                                          <span class="n">c2</span><span class="o">.</span><span class="n">netloc</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                          <span class="n">c2</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">c2</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">c2</span><span class="o">.</span><span class="n">query</span><span class="p">,</span> <span class="n">c2</span><span class="o">.</span><span class="n">fragment</span><span class="p">))</span>
+            <span class="n">unreachable</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c2</span><span class="p">)</span>
+        <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;--channel&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="n">unreachable</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;The following conda channels are not reachable:</span><span class="se">\n</span><span class="s1"> -&#39;</span>
+        <span class="n">msg</span> <span class="o">+=</span> <span class="s1">&#39; -&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">unreachable</span><span class="p">])</span>
+        <span class="k">raise</span> <span class="n">NetworkException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+    <span class="k">if</span> <span class="s1">&#39;error&#39;</span> <span class="ow">in</span> <span class="n">out</span> <span class="ow">and</span> <span class="s1">&#39;exception_name&#39;</span> <span class="ow">in</span> <span class="n">out</span> \
+            <span class="ow">and</span> <span class="n">out</span><span class="p">[</span><span class="s1">&#39;exception_name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;PackagesNotFoundError&#39;</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s1">&#39;error&#39;</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;message&#39;</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="get_conda_pkg_dependencies"><a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_conda_pkg_dependencies">[docs]</a><span class="k">def</span> <span class="nf">get_conda_pkg_dependencies</span><span class="p">(</span><span class="n">conda_package</span><span class="p">,</span>
+                               <span class="n">conda_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get dependencies of a conda package.</span>
+
+<span class="sd">    :param conda_package: str</span>
+<span class="sd">        Name of conda package</span>
+<span class="sd">    :param conda_channel: str</span>
+<span class="sd">        url of the channel</span>
+<span class="sd">    :return: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">get_conda_pkg_info</span><span class="p">(</span><span class="n">conda_package</span><span class="p">,</span> <span class="n">conda_channel</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">out</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{conda_package}</span><span class="s1"> not found.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">conda_package</span><span class="o">=</span><span class="n">conda_package</span><span class="p">))</span>
+    <span class="n">packages</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">conda_package</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;depends&#39;</span><span class="p">]</span>
+    <span class="n">packages</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;==&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;==&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+                     <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">packages</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">packages</span></div>
+
+
+<span class="k">def</span> <span class="nf">_get_release_commit</span><span class="p">(</span><span class="n">repository</span><span class="p">,</span> <span class="n">release_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Quaternion releases 3.4.1 and 3.5.1 give different results</span>
+<span class="sd">    :param repository:</span>
+<span class="sd">    :param release_name:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">repository</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">release_name</span><span class="p">)[</span><span class="s1">&#39;object&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;tag&#39;</span><span class="p">:</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">repository</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">tag_sha</span><span class="o">=</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;sha&#39;</span><span class="p">])[</span><span class="s1">&#39;object&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;commit&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Object is not a commit, but a </span><span class="si">{t}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">obj</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">obj</span>
+
+
+<span class="k">def</span> <span class="nf">_get_repository_info_v3</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span>
+                            <span class="n">since</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+                            <span class="n">use_pr_titles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="n">include_unreleased_commits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">include_commits</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get information about a Github repository</span>
+
+<span class="sd">    :param owner_repo: str</span>
+<span class="sd">        the name of the repository, including owner, something like &#39;sot/skare3&#39;.</span>
+<span class="sd">    :param since: int or str</span>
+<span class="sd">        the maximum number of releases to look back, or the release tag to look back to</span>
+<span class="sd">        (not inclusive).</span>
+<span class="sd">    :param use_pr_titles: bool</span>
+<span class="sd">        Whether to use PR titles instead of the PR commit message.</span>
+<span class="sd">        This is so one can change PR titles after the fact to be more informative.</span>
+<span class="sd">    :param include_unreleased_commits: bool</span>
+<span class="sd">        whether to include commits and merges for repositories that have no release.</span>
+<span class="sd">        This affects only top-level entries &#39;commits&#39;, &#39;merges&#39;, &#39;merge_info&#39;.</span>
+<span class="sd">        It is for backward compatibility with the dashboard.</span>
+<span class="sd">    :param include_commits: bool</span>
+<span class="sd">        whether to include commits in release_info.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">GITHUB_API_V3</span>
+
+    <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span> <span class="o">=</span> <span class="n">owner_repo</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+    <span class="n">repository</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">Repository</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">)</span>
+
+    <span class="n">releases</span> <span class="o">=</span> <span class="p">[</span><span class="n">release</span> <span class="k">for</span> <span class="n">release</span> <span class="ow">in</span> <span class="n">repository</span><span class="o">.</span><span class="n">releases</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">release</span><span class="p">[</span><span class="s1">&#39;prerelease&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">release</span><span class="p">[</span><span class="s1">&#39;draft&#39;</span><span class="p">]]</span>
+
+    <span class="c1"># get the actual commit sha and date for each release</span>
+    <span class="n">release_commits</span> <span class="o">=</span> <span class="p">[</span><span class="n">_get_release_commit</span><span class="p">(</span><span class="n">repository</span><span class="p">,</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;tag_name&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">]</span>
+    <span class="n">release_commits</span> <span class="o">=</span> <span class="p">[</span><span class="n">repository</span><span class="o">.</span><span class="n">commits</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;sha&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">release_commits</span><span class="p">]</span>
+    <span class="n">release_dates</span> <span class="o">=</span> <span class="p">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;tag_name&#39;</span><span class="p">]:</span> <span class="n">c</span><span class="p">[</span><span class="s1">&#39;commit&#39;</span><span class="p">][</span><span class="s1">&#39;committer&#39;</span><span class="p">][</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span>
+                     <span class="nb">zip</span><span class="p">(</span><span class="n">releases</span><span class="p">,</span> <span class="n">release_commits</span><span class="p">)}</span>
+
+    <span class="c1"># later on, the releases are referred by commit sha</span>
+    <span class="n">releases</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;sha&#39;</span><span class="p">]:</span> <span class="n">r</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">releases</span><span class="p">,</span> <span class="n">release_commits</span><span class="p">)}</span>
+
+    <span class="n">date_since</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">since</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="c1"># only the latest &#39;since&#39; releases (at most) will be included in summary</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">releases</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">since</span><span class="p">:</span>
+            <span class="n">date_since</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">release_dates</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="n">since</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">since</span> <span class="ow">in</span> <span class="n">release_dates</span><span class="p">:</span>
+        <span class="c1"># only releases _after_ &#39;since&#39; will be included in summary</span>
+        <span class="n">date_since</span> <span class="o">=</span> <span class="n">release_dates</span><span class="p">[</span><span class="n">since</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Requested repository info with since=</span><span class="si">{since}</span><span class="s1">,&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="n">since</span><span class="p">)</span> <span class="o">+</span>
+                        <span class="s1">&#39;which is not and integer and is not one of the known releases&#39;</span> <span class="o">+</span>
+                        <span class="s1">&#39;(</span><span class="si">{releases}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">releases</span><span class="o">=</span><span class="nb">sorted</span><span class="p">(</span><span class="n">release_dates</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+
+    <span class="n">release_info</span> <span class="o">=</span> <span class="p">[{</span>
+        <span class="s1">&#39;release_tag&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;release_tag_date&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;commits&#39;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s1">&#39;merges&#39;</span><span class="p">:</span> <span class="p">[]</span>
+    <span class="p">}]</span>
+
+    <span class="k">if</span> <span class="n">use_pr_titles</span><span class="p">:</span>
+        <span class="n">all_pull_requests</span> <span class="o">=</span> <span class="n">repository</span><span class="o">.</span><span class="n">pull_requests</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+        <span class="n">all_pull_requests</span> <span class="o">=</span> <span class="p">{</span><span class="n">pr</span><span class="p">[</span><span class="s1">&#39;number&#39;</span><span class="p">]:</span> <span class="n">pr</span> <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">all_pull_requests</span><span class="p">}</span>
+    <span class="n">commits</span> <span class="o">=</span> <span class="n">repository</span><span class="o">.</span><span class="n">commits</span><span class="p">(</span><span class="n">sha</span><span class="o">=</span><span class="s1">&#39;master&#39;</span><span class="p">,</span> <span class="n">since</span><span class="o">=</span><span class="n">date_since</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">date_since</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">commits</span> <span class="o">=</span> <span class="n">commits</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># remove first commit, which was just the starting point</span>
+    <span class="k">for</span> <span class="n">commit</span> <span class="ow">in</span> <span class="n">commits</span><span class="p">:</span>
+        <span class="n">sha</span> <span class="o">=</span> <span class="n">commit</span><span class="p">[</span><span class="s1">&#39;sha&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">sha</span> <span class="ow">in</span> <span class="n">releases</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">release_info</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;release_tag&#39;</span><span class="p">:</span> <span class="n">releases</span><span class="p">[</span><span class="n">sha</span><span class="p">][</span><span class="s2">&quot;tag_name&quot;</span><span class="p">],</span>
+                <span class="s1">&#39;release_tag_date&#39;</span><span class="p">:</span> <span class="n">releases</span><span class="p">[</span><span class="n">sha</span><span class="p">][</span><span class="s2">&quot;published_at&quot;</span><span class="p">],</span>
+                <span class="s1">&#39;commits&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s1">&#39;merges&#39;</span><span class="p">:</span> <span class="p">[]</span>
+            <span class="p">})</span>
+
+        <span class="n">release_info</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;commits&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s1">&#39;sha&#39;</span><span class="p">:</span> <span class="n">commit</span><span class="p">[</span><span class="s1">&#39;sha&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="n">commit</span><span class="p">[</span><span class="s1">&#39;commit&#39;</span><span class="p">][</span><span class="s1">&#39;message&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">commit</span><span class="p">[</span><span class="s1">&#39;commit&#39;</span><span class="p">][</span><span class="s1">&#39;committer&#39;</span><span class="p">][</span><span class="s1">&#39;date&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;author&#39;</span><span class="p">:</span> <span class="n">commit</span><span class="p">[</span><span class="s1">&#39;commit&#39;</span><span class="p">][</span><span class="s1">&#39;author&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+        <span class="p">})</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span>
+            <span class="s1">&#39;Merge pull request #(?P&lt;pr_number&gt;.+) from (?P&lt;branch&gt;\S+)</span><span class="se">\n\n</span><span class="s1">(?P&lt;title&gt;.+)&#39;</span><span class="p">,</span>
+            <span class="n">commit</span><span class="p">[</span><span class="s1">&#39;commit&#39;</span><span class="p">][</span><span class="s1">&#39;message&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="n">merge</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groupdict</span><span class="p">()</span>
+            <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">use_pr_titles</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_pull_requests</span><span class="p">:</span>
+                    <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_pull_requests</span><span class="p">[</span><span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]][</span><span class="s1">&#39;title&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">release_info</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;merges&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">merge</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">release_info</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">last_tag</span> <span class="o">=</span> <span class="n">release_info</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;release_tag&#39;</span><span class="p">]</span>
+        <span class="n">last_tag_date</span> <span class="o">=</span> <span class="n">release_info</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;release_tag_date&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">last_tag</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">last_tag_date</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="n">branches</span> <span class="o">=</span> <span class="n">repository</span><span class="o">.</span><span class="n">branches</span><span class="p">()</span>
+    <span class="n">issues</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">repository</span><span class="o">.</span><span class="n">issues</span><span class="p">()</span> <span class="k">if</span> <span class="s1">&#39;pull_request&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">i</span><span class="p">]</span>
+
+    <span class="n">pull_requests</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">repository</span><span class="o">.</span><span class="n">pull_requests</span><span class="p">():</span>
+        <span class="n">pr_commits</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pr</span><span class="p">[</span><span class="s1">&#39;commits_url&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="n">pr_commits</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;commit&#39;</span><span class="p">][</span><span class="s1">&#39;committer&#39;</span><span class="p">][</span><span class="s1">&#39;date&#39;</span><span class="p">]</span>
+        <span class="n">pull_requests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;number&#39;</span><span class="p">:</span> <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;number&#39;</span><span class="p">],</span>
+                              <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;_links&#39;</span><span class="p">][</span><span class="s1">&#39;html&#39;</span><span class="p">][</span><span class="s1">&#39;href&#39;</span><span class="p">],</span>
+                              <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span>
+                              <span class="s1">&#39;n_commits&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">pr_commits</span><span class="p">),</span>
+                              <span class="s1">&#39;last_commit_date&#39;</span><span class="p">:</span> <span class="n">date</span><span class="p">})</span>
+
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/vnd.github.antiope-preview+json&#39;</span><span class="p">}</span>
+    <span class="n">workflows</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s1">&#39;/repos/</span><span class="si">{owner}</span><span class="s1">/</span><span class="si">{repo}</span><span class="s1">/actions/workflows&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">),</span>
+        <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="n">workflows</span> <span class="o">=</span> <span class="p">[{</span><span class="n">k</span><span class="p">:</span> <span class="n">w</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;badge_url&#39;</span><span class="p">]}</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">workflows</span><span class="p">[</span><span class="s1">&#39;workflows&#39;</span><span class="p">]]</span>
+
+    <span class="n">repo_info</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;owner&#39;</span><span class="p">:</span> <span class="n">owner</span><span class="p">,</span>
+        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
+        <span class="s1">&#39;last_tag&#39;</span><span class="p">:</span> <span class="n">last_tag</span><span class="p">,</span>
+        <span class="s1">&#39;last_tag_date&#39;</span><span class="p">:</span> <span class="n">last_tag_date</span><span class="p">,</span>
+        <span class="s1">&#39;commits&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">release_info</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;commits&#39;</span><span class="p">]),</span>
+        <span class="s1">&#39;merges&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">release_info</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;merges&#39;</span><span class="p">]),</span>
+        <span class="s1">&#39;merge_info&#39;</span><span class="p">:</span> <span class="n">release_info</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;merges&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;release_info&#39;</span><span class="p">:</span> <span class="n">release_info</span><span class="p">,</span>
+        <span class="s1">&#39;issues&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">issues</span><span class="p">),</span>
+        <span class="s1">&#39;n_pull_requests&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">pull_requests</span><span class="p">),</span>
+        <span class="s1">&#39;branches&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">branches</span><span class="p">),</span>
+        <span class="s1">&#39;pull_requests&#39;</span><span class="p">:</span> <span class="n">pull_requests</span><span class="p">,</span>
+        <span class="s1">&#39;workflows&#39;</span><span class="p">:</span> <span class="n">workflows</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">include_commits</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">repo_info</span><span class="p">[</span><span class="s1">&#39;release_info&#39;</span><span class="p">]:</span>
+            <span class="k">del</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;commits&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">include_unreleased_commits</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">repo_info</span><span class="p">[</span><span class="s1">&#39;release_info&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">repo_info</span><span class="p">[</span><span class="s1">&#39;commits&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">repo_info</span><span class="p">[</span><span class="s1">&#39;merges&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">repo_info</span><span class="p">[</span><span class="s1">&#39;merge_info&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">return</span> <span class="n">repo_info</span>
+
+
+<span class="n">_LAST_UPDATED_QUERY</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">{</span>
+<span class="s2">  repository(name: &quot;{{ name }}&quot;, owner: &quot;{{ owner }}&quot;) {</span>
+<span class="s2">    pushedAt</span>
+<span class="s2">    updatedAt</span>
+<span class="s2">    name</span>
+<span class="s2">    owner  {</span>
+<span class="s2">      id</span>
+<span class="s2">    }</span>
+<span class="s2">  }</span>
+<span class="s2">}</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="repository_info_is_outdated"><a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.repository_info_is_outdated">[docs]</a><span class="k">def</span> <span class="nf">repository_info_is_outdated</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">pkg_info</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Cache update policy that returns True if the Github repository has been updated or pushed into.</span>
+
+<span class="sd">    :param _:</span>
+<span class="sd">    :param pkg_info: dict. As returned from :func:`~skare3_tools.packages.get_repository_info`.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">GITHUB_API_V4</span><span class="p">(</span><span class="n">_LAST_UPDATED_QUERY</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">pkg_info</span><span class="p">))</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">]</span>
+    <span class="n">outdated</span> <span class="o">=</span> <span class="p">(</span><span class="n">pkg_info</span><span class="p">[</span><span class="s1">&#39;pushed_at&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;pushedAt&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                <span class="n">pkg_info</span><span class="p">[</span><span class="s1">&#39;updated_at&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;updatedAt&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">outdated</span></div>
+
+
+<div class="viewcode-block" id="get_repository_info"><a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_repository_info">[docs]</a><span class="nd">@json_cache</span><span class="p">(</span><span class="s1">&#39;pkg_repository_info&#39;</span><span class="p">,</span>
+            <span class="n">directory</span><span class="o">=</span><span class="s1">&#39;pkg_info&#39;</span><span class="p">,</span>
+            <span class="n">update_policy</span><span class="o">=</span><span class="n">repository_info_is_outdated</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_repository_info</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s1">&#39;v4&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get information about a Github repository</span>
+
+<span class="sd">    :param owner_repo: str</span>
+<span class="sd">        the name of the repository, including owner, something like &#39;sot/skare3&#39;.</span>
+<span class="sd">    :param since: int or str</span>
+<span class="sd">        the maximum number of releases to look back, or the release tag to look back to</span>
+<span class="sd">        (not inclusive).</span>
+<span class="sd">    :param use_pr_titles: bool</span>
+<span class="sd">        Whether to use PR titles instead of the PR commit message.</span>
+<span class="sd">        This is so one can change PR titles after the fact to be more informative.</span>
+<span class="sd">    :param include_unreleased_commits: bool</span>
+<span class="sd">        whether to include commits and merges for repositories that have no release.</span>
+<span class="sd">        This affects only top-level entries &#39;commits&#39;, &#39;merges&#39;, &#39;merge_info&#39;.</span>
+<span class="sd">        It is for backward compatibility with the dashboard.</span>
+<span class="sd">    :param include_commits: bool</span>
+<span class="sd">        whether to include commits in release_info.</span>
+<span class="sd">    :param version: str</span>
+<span class="sd">        Github API version to use.</span>
+<span class="sd">    :param update: bool</span>
+<span class="sd">        Force update of the cached info. By default updates only if pushed_at or updated_at change.</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">owner</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">owner_repo</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">version</span> <span class="o">==</span> <span class="s1">&#39;v4&#39;</span><span class="p">:</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">_get_repository_info_v4</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">_get_repository_info_v3</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">info</span><span class="p">[</span><span class="s1">&#39;master_version&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">conda_info</span> <span class="o">=</span> <span class="n">get_conda_pkg_info</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">conda_channel</span><span class="o">=</span><span class="s1">&#39;masters&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">conda_info</span><span class="p">:</span>
+        <span class="n">info</span><span class="p">[</span><span class="s1">&#39;master_version&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">conda_info</span><span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()][</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;version&#39;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">info</span></div>
+
+
+<div class="viewcode-block" id="get_repositories_info"><a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_repositories_info">[docs]</a><span class="k">def</span> <span class="nf">get_repositories_info</span><span class="p">(</span><span class="n">repositories</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s1">&#39;v4&#39;</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">repositories</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">repositories</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;repository&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">get_package_list</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;owner&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;organizations&#39;</span><span class="p">]]</span>
+    <span class="n">repo_package_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;repository&#39;</span><span class="p">]:</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;package&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">get_package_list</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;repository&#39;</span><span class="p">]}</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;packages&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+    <span class="n">meta_pkg_versions</span> <span class="o">=</span> <span class="p">{</span><span class="n">pkg</span><span class="p">:</span> <span class="p">{</span><span class="n">r</span><span class="p">:</span> <span class="s1">&#39;&#39;</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">repositories</span><span class="p">}</span>
+                         <span class="k">for</span> <span class="n">pkg</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;ska3-flight&#39;</span><span class="p">,</span> <span class="s1">&#39;ska3-matlab&#39;</span><span class="p">]}</span>
+
+    <span class="k">for</span> <span class="n">pkg</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;ska3-flight&#39;</span><span class="p">,</span> <span class="s1">&#39;ska3-matlab&#39;</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">pkg</span> <span class="ow">in</span> <span class="n">meta_pkg_versions</span>
+            <span class="n">conda_info</span> <span class="o">=</span> <span class="n">get_conda_pkg_info</span><span class="p">(</span><span class="n">pkg</span><span class="p">,</span> <span class="n">conda_channel</span><span class="o">=</span><span class="s1">&#39;main&#39;</span><span class="p">)[</span><span class="n">pkg</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">info</span><span class="p">[</span><span class="n">pkg</span><span class="p">]</span> <span class="o">=</span> <span class="n">conda_info</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]</span>
+            <span class="n">versions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;==&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;==&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+                             <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">conda_info</span><span class="p">[</span><span class="s1">&#39;depends&#39;</span><span class="p">]])</span>
+            <span class="k">for</span> <span class="n">owner_repo</span> <span class="ow">in</span> <span class="n">repositories</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">owner_repo</span> <span class="ow">in</span> <span class="n">repo_package_map</span><span class="p">,</span> <span class="s1">&#39;Package </span><span class="si">{owner_repo}</span><span class="s1"> not in package map&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">owner_repo</span><span class="o">=</span><span class="n">owner_repo</span><span class="p">)</span>
+                <span class="n">conda_pkg</span> <span class="o">=</span> <span class="n">repo_package_map</span><span class="p">[</span><span class="n">owner_repo</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">conda_pkg</span> <span class="ow">in</span> <span class="n">versions</span><span class="p">:</span>
+                    <span class="k">assert</span> <span class="n">owner_repo</span> <span class="ow">in</span> <span class="n">meta_pkg_versions</span><span class="p">[</span><span class="n">pkg</span><span class="p">]</span>
+                    <span class="n">meta_pkg_versions</span><span class="p">[</span><span class="n">pkg</span><span class="p">][</span><span class="n">owner_repo</span><span class="p">]</span> <span class="o">=</span> <span class="n">versions</span><span class="p">[</span><span class="n">conda_pkg</span><span class="p">]</span>
+        <span class="k">except</span> <span class="n">NetworkException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Empty </span><span class="si">{pkg}</span><span class="s1">: </span><span class="si">{t}</span><span class="s1">: </span><span class="si">{e}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pkg</span><span class="o">=</span><span class="n">pkg</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">e</span><span class="o">=</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">owner_repo</span> <span class="ow">in</span> <span class="n">repositories</span><span class="p">:</span>
+        <span class="c1"># print(owner_repo)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">repo_info</span> <span class="o">=</span> <span class="n">get_repository_info</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="n">update</span><span class="p">)</span>
+            <span class="n">repo_info</span><span class="p">[</span><span class="s1">&#39;matlab&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta_pkg_versions</span><span class="p">[</span><span class="s1">&#39;ska3-matlab&#39;</span><span class="p">][</span><span class="n">owner_repo</span><span class="p">]</span>
+            <span class="n">repo_info</span><span class="p">[</span><span class="s1">&#39;flight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta_pkg_versions</span><span class="p">[</span><span class="s1">&#39;ska3-flight&#39;</span><span class="p">][</span><span class="n">owner_repo</span><span class="p">]</span>
+            <span class="n">info</span><span class="p">[</span><span class="s1">&#39;packages&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">repo_info</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Failed to get info on </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">owner_repo</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+    <span class="n">info</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()})</span>
+
+    <span class="k">return</span> <span class="n">info</span></div>
+
+
+<span class="k">def</span> <span class="nf">get_parser</span><span class="p">():</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">SkaRE3 Github information tool.</span>
+
+<span class="s2">This script queries Github and a few other sources to determine the status of all packages.</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;repository_info.json&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Output file (default=repository_info.json)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--token&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Github token, or name of file that contains token&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">get_parser</span><span class="p">()</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="n">github</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">token</span><span class="p">)</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">get_repositories_info</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">info</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">o</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
+
+
+<form action="../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<footer class="footer">
+  <p class="pull-right"> &nbsp;
+    <a href="#">Back to Top</a></p>
+  <p>
+    &copy; Copyright 2020, Javier Gonzalez.<br/>
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 3.1.2. &nbsp;
+  </p>
+</footer>
+  </body>
+</html>

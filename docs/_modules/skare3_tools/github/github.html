@@ -1,0 +1,1012 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>skare3_tools.github.github &#8212; SkaRE3 Tools 0.1.dev1+g81bfeff documentation</title>
+    <link rel="stylesheet" href="../../../_static/bootstrap-astropy.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,600' rel='stylesheet' type='text/css'/>
+
+  </head><body>
+<div class="topbar">
+  <a class="brand" title="Documentation Home" href="../../../index.html"><span id="logotext1">Ska! </span><span id="logotext2">SkaRE3</span><span id="logotext3">Tools</span></a>
+  <ul>
+    
+    <li><a class="home" title="Homepage" href="https://cxc.cfa.harvard.edu/mta/ASPECT/tool_doc">
+        <span id="logotext1">ska</span><span id="logotext2">tools</span>
+    </a></li>
+    <li><a title="General Index" href="../../../genindex.html">Index</a></li>
+    <li><a title="Module Index" href="../../../py-modindex.html">Modules</a></li>
+    <li>
+      
+      
+<form action="../../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+      
+    </li>
+  </ul>
+</div>
+
+<div class="related">
+    <h3>Navigation</h3>
+    <ul>
+      <li>
+	<a href="../../../index.html">SkaRE3 Tools 0.1.dev1+g81bfeff documentation</a>
+	 &#187;
+      </li>
+      <li><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+      
+       
+    </ul>
+</div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for skare3_tools.github.github</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This is a thin wrapper for `Github&#39;s REST API`_ (V3). It is intended to be easy to extend.</span>
+<span class="sd">It does not impose much structure on top of what is shown in their online documentation,</span>
+<span class="sd">and it should be easy to see the correspondence between both.</span>
+
+<span class="sd">.. _`Github&#39;s REST API`: https://developer.github.com/v3/</span>
+
+<span class="sd">As an example, this is how one gets a list of releases and pull requests for a repository:</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">      &gt;&gt;&gt; from skare3_tools import github</span>
+<span class="sd">      &gt;&gt;&gt; repo = github.Repository(&#39;sot/Chandra.Maneuver&#39;)</span>
+<span class="sd">      &gt;&gt;&gt; releases = repo.releases()</span>
+<span class="sd">      &gt;&gt;&gt; for release in releases:</span>
+<span class="sd">      ...     print(release[&#39;name&#39;])</span>
+<span class="sd">      Release 3.7.2</span>
+<span class="sd">      Release 3.7.1 with one test fix for 32 bit platform compat.</span>
+<span class="sd">      Version 3.7</span>
+<span class="sd">      Version 0.6</span>
+<span class="sd">      Version 0.05</span>
+<span class="sd">      &gt;&gt;&gt; prs = repo.pull_requests.create(title=&#39;Make namespace package native&#39;,</span>
+<span class="sd">      ...                                 head=&#39;namespace&#39;,</span>
+<span class="sd">      ...                                 base=&#39;master&#39;,</span>
+<span class="sd">      ...                                 body=&#39;The description goes here&#39;)</span>
+<span class="sd">      &gt;&gt;&gt; prs = repo.pull_requests()</span>
+<span class="sd">      &gt;&gt;&gt; for pr in prs:</span>
+<span class="sd">      ...     print(f&quot;PR #{pr[&#39;number&#39;]}: {pr[&#39;title&#39;]}&quot;)</span>
+<span class="sd">      PR #1: Make namespace package native</span>
+
+<span class="sd">It is also possible to use the API directly, in case there is no appropriate high-level method:</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">      &gt;&gt;&gt; from skare3_tools import github</span>
+<span class="sd">      &gt;&gt;&gt; last_tag = github.GITHUB_API_V3.get(&#39;/repos/sot/Chandra.Maneuver/releases/latest&#39;).json()</span>
+<span class="sd">      &gt;&gt;&gt; last_tag[&#39;tag_name&#39;]</span>
+<span class="sd">      &#39;3.7.2&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">keyring</span>
+<span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
+    <span class="n">keyring</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="kn">from</span> <span class="nn">requests.auth</span> <span class="kn">import</span> <span class="n">HTTPBasicAuth</span>
+
+
+<span class="k">class</span> <span class="nc">AuthException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">RestException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;github&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initialize the API.</span>
+
+<span class="sd">    :param token: str</span>
+<span class="sd">        a Github auth token</span>
+<span class="sd">    :param force: bool</span>
+<span class="sd">        override a previously initialized API</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">GITHUB_API</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">force</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">GITHUB_API</span></div>
+
+
+<span class="k">def</span> <span class="nf">_get_user_password</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;GITHUB_USER&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Github user from environment&#39;</span><span class="p">)</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;GITHUB_USER&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Github user from arguments&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">password</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;GITHUB_PASSWORD&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+            <span class="n">password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;GITHUB_PASSWORD&#39;</span><span class="p">]</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Github password from environment&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">keyring</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">password</span> <span class="o">=</span> <span class="n">keyring</span><span class="o">.</span><span class="n">get_password</span><span class="p">(</span><span class="s2">&quot;skare3-github&quot;</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Github user from keyring&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="kn">import</span> <span class="nn">re</span>
+                <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;No recommended backend was available&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)):</span>
+                    <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;keyring backend failed&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">user</span><span class="p">,</span> <span class="n">password</span>
+
+
+<div class="viewcode-block" id="GithubAPI"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI">[docs]</a><span class="k">class</span> <span class="nc">GithubAPI</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main class that encapsulates Github&#39;s REST API.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auth</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_url</span> <span class="o">=</span> <span class="s1">&#39;https://api.github.com&#39;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">AuthException</span><span class="p">:</span>
+            <span class="c1"># the exception is not raised if we are creating the API with default args.</span>
+            <span class="c1"># An exception will be raised later, when one tries to use it.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">user</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">password</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="k">raise</span>
+
+    <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span>
+
+<div class="viewcode-block" id="GithubAPI.init"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.init">[docs]</a>    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the Github API.</span>
+
+<span class="sd">        If not token is provided, it tries the following:</span>
+<span class="sd">        - look for GITHUB_API_TOKEN environmental variable</span>
+<span class="sd">        - look for GITHUB_TOKEN environmental variable</span>
+
+<span class="sd">        If that fails, try with user/password (deprecated)</span>
+<span class="sd">        If no user name is provided, it tries the following:</span>
+
+<span class="sd">        - look for GITHUB_USER environmental variable</span>
+<span class="sd">        - request in a command line prompt.</span>
+
+<span class="sd">        If no password is provided, it tries the following:</span>
+
+<span class="sd">        - look for GITHUB_PASSWORD environmental variable</span>
+<span class="sd">        - try getting it from the keyring (Keychain in Mac OS)</span>
+
+<span class="sd">        If user name or password can not be determined, an AuthException is raised.</span>
+
+<span class="sd">        :param user: str (deprecated)</span>
+<span class="sd">        :param password: str (deprecated)</span>
+<span class="sd">        :param token: str</span>
+<span class="sd">        :param force: bool</span>
+<span class="sd">        :return: GithubAPI</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;GITHUB_API_TOKEN&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+                <span class="n">token</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;GITHUB_API_TOKEN&#39;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="s1">&#39;GITHUB_TOKEN&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+                <span class="n">token</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;GITHUB_TOKEN&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">auth</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;token </span><span class="si">{</span><span class="n">token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">user</span><span class="p">,</span> <span class="n">password</span> <span class="o">=</span> <span class="n">_get_user_password</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">user</span> <span class="ow">and</span> <span class="n">password</span><span class="p">:</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Using basic auth, which is deprecated&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">auth</span> <span class="o">=</span> <span class="n">HTTPBasicAuth</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">}</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;message&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;. &#39;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="p">(</span><span class="s1">&#39;Github token should be given as argument &#39;</span>
+                        <span class="s1">&#39;or set in either GITHUB_TOKEN or GITHUB_API_TOKEN &#39;</span>
+                        <span class="s1">&#39;environment variables&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">AuthException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;message&#39;</span><span class="p">]</span>
+                <span class="k">raise</span> <span class="n">AuthException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="s1">&#39;/user&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s1">&#39;login&#39;</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+                <span class="n">user</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;login&#39;</span><span class="p">]</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Github interface initialized (user=</span><span class="si">{</span><span class="n">user</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Github interface initialized: </span><span class="si">{</span><span class="n">r</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">auth</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">raise</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RestException</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">reason</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;get&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_json</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">(),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;GithubAPI authentication credentials are not initialized&#39;</span><span class="p">)</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">path</span>  <span class="c1"># make sure it is just the path</span>
+        <span class="k">if</span> <span class="s1">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">{{</span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="se">}}</span><span class="s1">&#39;</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">and</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;:&#39;</span> <span class="k">else</span> <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)])</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">and</span> <span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;/&#39;</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">api_url</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">_headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">_headers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;json&#39;</span><span class="p">]}</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="se">\n</span><span class="s1">  headers: </span><span class="si">%s</span><span class="se">\n</span><span class="s1">  params: </span><span class="si">%s</span><span class="s1">,</span><span class="se">\n</span><span class="s1"> kwargs: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                      <span class="n">url</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">_headers</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">_headers</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">auth</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">check</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">return_json</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s1">&#39;keys&#39;</span><span class="p">):</span>
+                <span class="n">result</span><span class="p">[</span><span class="s1">&#39;response&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;status_code&#39;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span>
+                    <span class="s1">&#39;ok&#39;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">ok</span><span class="p">,</span>
+                    <span class="s1">&#39;reason&#39;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span>
+                    <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;message&#39;</span> <span class="ow">in</span> <span class="n">result</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+                <span class="p">}</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="n">r</span>
+
+<div class="viewcode-block" id="GithubAPI.get"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform http request using GET method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;get&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span></div>
+
+<div class="viewcode-block" id="GithubAPI.post"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.post">[docs]</a>    <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform http request using POST method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span></div>
+
+<div class="viewcode-block" id="GithubAPI.put"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.put">[docs]</a>    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform http request using PUT method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;put&#39;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span></div>
+
+<div class="viewcode-block" id="GithubAPI.patch"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.patch">[docs]</a>    <span class="k">def</span> <span class="nf">patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform http request using PATCH method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;patch&#39;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">_EndpointGroup</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for grouping related endpoints.</span>
+
+<span class="sd">    Related endpoints share some arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">api</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_method_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">api</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">return_json</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_</span><span class="p">(</span><span class="s1">&#39;get&#39;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_</span><span class="p">(</span><span class="s1">&#39;put&#39;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_</span><span class="p">(</span><span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_</span><span class="p">(</span><span class="s1">&#39;patch&#39;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_</span><span class="p">(</span><span class="s1">&#39;delete&#39;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_list_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generator over items returned via a paginated endpoint.</span>
+
+<span class="sd">        Github&#39;s API paginates the results when requests return multiple items.</span>
+<span class="sd">        This method steps through the pages, returning items one by one.</span>
+
+<span class="sd">        :param url:</span>
+<span class="sd">        :param limit:</span>
+<span class="sd">        :param kwargs:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;params&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;page&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">page</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;_get_list_generator received a </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="n">r</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;_get_list_generator in page </span><span class="si">%s</span><span class="s1">, </span><span class="si">%s</span><span class="s1"> entries&#39;</span><span class="p">,</span> <span class="n">page</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+            <span class="n">page</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">item</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">limit</span> <span class="ow">and</span> <span class="n">count</span> <span class="o">&gt;=</span> <span class="n">limit</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">StopIteration</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generator over items returned via a paginated endpoint.</span>
+
+<span class="sd">        Github&#39;s API paginates the results when requests return multiple items.</span>
+<span class="sd">        This method steps through the pages, returning a list of all items.</span>
+
+<span class="sd">        :param args:</span>
+<span class="sd">        :param kwargs:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">entry</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list_generator</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)]</span>
+
+
+<div class="viewcode-block" id="Repository"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Repository">[docs]</a><span class="k">class</span> <span class="nc">Repository</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Switchboard for all repository-related endpoints.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        - releases</span>
+<span class="sd">        - tags</span>
+<span class="sd">        - commits</span>
+<span class="sd">        - issues</span>
+<span class="sd">        - branches</span>
+<span class="sd">        - checks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">api</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api</span> <span class="o">=</span> <span class="n">GITHUB_API</span> <span class="k">if</span> <span class="n">api</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">api</span>
+        <span class="k">if</span> <span class="s1">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">repo</span><span class="p">:</span>
+            <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;owner&#39;</span><span class="p">:</span> <span class="n">owner</span><span class="p">,</span>
+            <span class="s1">&#39;repo&#39;</span><span class="p">:</span> <span class="n">repo</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">releases</span> <span class="o">=</span> <span class="n">Releases</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="n">Tags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">commits</span> <span class="o">=</span> <span class="n">Commits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">issues</span> <span class="o">=</span> <span class="n">Issues</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">branches</span> <span class="o">=</span> <span class="n">Branches</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checks</span> <span class="o">=</span> <span class="n">Checks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pull_requests</span> <span class="o">=</span> <span class="n">PullRequests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merge</span> <span class="o">=</span> <span class="n">Merge</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dispatch_event</span> <span class="o">=</span> <span class="n">DispatchEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Releases"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Releases">[docs]</a><span class="k">class</span> <span class="nc">Releases</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Endpoints that have to do with repository releases</span>
+<span class="sd">    (`releases API docs &lt;https://developer.github.com/v3/repos/releases&gt;`_)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Releases.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Releases.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latest</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">release_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param latest:</span>
+<span class="sd">        :param tag_name:</span>
+<span class="sd">        :param release_id:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">sum</span><span class="p">([</span><span class="n">latest</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">tag_name</span><span class="p">),</span> <span class="nb">bool</span><span class="p">(</span><span class="n">release_id</span><span class="p">)])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;only one of latest, tag_name, release_id can be specified&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">release_id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/releases/:release_id&#39;</span><span class="p">,</span>
+                             <span class="n">release_id</span><span class="o">=</span><span class="n">release_id</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">latest</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/releases/latest&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">tag_name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/releases/tags/:tag_name&#39;</span><span class="p">,</span>
+                             <span class="n">tag_name</span><span class="o">=</span><span class="n">tag_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/releases&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Releases.create"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Releases.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param tag_name: str. Required. The name of the tag.</span>
+<span class="sd">        :param target_commitish: str.</span>
+<span class="sd">            Specifies the commitish value that determines where the Git tag is created from.</span>
+<span class="sd">            Can be any branch or commit SHA. Unused if the Git tag already exists.</span>
+<span class="sd">            Default: the repository&#39;s default branch (usually master).</span>
+<span class="sd">        :param name: str.</span>
+<span class="sd">            The name of the release.</span>
+<span class="sd">        :param body: str.</span>
+<span class="sd">            Text describing the contents of the tag.</span>
+<span class="sd">        :param draft: boolean.</span>
+<span class="sd">            True to create a draft (unpublished) release, false to create a published one.</span>
+<span class="sd">            Default: false</span>
+<span class="sd">        :param prerelease: boolean.</span>
+<span class="sd">            True to identify the release as a prerelease.</span>
+<span class="sd">            false to identify the release as a full release.</span>
+<span class="sd">            Default: false</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;tag_name&#39;</span><span class="p">]</span>
+        <span class="n">optional</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;target_commitish&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;body&#39;</span><span class="p">,</span> <span class="s1">&#39;draft&#39;</span><span class="p">,</span> <span class="s1">&#39;prerelease&#39;</span><span class="p">]</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optional</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">})</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/releases&#39;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Releases.edit"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Releases.edit">[docs]</a>    <span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">release_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param release_id: str</span>
+<span class="sd">        :param tag_name: str</span>
+<span class="sd">            The name of the tag.</span>
+<span class="sd">        :param target_commitish: str</span>
+<span class="sd">            Specifies the commitish value that determines where the Git tag is created from.</span>
+<span class="sd">            Can be any branch or commit SHA. Unused if the Git tag already exists.</span>
+<span class="sd">            Default: the repository&#39;s default branch (usually master).</span>
+<span class="sd">        :param name: str</span>
+<span class="sd">            The name of the release.</span>
+<span class="sd">        :param body: str</span>
+<span class="sd">            Text describing the contents of the tag.</span>
+<span class="sd">        :param draft: boolean</span>
+<span class="sd">            true makes the release a draft, and false publishes the release.</span>
+<span class="sd">        :param prerelease: boolean</span>
+<span class="sd">            true to identify the release as a prerelease,</span>
+<span class="sd">            false to identify the release as a full release.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">optional</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;target_commitish&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;body&#39;</span><span class="p">,</span> <span class="s1">&#39;draft&#39;</span><span class="p">,</span> <span class="s1">&#39;prerelease&#39;</span><span class="p">]</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optional</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">})</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/releases/:release_id&#39;</span><span class="p">,</span>
+                           <span class="n">release_id</span><span class="o">=</span><span class="n">release_id</span><span class="p">,</span>
+                           <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">,</span>
+                           <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">release_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delete</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/releases/:release_id&#39;</span><span class="p">,</span> <span class="n">release_id</span><span class="o">=</span><span class="n">release_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Tags"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Tags">[docs]</a><span class="k">class</span> <span class="nc">Tags</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Endpoints that have to do with repository tags</span>
+<span class="sd">    (`tags API docs &lt;https://developer.github.com/v3/git/tags&gt;`_)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Tags.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Tags.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tag_sha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">sum</span><span class="p">([</span><span class="nb">bool</span><span class="p">(</span><span class="n">tag_sha</span><span class="p">),</span> <span class="nb">bool</span><span class="p">(</span><span class="n">name</span><span class="p">)])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;only one of tag_sha, name can be specified&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tag_sha</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/git/tags/:tag_sha&#39;</span><span class="p">,</span>
+                             <span class="n">tag_sha</span><span class="o">=</span><span class="n">tag_sha</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/git/ref/tags/:name&#39;</span><span class="p">,</span>
+                             <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/tags&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Tags.create"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Tags.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param tag: str. Required.</span>
+<span class="sd">            The tag&#39;s name. This is typically a version (e.g., &quot;v0.0.1&quot;).</span>
+<span class="sd">        :param message: str. Required.</span>
+<span class="sd">            The tag message.</span>
+<span class="sd">        :param object: str. Required.</span>
+<span class="sd">            The SHA of the git object this is tagging.</span>
+<span class="sd">        :param type: str. Required.</span>
+<span class="sd">            The type of the object we&#39;re tagging. Normally this is a commit</span>
+<span class="sd">            but it can also be a tree or a blob.</span>
+<span class="sd">        :param tagger: object</span>
+<span class="sd">            An object with information about the individual creating the tag.</span>
+
+<span class="sd">        The tagger object contains the following keys:</span>
+
+<span class="sd">        - name: str. The name of the author of the tag</span>
+<span class="sd">        - email: str. The email of the author of the tag</span>
+<span class="sd">        - date: str. When this object was tagged.</span>
+<span class="sd">          This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;tag&#39;</span><span class="p">,</span> <span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="s1">&#39;object&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">]</span>
+        <span class="n">optional</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;tagger&#39;</span><span class="p">]</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optional</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">})</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/git/tags&#39;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Commits"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Commits">[docs]</a><span class="k">class</span> <span class="nc">Commits</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Endpoints that have to do with repository commits</span>
+<span class="sd">    (`commit API docs &lt;https://developer.github.com/v3/repos/commits&gt;`_)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Commits.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Commits.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param ref: str</span>
+<span class="sd">        :param sha: str</span>
+<span class="sd">            SHA or branch to start listing commits from.</span>
+<span class="sd">            Default: the repository’s default branch (usually master).</span>
+<span class="sd">        :param path: str</span>
+<span class="sd">            Only commits containing this file path will be returned.</span>
+<span class="sd">        :param author: str</span>
+<span class="sd">            GitHub login or email address by which to filter by commit author.</span>
+<span class="sd">        :param since: str</span>
+<span class="sd">            Only commits after this date will be returned.</span>
+<span class="sd">            This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.</span>
+<span class="sd">        :param until: str</span>
+<span class="sd">            Only commits before this date will be returned.</span>
+<span class="sd">            This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.</span>
+
+<span class="sd">        :param kwargs:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">optional</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sha&#39;</span><span class="p">,</span> <span class="s1">&#39;path&#39;</span><span class="p">,</span> <span class="s1">&#39;author&#39;</span><span class="p">,</span> <span class="s1">&#39;since&#39;</span><span class="p">,</span> <span class="s1">&#39;until&#39;</span><span class="p">]</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optional</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">})</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/commits/:ref&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/commits&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Branches"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Branches">[docs]</a><span class="k">class</span> <span class="nc">Branches</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Endpoints that have to do with repository branches</span>
+<span class="sd">    (`branches API docs &lt;https://developer.github.com/v3/repos/branches&gt;`_)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Branches.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Branches.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">branch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param branch:</span>
+<span class="sd">        :param protected: bool</span>
+<span class="sd">            Setting to true returns only protected branches.</span>
+<span class="sd">            When set to false, only unprotected branches are returned.</span>
+<span class="sd">            Omitting this parameter returns all branches.</span>
+<span class="sd">        :param kwargs:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">optional</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;protected&#39;</span><span class="p">]</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optional</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">})</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">branch</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s1">&#39;/repos/:owner/:repo/branches/:branch&#39;</span><span class="p">,</span>
+                             <span class="n">branch</span><span class="o">=</span><span class="n">branch</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/branches&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Issues"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Issues">[docs]</a><span class="k">class</span> <span class="nc">Issues</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Endpoints that have to do with repository issues</span>
+<span class="sd">    (`issues API docs &lt;https://developer.github.com/v3/issues&gt;`_)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Issues.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Issues.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List issues.</span>
+
+<span class="sd">        :param issue_number: int, Optional</span>
+<span class="sd">        :param filter: str</span>
+<span class="sd">            Indicates which sorts of issues to return. Default: assigned. Can be one of:</span>
+
+<span class="sd">            - assigned: Issues assigned to you</span>
+<span class="sd">            - created: Issues created by you</span>
+<span class="sd">            - mentioned: Issues mentioning you</span>
+<span class="sd">            - subscribed: Issues you&#39;re subscribed to updates for</span>
+<span class="sd">            - all: All issues the authenticated user can see</span>
+
+<span class="sd">        :param state: str</span>
+<span class="sd">            Indicates the state of the issues to return. Can be either open, closed, or all.</span>
+<span class="sd">            Default: open</span>
+<span class="sd">        :param labels: str</span>
+<span class="sd">            A list of comma separated label names. Example: bug,ui,@high</span>
+<span class="sd">        :param sort: str</span>
+<span class="sd">            What to sort results by. Can be either created, updated, comments.</span>
+<span class="sd">            Default: created</span>
+<span class="sd">        :param direction: str</span>
+<span class="sd">            The direction of the sort. Can be either asc or desc.</span>
+<span class="sd">            Default: desc</span>
+<span class="sd">        :param since: str</span>
+<span class="sd">            Only issues updated at or after this time are returned.</span>
+<span class="sd">            This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.</span>
+<span class="sd">        :param kwargs:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">optional</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="s1">&#39;sort&#39;</span><span class="p">,</span> <span class="s1">&#39;direction&#39;</span><span class="p">,</span> <span class="s1">&#39;since&#39;</span><span class="p">]</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optional</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">})</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">issue_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s1">&#39;/repos/:owner/:repo/issues/:issue_number&#39;</span><span class="p">,</span>
+                             <span class="n">issue_number</span><span class="o">=</span><span class="n">issue_number</span><span class="p">,</span>
+                             <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span>
+                             <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/issues&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Issues.create"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Issues.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param title: str Required. The title of the issue.</span>
+<span class="sd">        :param body: str The contents of the issue.</span>
+<span class="sd">        :param milestone: int</span>
+<span class="sd">            The number of the milestone to associate this issue with.</span>
+<span class="sd">            NOTE: Only users with push access can set the milestone for new issues.</span>
+<span class="sd">            The milestone is silently dropped otherwise.</span>
+<span class="sd">        :param labels: list</span>
+<span class="sd">            Labels to associate with this issue.</span>
+<span class="sd">            NOTE: Only users with push access can set labels for new issues.</span>
+<span class="sd">            Labels are silently dropped otherwise.</span>
+<span class="sd">        :param assignees: list</span>
+<span class="sd">            Logins for Users to assign to this issue.</span>
+<span class="sd">            NOTE: Only users with push access can set assignees for new issues.</span>
+<span class="sd">            Assignees are silently dropped otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span>
+        <span class="n">optional</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;body&#39;</span><span class="p">,</span> <span class="s1">&#39;milestone&#39;</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="s1">&#39;assignees&#39;</span><span class="p">]</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optional</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">})</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/issues&#39;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Issues.edit"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Issues.edit">[docs]</a>    <span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param issue_number:</span>
+<span class="sd">        :param title: str</span>
+<span class="sd">            The title of the issue.</span>
+<span class="sd">        :param body: str</span>
+<span class="sd">            The contents of the issue.</span>
+<span class="sd">        :param assignee: str</span>
+<span class="sd">            Login for the user that this issue should be assigned to. This field is deprecated.</span>
+<span class="sd">        :param state: str</span>
+<span class="sd">            State of the issue. Either open or closed.</span>
+<span class="sd">        :param milestone: int</span>
+<span class="sd">            The number of the milestone to associate this issue with or null to remove current.</span>
+<span class="sd">            NOTE: Only users with push access can set the milestone for issues.</span>
+<span class="sd">            The milestone is silently dropped otherwise.</span>
+<span class="sd">        :param labels: list of strings</span>
+<span class="sd">            Labels to associate with this issue.</span>
+<span class="sd">            Pass one or more Labels to replace the set of Labels on this Issue.</span>
+<span class="sd">            Send an empty array ([]) to clear all Labels from the Issue.</span>
+<span class="sd">            NOTE: Only users with push access can set labels for issues.</span>
+<span class="sd">            Labels are silently dropped otherwise.</span>
+<span class="sd">        :param assignees: list of strings</span>
+<span class="sd">            Logins for Users to assign to this issue.</span>
+<span class="sd">            Pass one or more user logins to replace the set of assignees on this Issue.</span>
+<span class="sd">            Send an empty array ([]) to clear all assignees from the Issue.</span>
+<span class="sd">            NOTE: Only users with push access can set assignees for new issues.</span>
+<span class="sd">            Assignees are silently dropped otherwise.</span>
+<span class="sd">        :param kwargs:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">optional</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;body&#39;</span><span class="p">,</span> <span class="s1">&#39;assignee&#39;</span><span class="p">,</span> <span class="s1">&#39;state&#39;</span><span class="p">,</span> <span class="s1">&#39;milestone&#39;</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="s1">&#39;assignees&#39;</span><span class="p">]</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optional</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">})</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span><span class="p">(</span><span class="s1">&#39;/repos/:owner/:repo/issues/:issue_number&#39;</span><span class="p">,</span>
+                           <span class="n">issue_number</span><span class="o">=</span><span class="n">issue_number</span><span class="p">,</span>
+                           <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">,</span>
+                           <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="PullRequests"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests">[docs]</a><span class="k">class</span> <span class="nc">PullRequests</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Endpoints that have to do with pull requests</span>
+<span class="sd">    (`pull requests API docs &lt;https://developer.github.com/v3/pulls&gt;`_)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="PullRequests.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param pull_number: str (optional)</span>
+<span class="sd">            Default: all pulls</span>
+<span class="sd">        :param state: str</span>
+<span class="sd">            Either open, closed, or all to filter by state.</span>
+<span class="sd">            Default: open</span>
+<span class="sd">        :param head: str</span>
+<span class="sd">            Filter pulls by head user or head organization and branch name in the format of</span>
+<span class="sd">            user:ref-name or organization:ref-name. For example:</span>
+<span class="sd">            github:new-script-format or octocat:test-branch.</span>
+<span class="sd">        :param base: str</span>
+<span class="sd">            Filter pulls by base branch name. Example: gh-pages.</span>
+<span class="sd">        :param sort: str</span>
+<span class="sd">            What to sort results by. Can be either created, updated, popularity (comment count)</span>
+<span class="sd">            or long-running (age, filtering by pulls updated in the last month).</span>
+<span class="sd">            Default: created</span>
+<span class="sd">        :param direction: str</span>
+<span class="sd">            The direction of the sort. Can be either asc or desc.</span>
+<span class="sd">            Default: desc when sort is created or sort is not specified, otherwise asc.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pull_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s1">&#39;/repos/:owner/:repo/pulls/:pull_number&#39;</span><span class="p">,</span>
+                          <span class="n">pull_number</span><span class="o">=</span><span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;response&#39;</span><span class="p">][</span><span class="s1">&#39;ok&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="s1">&#39;state&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;state&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;state&#39;</span><span class="p">]:</span>
+                    <span class="k">return</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;head&#39;</span><span class="p">,</span> <span class="s1">&#39;base&#39;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">r</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;ref&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+                        <span class="k">return</span> <span class="p">[]</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">r</span>
+        <span class="k">if</span> <span class="s1">&#39;head&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="s1">&#39;:&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;head&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s1">&#39;status_code&#39;</span><span class="p">:</span> <span class="mi">404</span><span class="p">,</span>
+                    <span class="s1">&#39;ok&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s1">&#39;reason&#39;</span><span class="p">:</span>  <span class="s1">&#39;head must be in the format user:ref-name or organization:ref-name.&#39;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">optional</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;state&#39;</span><span class="p">,</span> <span class="s1">&#39;head&#39;</span><span class="p">,</span> <span class="s1">&#39;base&#39;</span><span class="p">,</span> <span class="s1">&#39;sort&#39;</span><span class="p">,</span> <span class="s1">&#39;direction&#39;</span><span class="p">]</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optional</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">})</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s1">&#39;/repos/:owner/:repo/pulls&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PullRequests.create"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param title: str Required.</span>
+<span class="sd">            The title of the new pull request.</span>
+<span class="sd">        :param head: str Required.</span>
+<span class="sd">            The name of the branch where your changes are implemented.</span>
+<span class="sd">            For cross-repository pull requests in the same network,</span>
+<span class="sd">            namespace head with a user like this: username:branch.</span>
+<span class="sd">        :param base: str Required.</span>
+<span class="sd">            The name of the branch you want the changes pulled into.</span>
+<span class="sd">            This should be an existing branch on the current repository.</span>
+<span class="sd">            You cannot submit a pull request to one repository that requests</span>
+<span class="sd">            a merge to a base of another repository.</span>
+<span class="sd">        :param body: str</span>
+<span class="sd">            The contents of the pull request.</span>
+<span class="sd">        :param maintainer_can_modify: bool</span>
+<span class="sd">            Indicates whether maintainers can modify the pull request.</span>
+<span class="sd">        :param draft: bool</span>
+<span class="sd">            Indicates whether the pull request is a draft.</span>
+<span class="sd">            See &quot;Draft Pull Requests&quot; in the GitHub Help documentation to learn more.</span>
+<span class="sd">        :param kwargs:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;head&#39;</span><span class="p">,</span> <span class="s1">&#39;base&#39;</span><span class="p">]</span>
+        <span class="n">optional</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;body&#39;</span><span class="p">,</span> <span class="s1">&#39;maintainer_can_modify&#39;</span><span class="p">,</span> <span class="s1">&#39;draft&#39;</span><span class="p">]</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optional</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">})</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">(</span><span class="s1">&#39;/repos/:owner/:repo/pulls&#39;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PullRequests.edit"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.edit">[docs]</a>    <span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param pull_number:</span>
+<span class="sd">        :param title: str</span>
+<span class="sd">            The title of the pull request.</span>
+<span class="sd">        :param body: str</span>
+<span class="sd">            The contents of the pull request.</span>
+<span class="sd">        :param state: str</span>
+<span class="sd">            State of this Pull Request. Either open or closed.</span>
+<span class="sd">        :param base: str</span>
+<span class="sd">            The name of the branch you want your changes pulled into.</span>
+<span class="sd">            This should be an existing branch on the current repository.</span>
+<span class="sd">            You cannot update the base branch on a pull request to point to another repository.</span>
+<span class="sd">        :param maintainer_can_modify: bool</span>
+<span class="sd">            Indicates whether maintainers can modify the pull request.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">optional</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;body&#39;</span><span class="p">,</span> <span class="s1">&#39;state&#39;</span><span class="p">,</span> <span class="s1">&#39;base&#39;</span><span class="p">,</span> <span class="s1">&#39;maintainer_can_modify&#39;</span><span class="p">]</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optional</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">})</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patch</span><span class="p">(</span><span class="s1">&#39;/repos/:owner/:repo/pulls/:pull_number&#39;</span><span class="p">,</span>
+                           <span class="n">pull_number</span><span class="o">=</span><span class="n">pull_number</span><span class="p">,</span>
+                           <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">,</span>
+                           <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PullRequests.commits"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.commits">[docs]</a>    <span class="k">def</span> <span class="nf">commits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Lists a maximum of 250 commits for a pull request.</span>
+
+<span class="sd">        :param pull_number: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#  To receive a complete commit list</span>
+        <span class="c1">#  for pull requests with more than 250 commits, we need to use the Commit List API.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s1">&#39;/repos/:owner/:repo/pulls/:pull_number/commits&#39;</span><span class="p">,</span>
+                         <span class="n">pull_number</span><span class="o">=</span><span class="n">pull_number</span><span class="p">,</span>
+                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PullRequests.files"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.files">[docs]</a>    <span class="k">def</span> <span class="nf">files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Lists a maximum of 250 commits for a pull request.</span>
+
+<span class="sd">        :param pull_number: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#  To receive a complete commit list</span>
+        <span class="c1">#  for pull requests with more than 250 commits, we need to use the Commit List API.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s1">&#39;/repos/:owner/:repo/pulls/:pull_number/files&#39;</span><span class="p">,</span>
+                         <span class="n">pull_number</span><span class="o">=</span><span class="n">pull_number</span><span class="p">,</span>
+                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PullRequests.status"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.status">[docs]</a>    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get if a pull request has been merged</span>
+
+<span class="sd">        :param pull_number: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#  To receive a complete commit list</span>
+        <span class="c1">#  for pull requests with more than 250 commits, we need to use the Commit List API.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s1">&#39;/repos/:owner/:repo/pulls/:pull_number/merge&#39;</span><span class="p">,</span>
+                         <span class="n">pull_number</span><span class="o">=</span><span class="n">pull_number</span><span class="p">,</span>
+                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PullRequests.merge"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Merge a pull request</span>
+
+<span class="sd">        :param pull_number:</span>
+<span class="sd">        :param commit_title: str</span>
+<span class="sd">            Title for the automatic commit message.</span>
+<span class="sd">        :param commit_message: str</span>
+<span class="sd">            Extra detail to append to automatic commit message.</span>
+<span class="sd">        :param sha: str</span>
+<span class="sd">            SHA that pull request head must match to allow merge.</span>
+<span class="sd">        :param merge_method: str</span>
+<span class="sd">            Merge method to use. Possible values are merge, squash or rebase. Default is merge.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;commit_title&#39;</span><span class="p">,</span> <span class="s1">&#39;commit_message&#39;</span><span class="p">,</span> <span class="s1">&#39;sha&#39;</span><span class="p">]</span>
+        <span class="n">optional</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;merge_method&#39;</span><span class="p">]</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optional</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">})</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_put</span><span class="p">(</span><span class="s1">&#39;/repos/:owner/:repo/pulls/:pull_number/merge&#39;</span><span class="p">,</span>
+                         <span class="n">pull_number</span><span class="o">=</span><span class="n">pull_number</span><span class="p">,</span>
+                         <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">Merge</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Single endpoint for merges</span>
+<span class="sd">    (`merges API docs &lt;https://developer.github.com/v3/repos/merging/&gt;`_)</span>
+
+<span class="sd">    Note: this is for branches. Merging pull requests is done with the pull requests API</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Merge a branch</span>
+
+<span class="sd">        :param base: str</span>
+<span class="sd">            The name of the base branch that the head will be merged into.</span>
+<span class="sd">        :param head: str</span>
+<span class="sd">            The head to merge. This can be a branch name or a commit SHA1.</span>
+<span class="sd">        :param commit_message: str. optional</span>
+<span class="sd">            Commit message to use for the merge commit. If omitted, a default message will be used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;base&#39;</span><span class="p">,</span> <span class="s1">&#39;head&#39;</span><span class="p">]</span>
+        <span class="n">optional</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;commit_message&#39;</span><span class="p">]</span>
+        <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optional</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">})</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">(</span><span class="s1">&#39;/repos/:owner/:repo/pulls/:pull_number/merge&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Checks"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Checks">[docs]</a><span class="k">class</span> <span class="nc">Checks</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Endpoints that have to do with repository checks</span>
+<span class="sd">    (`checks API docs &lt;https://developer.github.com/v3/checks&gt;`_)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Checks.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Checks.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref</span><span class="p">):</span>
+        <span class="c1"># accept headers are custom because this endpoint is</span>
+        <span class="c1"># on preview for developers and can change any time</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s1">&#39;repos/:owner/:repo/commits/:ref/check-runs&#39;</span><span class="p">,</span>
+                         <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/vnd.github.antiope-preview+json&#39;</span><span class="p">},</span>
+                         <span class="n">ref</span><span class="o">=</span><span class="n">ref</span><span class="p">)</span></div></div>
+
+<span class="k">class</span> <span class="nc">DispatchEvent</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a repository dispatch event</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="n">client_payload</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a repository dispatch event</span>
+
+<span class="sd">        :param event_type: str</span>
+<span class="sd">            A custom webhook event name.</span>
+<span class="sd">        :param client_payload: dict</span>
+<span class="sd">            JSON payload with extra information about the webhook event.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;event_type&#39;</span><span class="p">:</span> <span class="n">event_type</span><span class="p">,</span>
+                  <span class="s1">&#39;client_payload&#39;</span><span class="p">:</span> <span class="n">client_payload</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">(</span><span class="s1">&#39;/repos/:owner/:repo/dispatches&#39;</span><span class="p">,</span>
+                          <span class="n">json</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Repositories</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s1">&#39;orgs/:owner/repos&#39;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Organization</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api</span> <span class="o">=</span> <span class="n">GITHUB_API</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;owner&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">repositories</span> <span class="o">=</span> <span class="n">Repositories</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+
+<span class="n">GITHUB_API</span> <span class="o">=</span> <span class="n">GithubAPI</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
+
+
+<form action="../../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<footer class="footer">
+  <p class="pull-right"> &nbsp;
+    <a href="#">Back to Top</a></p>
+  <p>
+    &copy; Copyright 2020, Javier Gonzalez.<br/>
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 3.1.2. &nbsp;
+  </p>
+</footer>
+  </body>
+</html>

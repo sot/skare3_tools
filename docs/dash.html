@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard &#8212; SkaRE3 Tools 0.1.dev1+g81bfeff documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-astropy.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Test Results" href="test_results.html" />
+    <link rel="prev" title="Packages" href="packages.html" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,600' rel='stylesheet' type='text/css'/>
+
+  </head><body>
+<div class="topbar">
+  <a class="brand" title="Documentation Home" href="index.html"><span id="logotext1">Ska! </span><span id="logotext2">SkaRE3</span><span id="logotext3">Tools</span></a>
+  <ul>
+    
+    <li><a class="home" title="Homepage" href="https://cxc.cfa.harvard.edu/mta/ASPECT/tool_doc">
+        <span id="logotext1">ska</span><span id="logotext2">tools</span>
+    </a></li>
+    <li><a title="General Index" href="genindex.html">Index</a></li>
+    <li><a title="Module Index" href="py-modindex.html">Modules</a></li>
+    <li>
+      
+      
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+      
+    </li>
+  </ul>
+</div>
+
+<div class="related">
+    <h3>Navigation</h3>
+    <ul>
+      <li class="right">
+	<a href="test_results.html" title="Test Results">
+	  next &raquo;
+	</a>
+      </li>
+      <li class="right">
+	<a href="packages.html" title="Packages">
+	  &laquo; previous
+	</a>
+	 |
+      </li>
+      <li>
+	<a href="index.html">SkaRE3 Tools 0.1.dev1+g81bfeff documentation</a>
+	 &#187;
+      </li>
+      
+      <li>Dashboard</li> 
+    </ul>
+</div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-skare3_tools.dashboard">
+<span id="dashboard"></span><h1>Dashboard<a class="headerlink" href="#module-skare3_tools.dashboard" title="Permalink to this headline">¶</a></h1>
+<p>Tools to display package information on web pages.
+Most implementation is in the <a class="reference internal" href="#module-skare3_tools.dashboard.views" title="skare3_tools.dashboard.views"><code class="xref py py-mod docutils literal notranslate"><span class="pre">views</span></code></a> submodule.</p>
+<div class="section" id="module-skare3_tools.dashboard.views">
+<span id="views"></span><h2>Views<a class="headerlink" href="#module-skare3_tools.dashboard.views" title="Permalink to this headline">¶</a></h2>
+<p>Current views:</p>
+<ul class="simple">
+<li><p>dashboard. Shows all packages, with conda and github information.
+Available with the <a class="reference internal" href="#skare3-dashboard"><span class="std std-ref">skare3-dashboard</span></a> stand-alone script.</p></li>
+<li><p>test_log. Shows a test log with color highlighting.
+Only available on web server.</p></li>
+<li><p>test_results. Shows all test results for a given test suite.
+Available with the <a class="reference internal" href="#skare3-test-dashboard"><span class="std std-ref">skare3-test-dashboard</span></a> stand-alone script.</p></li>
+<li><p>test_stream. Shows the history of test results for test suites of a given stream label.
+Only available on web server.</p></li>
+</ul>
+</div>
+<div class="section" id="scripts">
+<h2>Scripts<a class="headerlink" href="#scripts" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="skare3-dashboard">
+<span id="id1"></span><h3><a class="reference internal" href="#skare3-dashboard"><span class="std std-ref">skare3-dashboard</span></a><a class="headerlink" href="#skare3-dashboard" title="Permalink to this headline">¶</a></h3>
+<p><p>Produce a single html page with package information</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">dashboard</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">FILENAME</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="Named Arguments">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h4>
+<dl class="option-list">
+<dt><kbd>-o</kbd></dt>
+<dd><p>Output file (default: index.html)</p>
+<p>Default: “index.html”</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="skare3-test-dashboard">
+<span id="id2"></span><h3><a class="reference internal" href="#skare3-test-dashboard"><span class="std std-ref">skare3-test-dashboard</span></a><a class="headerlink" href="#skare3-test-dashboard" title="Permalink to this headline">¶</a></h3>
+<p><p>Produce a single html page with a test result report</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">test</span><span class="o">-</span><span class="n">dashboard</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="n">FILE_IN</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">FILE_OUT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">b</span><span class="p">]</span>
+                             <span class="p">[</span><span class="o">--</span><span class="n">log</span><span class="o">-</span><span class="nb">dir</span> <span class="n">LOG_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">static</span><span class="o">-</span><span class="nb">dir</span> <span class="n">STATIC_DIR</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="Named Arguments">
+<h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h4>
+<dl class="option-list">
+<dt><kbd>-i</kbd></dt>
+<dd><p>Directory or JSON file containing all test results. If it is a directory, then it must have a file named all_tests.json.</p>
+</dd>
+<dt><kbd>-o</kbd></dt>
+<dd><p>Name of file to write to. By default, this creates a file named test_results.html, located in the input directory or the current working directory, depending on whether the ‘-i’ options was given.</p>
+</dd>
+<dt><kbd>-b</kbd></dt>
+<dd><p>Batch mode: do not open a browser window with the result.</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--log-dir</kbd></dt>
+<dd><p>Default: “.”</p>
+</dd>
+<dt><kbd>--static-dir</kbd></dt>
+<dd><p>Location of static data directory.</p>
+<p>Default: “/export/jgonzale/github-workflows/shiny-runner-sot/_work/skare3_tools/skare3_tools/source/skare3_tools/dashboard/static”</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
+<ul>
+<li><a class="reference internal" href="#">Dashboard</a><ul>
+<li><a class="reference internal" href="#module-skare3_tools.dashboard.views">Views</a></li>
+<li><a class="reference internal" href="#scripts">Scripts</a><ul>
+<li><a class="reference internal" href="#skare3-dashboard"><span class="xref std std-ref">skare3-dashboard</span></a><ul>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#skare3-test-dashboard"><span class="xref std std-ref">skare3-test-dashboard</span></a><ul>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="packages.html"
+                        title="previous chapter">Packages</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="test_results.html"
+                        title="next chapter">Test Results</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dash.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<footer class="footer">
+  <p class="pull-right">
+    <a href="_sources/dash.rst.txt"
+       rel="nofollow">Page Source</a> &nbsp;
+    <a href="#">Back to Top</a></p>
+  <p>
+    &copy; Copyright 2020, Javier Gonzalez.<br/>
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 3.1.2. &nbsp;
+  </p>
+</footer>
+  </body>
+</html>

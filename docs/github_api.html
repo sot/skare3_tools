@@ -1,0 +1,735 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Github REST &#8212; SkaRE3 Tools 0.1.dev1+g81bfeff documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-astropy.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Packages" href="packages_api.html" />
+    <link rel="prev" title="API" href="api.html" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,600' rel='stylesheet' type='text/css'/>
+
+  </head><body>
+<div class="topbar">
+  <a class="brand" title="Documentation Home" href="index.html"><span id="logotext1">Ska! </span><span id="logotext2">SkaRE3</span><span id="logotext3">Tools</span></a>
+  <ul>
+    
+    <li><a class="home" title="Homepage" href="https://cxc.cfa.harvard.edu/mta/ASPECT/tool_doc">
+        <span id="logotext1">ska</span><span id="logotext2">tools</span>
+    </a></li>
+    <li><a title="General Index" href="genindex.html">Index</a></li>
+    <li><a title="Module Index" href="py-modindex.html">Modules</a></li>
+    <li>
+      
+      
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+      
+    </li>
+  </ul>
+</div>
+
+<div class="related">
+    <h3>Navigation</h3>
+    <ul>
+      <li class="right">
+	<a href="packages_api.html" title="Packages">
+	  next &raquo;
+	</a>
+      </li>
+      <li class="right">
+	<a href="api.html" title="API">
+	  &laquo; previous
+	</a>
+	 |
+      </li>
+      <li>
+	<a href="index.html">SkaRE3 Tools 0.1.dev1+g81bfeff documentation</a>
+	 &#187;
+      </li>
+      <li><a href="api.html" accesskey="U">API</a> &#187;</li>
+      
+      <li>Github REST</li> 
+    </ul>
+</div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="github-rest">
+<h1>Github REST<a class="headerlink" href="#github-rest" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="skare3_tools.github.github.init">
+<code class="sig-prename descclassname">skare3_tools.github.github.</code><code class="sig-name descname">init</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">user</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">password</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">token</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">force</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the API.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>token</strong> – str
+a Github auth token</p></li>
+<li><p><strong>force</strong> – bool
+override a previously initialized API</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt id="skare3_tools.github.github.GithubAPI">
+<em class="property">class </em><code class="sig-prename descclassname">skare3_tools.github.github.</code><code class="sig-name descname">GithubAPI</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">user</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">password</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">token</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#GithubAPI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.GithubAPI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main class that encapsulates Github’s REST API.</p>
+<dl class="py method">
+<dt id="skare3_tools.github.github.GithubAPI.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#GithubAPI.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.GithubAPI.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform http request using GET method.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.GithubAPI.init">
+<code class="sig-name descname">init</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">user</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">password</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">token</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">force</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#GithubAPI.init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.GithubAPI.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the Github API.</p>
+<p>If not token is provided, it tries the following:
+- look for GITHUB_API_TOKEN environmental variable
+- look for GITHUB_TOKEN environmental variable</p>
+<p>If that fails, try with user/password (deprecated)
+If no user name is provided, it tries the following:</p>
+<ul class="simple">
+<li><p>look for GITHUB_USER environmental variable</p></li>
+<li><p>request in a command line prompt.</p></li>
+</ul>
+<p>If no password is provided, it tries the following:</p>
+<ul class="simple">
+<li><p>look for GITHUB_PASSWORD environmental variable</p></li>
+<li><p>try getting it from the keyring (Keychain in Mac OS)</p></li>
+</ul>
+<p>If user name or password can not be determined, an AuthException is raised.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user</strong> – str (deprecated)</p></li>
+<li><p><strong>password</strong> – str (deprecated)</p></li>
+<li><p><strong>token</strong> – str</p></li>
+<li><p><strong>force</strong> – bool</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>GithubAPI</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.GithubAPI.patch">
+<code class="sig-name descname">patch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#GithubAPI.patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.GithubAPI.patch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform http request using PATCH method</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.GithubAPI.post">
+<code class="sig-name descname">post</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#GithubAPI.post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.GithubAPI.post" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform http request using POST method</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.GithubAPI.put">
+<code class="sig-name descname">put</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#GithubAPI.put"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.GithubAPI.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform http request using PUT method</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="skare3_tools.github.github.Repository">
+<em class="property">class </em><code class="sig-prename descclassname">skare3_tools.github.github.</code><code class="sig-name descname">Repository</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">repo</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">api</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Repository"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Repository" title="Permalink to this definition">¶</a></dt>
+<dd><p>Switchboard for all repository-related endpoints.</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><ul class="simple">
+<li><p>releases</p></li>
+<li><p>tags</p></li>
+<li><p>commits</p></li>
+<li><p>issues</p></li>
+<li><p>branches</p></li>
+<li><p>checks</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="section" id="repository-endpoints">
+<h2>Repository Endpoints<a class="headerlink" href="#repository-endpoints" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="skare3_tools.github.github.Releases">
+<em class="property">class </em><code class="sig-prename descclassname">skare3_tools.github.github.</code><code class="sig-name descname">Releases</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Releases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Releases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Endpoints that have to do with repository releases
+(<a class="reference external" href="https://developer.github.com/v3/repos/releases">releases API docs</a>)</p>
+<dl class="py method">
+<dt id="skare3_tools.github.github.Releases.__call__">
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">latest</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">tag_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">release_id</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Releases.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Releases.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>latest</strong> – </p></li>
+<li><p><strong>tag_name</strong> – </p></li>
+<li><p><strong>release_id</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.Releases.create">
+<code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Releases.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Releases.create" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tag_name</strong> – str. Required. The name of the tag.</p></li>
+<li><p><strong>target_commitish</strong> – str.
+Specifies the commitish value that determines where the Git tag is created from.
+Can be any branch or commit SHA. Unused if the Git tag already exists.
+Default: the repository’s default branch (usually master).</p></li>
+<li><p><strong>name</strong> – str.
+The name of the release.</p></li>
+<li><p><strong>body</strong> – str.
+Text describing the contents of the tag.</p></li>
+<li><p><strong>draft</strong> – boolean.
+True to create a draft (unpublished) release, false to create a published one.
+Default: false</p></li>
+<li><p><strong>prerelease</strong> – boolean.
+True to identify the release as a prerelease.
+false to identify the release as a full release.
+Default: false</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.Releases.edit">
+<code class="sig-name descname">edit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">release_id</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Releases.edit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Releases.edit" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>release_id</strong> – str</p></li>
+<li><p><strong>tag_name</strong> – str
+The name of the tag.</p></li>
+<li><p><strong>target_commitish</strong> – str
+Specifies the commitish value that determines where the Git tag is created from.
+Can be any branch or commit SHA. Unused if the Git tag already exists.
+Default: the repository’s default branch (usually master).</p></li>
+<li><p><strong>name</strong> – str
+The name of the release.</p></li>
+<li><p><strong>body</strong> – str
+Text describing the contents of the tag.</p></li>
+<li><p><strong>draft</strong> – boolean
+true makes the release a draft, and false publishes the release.</p></li>
+<li><p><strong>prerelease</strong> – boolean
+true to identify the release as a prerelease,
+false to identify the release as a full release.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="skare3_tools.github.github.Tags">
+<em class="property">class </em><code class="sig-prename descclassname">skare3_tools.github.github.</code><code class="sig-name descname">Tags</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Tags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Endpoints that have to do with repository tags
+(<a class="reference external" href="https://developer.github.com/v3/git/tags">tags API docs</a>)</p>
+<dl class="py method">
+<dt id="skare3_tools.github.github.Tags.__call__">
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tag_sha</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Tags.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Tags.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call self as a function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.Tags.create">
+<code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Tags.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Tags.create" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tag</strong> – str. Required.
+The tag’s name. This is typically a version (e.g., “v0.0.1”).</p></li>
+<li><p><strong>message</strong> – str. Required.
+The tag message.</p></li>
+<li><p><strong>object</strong> – str. Required.
+The SHA of the git object this is tagging.</p></li>
+<li><p><strong>type</strong> – str. Required.
+The type of the object we’re tagging. Normally this is a commit
+but it can also be a tree or a blob.</p></li>
+<li><p><strong>tagger</strong> – object
+An object with information about the individual creating the tag.</p></li>
+</ul>
+</dd>
+</dl>
+<p>The tagger object contains the following keys:</p>
+<ul class="simple">
+<li><p>name: str. The name of the author of the tag</p></li>
+<li><p>email: str. The email of the author of the tag</p></li>
+<li><p>date: str. When this object was tagged.
+This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="skare3_tools.github.github.Commits">
+<em class="property">class </em><code class="sig-prename descclassname">skare3_tools.github.github.</code><code class="sig-name descname">Commits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Commits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Commits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Endpoints that have to do with repository commits
+(<a class="reference external" href="https://developer.github.com/v3/repos/commits">commit API docs</a>)</p>
+<dl class="py method">
+<dt id="skare3_tools.github.github.Commits.__call__">
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ref</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Commits.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Commits.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ref</strong> – str</p></li>
+<li><p><strong>sha</strong> – str
+SHA or branch to start listing commits from.
+Default: the repository’s default branch (usually master).</p></li>
+<li><p><strong>path</strong> – str
+Only commits containing this file path will be returned.</p></li>
+<li><p><strong>author</strong> – str
+GitHub login or email address by which to filter by commit author.</p></li>
+<li><p><strong>since</strong> – str
+Only commits after this date will be returned.
+This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.</p></li>
+<li><p><strong>until</strong> – str
+Only commits before this date will be returned.
+This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.</p></li>
+<li><p><strong>kwargs</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="skare3_tools.github.github.Issues">
+<em class="property">class </em><code class="sig-prename descclassname">skare3_tools.github.github.</code><code class="sig-name descname">Issues</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Issues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Issues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Endpoints that have to do with repository issues
+(<a class="reference external" href="https://developer.github.com/v3/issues">issues API docs</a>)</p>
+<dl class="py method">
+<dt id="skare3_tools.github.github.Issues.__call__">
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">issue_number</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Issues.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Issues.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>List issues.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>issue_number</strong> – int, Optional</p></li>
+<li><p><strong>filter</strong> – <p>str
+Indicates which sorts of issues to return. Default: assigned. Can be one of:</p>
+<ul>
+<li><p>assigned: Issues assigned to you</p></li>
+<li><p>created: Issues created by you</p></li>
+<li><p>mentioned: Issues mentioning you</p></li>
+<li><p>subscribed: Issues you’re subscribed to updates for</p></li>
+<li><p>all: All issues the authenticated user can see</p></li>
+</ul>
+</p></li>
+<li><p><strong>state</strong> – str
+Indicates the state of the issues to return. Can be either open, closed, or all.
+Default: open</p></li>
+<li><p><strong>labels</strong> – str
+A list of comma separated label names. Example: bug,ui,&#64;high</p></li>
+<li><p><strong>sort</strong> – str
+What to sort results by. Can be either created, updated, comments.
+Default: created</p></li>
+<li><p><strong>direction</strong> – str
+The direction of the sort. Can be either asc or desc.
+Default: desc</p></li>
+<li><p><strong>since</strong> – str
+Only issues updated at or after this time are returned.
+This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.</p></li>
+<li><p><strong>kwargs</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.Issues.create">
+<code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Issues.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Issues.create" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>title</strong> – str Required. The title of the issue.</p></li>
+<li><p><strong>body</strong> – str The contents of the issue.</p></li>
+<li><p><strong>milestone</strong> – int
+The number of the milestone to associate this issue with.
+NOTE: Only users with push access can set the milestone for new issues.
+The milestone is silently dropped otherwise.</p></li>
+<li><p><strong>labels</strong> – list
+Labels to associate with this issue.
+NOTE: Only users with push access can set labels for new issues.
+Labels are silently dropped otherwise.</p></li>
+<li><p><strong>assignees</strong> – list
+Logins for Users to assign to this issue.
+NOTE: Only users with push access can set assignees for new issues.
+Assignees are silently dropped otherwise.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.Issues.edit">
+<code class="sig-name descname">edit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">issue_number</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Issues.edit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Issues.edit" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>issue_number</strong> – </p></li>
+<li><p><strong>title</strong> – str
+The title of the issue.</p></li>
+<li><p><strong>body</strong> – str
+The contents of the issue.</p></li>
+<li><p><strong>assignee</strong> – str
+Login for the user that this issue should be assigned to. This field is deprecated.</p></li>
+<li><p><strong>state</strong> – str
+State of the issue. Either open or closed.</p></li>
+<li><p><strong>milestone</strong> – int
+The number of the milestone to associate this issue with or null to remove current.
+NOTE: Only users with push access can set the milestone for issues.
+The milestone is silently dropped otherwise.</p></li>
+<li><p><strong>labels</strong> – list of strings
+Labels to associate with this issue.
+Pass one or more Labels to replace the set of Labels on this Issue.
+Send an empty array ([]) to clear all Labels from the Issue.
+NOTE: Only users with push access can set labels for issues.
+Labels are silently dropped otherwise.</p></li>
+<li><p><strong>assignees</strong> – list of strings
+Logins for Users to assign to this issue.
+Pass one or more user logins to replace the set of assignees on this Issue.
+Send an empty array ([]) to clear all assignees from the Issue.
+NOTE: Only users with push access can set assignees for new issues.
+Assignees are silently dropped otherwise.</p></li>
+<li><p><strong>kwargs</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="skare3_tools.github.github.Branches">
+<em class="property">class </em><code class="sig-prename descclassname">skare3_tools.github.github.</code><code class="sig-name descname">Branches</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Branches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Branches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Endpoints that have to do with repository branches
+(<a class="reference external" href="https://developer.github.com/v3/repos/branches">branches API docs</a>)</p>
+<dl class="py method">
+<dt id="skare3_tools.github.github.Branches.__call__">
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">branch</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Branches.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Branches.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>branch</strong> – </p></li>
+<li><p><strong>protected</strong> – bool
+Setting to true returns only protected branches.
+When set to false, only unprotected branches are returned.
+Omitting this parameter returns all branches.</p></li>
+<li><p><strong>kwargs</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="skare3_tools.github.github.PullRequests">
+<em class="property">class </em><code class="sig-prename descclassname">skare3_tools.github.github.</code><code class="sig-name descname">PullRequests</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#PullRequests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.PullRequests" title="Permalink to this definition">¶</a></dt>
+<dd><p>Endpoints that have to do with pull requests
+(<a class="reference external" href="https://developer.github.com/v3/pulls">pull requests API docs</a>)</p>
+<dl class="py method">
+<dt id="skare3_tools.github.github.PullRequests.__call__">
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pull_number</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#PullRequests.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.PullRequests.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pull_number</strong> – str (optional)
+Default: all pulls</p></li>
+<li><p><strong>state</strong> – str
+Either open, closed, or all to filter by state.
+Default: open</p></li>
+<li><p><strong>head</strong> – str
+Filter pulls by head user or head organization and branch name in the format of
+user:ref-name or organization:ref-name. For example:
+github:new-script-format or octocat:test-branch.</p></li>
+<li><p><strong>base</strong> – str
+Filter pulls by base branch name. Example: gh-pages.</p></li>
+<li><p><strong>sort</strong> – str
+What to sort results by. Can be either created, updated, popularity (comment count)
+or long-running (age, filtering by pulls updated in the last month).
+Default: created</p></li>
+<li><p><strong>direction</strong> – str
+The direction of the sort. Can be either asc or desc.
+Default: desc when sort is created or sort is not specified, otherwise asc.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.PullRequests.commits">
+<code class="sig-name descname">commits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pull_number</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#PullRequests.commits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.PullRequests.commits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lists a maximum of 250 commits for a pull request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>pull_number</strong> – str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.PullRequests.create">
+<code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#PullRequests.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.PullRequests.create" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>title</strong> – str Required.
+The title of the new pull request.</p></li>
+<li><p><strong>head</strong> – str Required.
+The name of the branch where your changes are implemented.
+For cross-repository pull requests in the same network,
+namespace head with a user like this: username:branch.</p></li>
+<li><p><strong>base</strong> – str Required.
+The name of the branch you want the changes pulled into.
+This should be an existing branch on the current repository.
+You cannot submit a pull request to one repository that requests
+a merge to a base of another repository.</p></li>
+<li><p><strong>body</strong> – str
+The contents of the pull request.</p></li>
+<li><p><strong>maintainer_can_modify</strong> – bool
+Indicates whether maintainers can modify the pull request.</p></li>
+<li><p><strong>draft</strong> – bool
+Indicates whether the pull request is a draft.
+See “Draft Pull Requests” in the GitHub Help documentation to learn more.</p></li>
+<li><p><strong>kwargs</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.PullRequests.edit">
+<code class="sig-name descname">edit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pull_number</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#PullRequests.edit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.PullRequests.edit" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pull_number</strong> – </p></li>
+<li><p><strong>title</strong> – str
+The title of the pull request.</p></li>
+<li><p><strong>body</strong> – str
+The contents of the pull request.</p></li>
+<li><p><strong>state</strong> – str
+State of this Pull Request. Either open or closed.</p></li>
+<li><p><strong>base</strong> – str
+The name of the branch you want your changes pulled into.
+This should be an existing branch on the current repository.
+You cannot update the base branch on a pull request to point to another repository.</p></li>
+<li><p><strong>maintainer_can_modify</strong> – bool
+Indicates whether maintainers can modify the pull request.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.PullRequests.files">
+<code class="sig-name descname">files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pull_number</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#PullRequests.files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.PullRequests.files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lists a maximum of 250 commits for a pull request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>pull_number</strong> – str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.PullRequests.merge">
+<code class="sig-name descname">merge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pull_number</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#PullRequests.merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.PullRequests.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge a pull request</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pull_number</strong> – </p></li>
+<li><p><strong>commit_title</strong> – str
+Title for the automatic commit message.</p></li>
+<li><p><strong>commit_message</strong> – str
+Extra detail to append to automatic commit message.</p></li>
+<li><p><strong>sha</strong> – str
+SHA that pull request head must match to allow merge.</p></li>
+<li><p><strong>merge_method</strong> – str
+Merge method to use. Possible values are merge, squash or rebase. Default is merge.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.PullRequests.status">
+<code class="sig-name descname">status</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pull_number</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#PullRequests.status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.PullRequests.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get if a pull request has been merged</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>pull_number</strong> – str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="skare3_tools.github.github.Checks">
+<em class="property">class </em><code class="sig-prename descclassname">skare3_tools.github.github.</code><code class="sig-name descname">Checks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Checks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Checks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Endpoints that have to do with repository checks
+(<a class="reference external" href="https://developer.github.com/v3/checks">checks API docs</a>)</p>
+<dl class="py method">
+<dt id="skare3_tools.github.github.Checks.__call__">
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ref</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Checks.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Checks.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call self as a function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="github-graphql">
+<h1>Github GraphQL<a class="headerlink" href="#github-graphql" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="skare3_tools.github.graphql.init">
+<code class="sig-prename descclassname">skare3_tools.github.graphql.</code><code class="sig-name descname">init</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">token</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">force</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/graphql.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.graphql.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the API.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>token</strong> – str
+a Github auth token</p></li>
+<li><p><strong>force</strong> – bool
+override a previously initialized API</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt id="skare3_tools.github.graphql.GithubAPI">
+<em class="property">class </em><code class="sig-prename descclassname">skare3_tools.github.graphql.</code><code class="sig-name descname">GithubAPI</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">token</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/graphql.html#GithubAPI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.graphql.GithubAPI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main class that encapsulates Github’s GraphQL API.</p>
+<dl class="py method">
+<dt id="skare3_tools.github.graphql.GithubAPI.init">
+<code class="sig-name descname">init</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">token</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">force</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/graphql.html#GithubAPI.init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.graphql.GithubAPI.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the Github API.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>token</strong> – str</p></li>
+<li><p><strong>force</strong> – bool</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>GithubAPI</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
+<ul>
+<li><a class="reference internal" href="#">Github REST</a><ul>
+<li><a class="reference internal" href="#repository-endpoints">Repository Endpoints</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#github-graphql">Github GraphQL</a></li>
+</ul>
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="previous chapter">API</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="packages_api.html"
+                        title="next chapter">Packages</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/github_api.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<footer class="footer">
+  <p class="pull-right">
+    <a href="_sources/github_api.rst.txt"
+       rel="nofollow">Page Source</a> &nbsp;
+    <a href="#">Back to Top</a></p>
+  <p>
+    &copy; Copyright 2020, Javier Gonzalez.<br/>
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 3.1.2. &nbsp;
+  </p>
+</footer>
+  </body>
+</html>

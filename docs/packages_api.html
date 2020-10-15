@@ -1,0 +1,259 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packages &#8212; SkaRE3 Tools 0.1.dev1+g81bfeff documentation</title>
+    <link rel="stylesheet" href="_static/bootstrap-astropy.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Github REST" href="github_api.html" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,600' rel='stylesheet' type='text/css'/>
+
+  </head><body>
+<div class="topbar">
+  <a class="brand" title="Documentation Home" href="index.html"><span id="logotext1">Ska! </span><span id="logotext2">SkaRE3</span><span id="logotext3">Tools</span></a>
+  <ul>
+    
+    <li><a class="home" title="Homepage" href="https://cxc.cfa.harvard.edu/mta/ASPECT/tool_doc">
+        <span id="logotext1">ska</span><span id="logotext2">tools</span>
+    </a></li>
+    <li><a title="General Index" href="genindex.html">Index</a></li>
+    <li><a title="Module Index" href="py-modindex.html">Modules</a></li>
+    <li>
+      
+      
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+      
+    </li>
+  </ul>
+</div>
+
+<div class="related">
+    <h3>Navigation</h3>
+    <ul>
+      <li class="right">
+	<a href="github_api.html" title="Github REST">
+	  &laquo; previous
+	</a>
+	
+      </li>
+      <li>
+	<a href="index.html">SkaRE3 Tools 0.1.dev1+g81bfeff documentation</a>
+	 &#187;
+      </li>
+      <li><a href="api.html" accesskey="U">API</a> &#187;</li>
+      
+      <li>Packages</li> 
+    </ul>
+</div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="packages">
+<h1>Packages<a class="headerlink" href="#packages" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="skare3_tools.packages.get_package_list">
+<code class="sig-prename descclassname">skare3_tools.packages.</code><code class="sig-name descname">get_package_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_package_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.packages.get_package_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of dictionaries, one per package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict
+Dictionary contains only basic information</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="skare3_tools.packages.get_repository_info">
+<code class="sig-prename descclassname">skare3_tools.packages.</code><code class="sig-name descname">get_repository_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">owner_repo</span></em>, <em class="sig-param"><span class="n">version</span><span class="o">=</span><span class="default_value">'v4'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_repository_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.packages.get_repository_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get information about a Github repository</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>owner_repo</strong> – str
+the name of the repository, including owner, something like ‘sot/skare3’.</p></li>
+<li><p><strong>since</strong> – int or str
+the maximum number of releases to look back, or the release tag to look back to
+(not inclusive).</p></li>
+<li><p><strong>use_pr_titles</strong> – bool
+Whether to use PR titles instead of the PR commit message.
+This is so one can change PR titles after the fact to be more informative.</p></li>
+<li><p><strong>include_unreleased_commits</strong> – bool
+whether to include commits and merges for repositories that have no release.
+This affects only top-level entries ‘commits’, ‘merges’, ‘merge_info’.
+It is for backward compatibility with the dashboard.</p></li>
+<li><p><strong>include_commits</strong> – bool
+whether to include commits in release_info.</p></li>
+<li><p><strong>version</strong> – str
+Github API version to use.</p></li>
+<li><p><strong>update</strong> – bool
+Force update of the cached info. By default updates only if pushed_at or updated_at change.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="skare3_tools.packages.get_repositories_info">
+<code class="sig-prename descclassname">skare3_tools.packages.</code><code class="sig-name descname">get_repositories_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">repositories</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">version</span><span class="o">=</span><span class="default_value">'v4'</span></em>, <em class="sig-param"><span class="n">update</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_repositories_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.packages.get_repositories_info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="skare3_tools.packages.get_conda_pkg_info">
+<code class="sig-prename descclassname">skare3_tools.packages.</code><code class="sig-name descname">get_conda_pkg_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">conda_package</span></em>, <em class="sig-param"><span class="n">conda_channel</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_conda_pkg_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.packages.get_conda_pkg_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get information on a conda package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>conda_package</strong> – str
+Name of conda package</p></li>
+<li><p><strong>conda_channel</strong> – str
+url of the channel</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="skare3_tools.packages.get_conda_pkg_dependencies">
+<code class="sig-prename descclassname">skare3_tools.packages.</code><code class="sig-name descname">get_conda_pkg_dependencies</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">conda_package</span></em>, <em class="sig-param"><span class="n">conda_channel</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_conda_pkg_dependencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.packages.get_conda_pkg_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get dependencies of a conda package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>conda_package</strong> – str
+Name of conda package</p></li>
+<li><p><strong>conda_channel</strong> – str
+url of the channel</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="section" id="caching">
+<h2>Caching<a class="headerlink" href="#caching" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="skare3_tools.packages.json_cache">
+<code class="sig-prename descclassname">skare3_tools.packages.</code><code class="sig-name descname">json_cache</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">directory</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">ignore</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">expires</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">update_policy</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#json_cache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.packages.json_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator to cache function results in json format.</p>
+<p>This decorator adds an ‘update’ argument to decorated functions. update is False by default,
+but one can set it to True to force-update the cache entry.</p>
+<p>Data is saved in json files. The file names can include a special separator character to denote
+the function arguments. Currently that character is ‘:’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – </p></li>
+<li><p><strong>directory</strong> – str
+path where to save json file. Either absolute or relative to CONFIG[‘data_dir’]</p></li>
+<li><p><strong>ignore</strong> – list
+list of argument names to ignore in the cache entry identifier</p></li>
+<li><p><strong>expires</strong> – dict
+a dictionary that can be given to datetime.timedelta(**expires)
+If the cache entry is older than this interval, it is updated.</p></li>
+<li><p><strong>update_policy</strong> – callable
+A callable taking two arguments: (filename, result), which returns True if the cache entry
+should be updated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="skare3_tools.packages.repository_info_is_outdated">
+<code class="sig-prename descclassname">skare3_tools.packages.</code><code class="sig-name descname">repository_info_is_outdated</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">_</span></em>, <em class="sig-param"><span class="n">pkg_info</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#repository_info_is_outdated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.packages.repository_info_is_outdated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cache update policy that returns True if the Github repository has been updated or pushed into.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>_</strong> – </p></li>
+<li><p><strong>pkg_info</strong> – dict. As returned from <a class="reference internal" href="#skare3_tools.packages.get_repository_info" title="skare3_tools.packages.get_repository_info"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_repository_info</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
+<ul>
+<li><a class="reference internal" href="#">Packages</a><ul>
+<li><a class="reference internal" href="#caching">Caching</a></li>
+</ul>
+</li>
+</ul>
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="github_api.html"
+                        title="previous chapter">Github REST</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/packages_api.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<footer class="footer">
+  <p class="pull-right">
+    <a href="_sources/packages_api.rst.txt"
+       rel="nofollow">Page Source</a> &nbsp;
+    <a href="#">Back to Top</a></p>
+  <p>
+    &copy; Copyright 2020, Javier Gonzalez.<br/>
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 3.1.2. &nbsp;
+  </p>
+</footer>
+  </body>
+</html>
