@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Github REST &#8212; SkaRE3 Tools 0.1.dev1+g81bfeff documentation</title>
+    <title>Github REST &#8212; SkaRE3 Tools 0.1.dev1+gaf707bc documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-astropy.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
@@ -60,7 +60,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 0.1.dev1+g81bfeff documentation</a>
+	<a href="index.html">SkaRE3 Tools 0.1.dev1+gaf707bc documentation</a>
 	 &#187;
       </li>
       <li><a href="api.html" accesskey="U">API</a> &#187;</li>
@@ -631,6 +631,84 @@ Merge method to use. Possible values are merge, squash or rebase. Default is mer
 <dt id="skare3_tools.github.github.Checks.__call__">
 <code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ref</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Checks.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Checks.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Call self as a function.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="skare3_tools.github.github.DispatchEvent">
+<em class="property">class </em><code class="sig-prename descclassname">skare3_tools.github.github.</code><code class="sig-name descname">DispatchEvent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#DispatchEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.DispatchEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a repository dispatch event</p>
+<dl class="py method">
+<dt id="skare3_tools.github.github.DispatchEvent.__call__">
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">event_type</span></em>, <em class="sig-param"><span class="n">client_payload</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#DispatchEvent.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.DispatchEvent.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a repository dispatch event</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_type</strong> – str
+A custom webhook event name.</p></li>
+<li><p><strong>client_payload</strong> – dict
+JSON payload with extra information about the webhook event.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="skare3_tools.github.github.Contents">
+<em class="property">class </em><code class="sig-prename descclassname">skare3_tools.github.github.</code><code class="sig-name descname">Contents</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Contents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Contents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create and edit repository content
+(<a class="reference external" href="https://developer.github.com/v3/repos/contents/">contents API docs</a>)</p>
+<dl class="py method">
+<dt id="skare3_tools.github.github.Contents.__call__">
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">decode</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Contents.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Contents.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the contents of a file or directory in a repository.
+If path is omitted, it returns all the contents of the repository.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> – str</p></li>
+<li><p><strong>decode</strong> – bool
+if True, the contents are base64 decoded.</p></li>
+<li><p><strong>ref</strong> – str
+name of the commit/branch/tag (default: the repository’s default branch (usually master)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="skare3_tools.github.github.Contents.edit">
+<code class="sig-name descname">edit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">encode</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#Contents.edit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.github.github.Contents.edit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create or update file contents</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> – str     Required.
+The commit message.</p></li>
+<li><p><strong>content</strong> – str     Required.
+The new file content.</p></li>
+<li><p><strong>sha</strong> – str
+if you are updating a file. The blob SHA of the file being replaced.</p></li>
+<li><p><strong>branch</strong> – str
+The branch name. Default: the repository’s default branch (usually master)</p></li>
+<li><p><strong>committer</strong> – dict
+The person that committed the file. Default: the authenticated user.</p></li>
+<li><p><strong>author</strong> – dict
+The author of the file. Default: The committer or the authenticated user.
+Both the author and committer parameters have the same keys: {‘name’: ‘’, ‘email’: ‘’}</p></li>
+<li><p><strong>encode</strong> – bool
+if True, the content argument is plain text, this function will encode it.
+default True</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

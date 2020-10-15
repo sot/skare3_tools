@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Github &#8212; SkaRE3 Tools 0.1.dev1+g81bfeff documentation</title>
+    <title>Github &#8212; SkaRE3 Tools 0.1.dev1+gaf707bc documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-astropy.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
@@ -60,7 +60,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 0.1.dev1+g81bfeff documentation</a>
+	<a href="index.html">SkaRE3 Tools 0.1.dev1+gaf707bc documentation</a>
 	 &#187;
       </li>
       
@@ -116,6 +116,49 @@ and it should be easy to see the correspondence between both.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">last_tag</span><span class="p">[</span><span class="s1">&#39;tag_name&#39;</span><span class="p">]</span>
 <span class="go">&#39;3.7.2&#39;</span>
 </pre></div>
+</div>
+<div class="section" id="getting-and-editing-content">
+<h3>Getting and Editing Content<a class="headerlink" href="#getting-and-editing-content" title="Permalink to this headline">¶</a></h3>
+<p>Getting content:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools.github</span> <span class="kn">import</span> <span class="n">github</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">Repository</span><span class="p">(</span><span class="s1">&#39;sot/test-actions&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">contents</span><span class="p">(</span><span class="s1">&#39;README.md&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span>
+<span class="go">&#39;# test-actions\n\nA realistic package with which to test GitHub actions...&#39;</span>
+</pre></div>
+</div>
+<dl>
+<dt>Editing content::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools.github</span> <span class="kn">import</span> <span class="n">github</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">Repository</span><span class="p">(</span><span class="s1">&#39;sot/test-actions&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">content</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="gp">... </span><span class="s2"># test-actions</span>
+<span class="gp">...</span><span class="s2"></span>
+<span class="gp">... </span><span class="s2">A realistic package with which to test GitHub actions and play around.</span>
+<span class="gp">... </span><span class="s2">&quot;&quot;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">edit</span><span class="p">(</span><span class="s1">&#39;README.md&#39;</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s1">&#39;changing readme&#39;</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">content</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="repository-dispatch">
+<h3>Repository Dispatch<a class="headerlink" href="#repository-dispatch" title="Permalink to this headline">¶</a></h3>
+<p>A typical use is to dispatch an event to cause an action. For example, the docs for some
+repositories are deployed when a repository_dispatch event of type ‘build-docs’ is triggered.
+This can be seen in the corresponding workflow:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="n">Deploy</span> <span class="n">Docs</span>
+<span class="n">on</span><span class="p">:</span>
+  <span class="n">repository_dispatch</span><span class="p">:</span>
+    <span class="n">types</span><span class="p">:</span>
+    <span class="o">-</span> <span class="n">build</span><span class="o">-</span><span class="n">docs</span>
+</pre></div>
+</div>
+<p>In this case, one can do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">github</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">Repository</span><span class="p">(</span><span class="s1">&#39;sot/skare3_tools&#39;</span><span class="p">)</span>  <span class="c1"># changing the repository name accordingly!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">dispatch_event</span><span class="p">(</span><span class="n">event_type</span><span class="o">=</span><span class="s1">&#39;build-docs&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="module-skare3_tools.github.graphql">
@@ -379,7 +422,11 @@ asdf</p>
         <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
 <ul>
 <li><a class="reference internal" href="#">Github</a><ul>
-<li><a class="reference internal" href="#module-skare3_tools.github.github">REST Interface (V3)</a></li>
+<li><a class="reference internal" href="#module-skare3_tools.github.github">REST Interface (V3)</a><ul>
+<li><a class="reference internal" href="#getting-and-editing-content">Getting and Editing Content</a></li>
+<li><a class="reference internal" href="#repository-dispatch">Repository Dispatch</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-skare3_tools.github.graphql">GraphQL Interface (V4)</a></li>
 <li><a class="reference internal" href="#github-scripts">Github Scripts</a><ul>
 <li><a class="reference internal" href="#skare3-create-issue">skare3-create-issue</a><ul>
