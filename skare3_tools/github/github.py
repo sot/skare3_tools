@@ -37,6 +37,30 @@ It is also possible to use the API directly, in case there is no appropriate hig
       >>> last_tag['tag_name']
       '3.7.2'
 
+Getting and Editing Content
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Getting content::
+
+    >>> from skare3_tools.github import github
+    >>> r = github.Repository('sot/test-actions')
+    >>> c = r.contents('README.md')
+    >>> c['content']
+    '# test-actions\\n\\nA realistic package with which to test GitHub actions...'
+
+Editing content::
+    >>> from skare3_tools.github import github
+    >>> r = github.Repository('sot/test-actions')
+    >>> content = \"""
+    ... # test-actions
+    ...
+    ... A realistic package with which to test GitHub actions and play around.
+    ... \"""
+    >>> r.contents.edit('README.md', message='changing readme', content=content)
+
+Repository Dispatch
+^^^^^^^^^^^^^^^^^^^
+
 A typical use is to dispatch an event to cause an action. For example, the docs for some
 repositories are deployed when a repository_dispatch event of type 'build-docs' is triggered.
 This can be seen in the corresponding workflow::
@@ -924,7 +948,7 @@ class DispatchEvent(_EndpointGroup):
 class Contents(_EndpointGroup):
     """
     Create and edit repository content
-    (`checks API docs  <https://developer.github.com/v3/repos/contents/>`_)
+    (`contents API docs  <https://developer.github.com/v3/repos/contents/>`_)
     """
     def __call__(self, path='', decode=True, **kwargs):
         """
