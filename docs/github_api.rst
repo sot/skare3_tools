@@ -33,6 +33,13 @@ Repository Endpoints
 .. autoclass:: skare3_tools.github.github.Checks
    :members: __call__
 
+.. autoclass:: skare3_tools.github.github.DispatchEvent
+   :members: __call__
+
+.. autoclass:: skare3_tools.github.github.Contents
+   :members: __call__, edit
+
+
 Github GraphQL
 ^^^^^^^^^^^^^^
 

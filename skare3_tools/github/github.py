@@ -36,6 +36,47 @@ It is also possible to use the API directly, in case there is no appropriate hig
       >>> last_tag = github.GITHUB_API_V3.get('/repos/sot/Chandra.Maneuver/releases/latest').json()
       >>> last_tag['tag_name']
       '3.7.2'
+
+Getting and Editing Content
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Getting content::
+
+    >>> from skare3_tools.github import github
+    >>> r = github.Repository('sot/test-actions')
+    >>> c = r.contents('README.md')
+    >>> c['content']
+    '# test-actions\\n\\nA realistic package with which to test GitHub actions...'
+
+Editing content::
+    >>> from skare3_tools.github import github
+    >>> r = github.Repository('sot/test-actions')
+    >>> content = \"""
+    ... # test-actions
+    ...
+    ... A realistic package with which to test GitHub actions and play around.
+    ... \"""
+    >>> r.contents.edit('README.md', message='changing readme', content=content)
+
+Repository Dispatch
+^^^^^^^^^^^^^^^^^^^
+
+A typical use is to dispatch an event to cause an action. For example, the docs for some
+repositories are deployed when a repository_dispatch event of type 'build-docs' is triggered.
+This can be seen in the corresponding workflow::
+
+    name: Deploy Docs
+    on:
+      repository_dispatch:
+        types:
+        - build-docs
+
+In this case, one can do::
+
+    >>> from skare3_tools import github
+    >>> r = github.Repository('sot/skare3_tools')  # changing the repository name accordingly!
+    >>> r.dispatch_event(event_type='build-docs')
+
 """
 
 import logging
@@ -195,18 +236,19 @@ class GithubAPI:
         if not response.ok:
             raise RestException(f'Error: {response.reason} ({response.status_code})')
 
-    def __call__(self, path, method='get', params=None,
+    def __call__(self, endpoint_str, method='get', params=None,
                  check=False, return_json=False, headers=(), **kwargs):
         if not self.initialized:
             raise Exception('GithubAPI authentication credentials are not initialized')
 
-        path = urllib.parse.urlparse(path).path  # make sure it is just the path
-        if ':' in path:
-            path = '/'.join([f'{{{p[1:]}}}' if p and p[0] == ':' else p for p in path.split('/')])
-            path = path.format(**kwargs)
-        if path and path[0] == '/':
-            path = path[1:]
-        url = f'{self.api_url}/{path}'
+        endpoint_str = urllib.parse.urlparse(endpoint_str).path  # make sure it is just the path
+        if ':' in endpoint_str:
+            endpoint_str = '/'.join([f'{{{p[1:]}}}' if p and p[0] == ':' else p
+                                     for p in endpoint_str.split('/')])
+            endpoint_str = endpoint_str.format(**kwargs)
+        if endpoint_str and endpoint_str[0] == '/':
+            endpoint_str = endpoint_str[1:]
+        url = f'{self.api_url}/{endpoint_str}'
         _headers = self.headers.copy()
         _headers.update(headers)
         kwargs = {k: v for k, v in kwargs.items() if k in ['json']}
@@ -366,6 +408,7 @@ class Repository:
         self.pull_requests = PullRequests(self)
         self.merge = Merge(self)
         self.dispatch_event = DispatchEvent(self)
+        self.contents = Contents(self)
 
 
 class Releases(_EndpointGroup):
@@ -900,6 +943,75 @@ class DispatchEvent(_EndpointGroup):
                   'client_payload': client_payload}
         return self._post('/repos/:owner/:repo/dispatches',
                           json=params)
+
+
+class Contents(_EndpointGroup):
+    """
+    Create and edit repository content
+    (`contents API docs  <https://developer.github.com/v3/repos/contents/>`_)
+    """
+    def __call__(self, path='', decode=True, **kwargs):
+        """
+        Gets the contents of a file or directory in a repository.
+        If path is omitted, it returns all the contents of the repository.
+
+        :param path: str
+        :param decode: bool
+            if True, the contents are base64 decoded.
+        :param ref: str
+            name of the commit/branch/tag (default: the repository’s default branch (usually master)
+        """
+        import base64
+        required = []
+        optional = ['ref']
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k]for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
+        c = self._get('/repos/:owner/:repo/contents/:path', path=path,  params=json, **kwargs)
+        if decode:
+            c['content'] = base64.b64decode(c['content']).decode()
+        return c
+
+    def edit(self, path, encode=True, **kwargs):
+        """
+        Create or update file contents
+
+        :param message:	str	Required.
+            The commit message.
+        :param content:	str	Required.
+            The new file content.
+        :param sha:	str
+            if you are updating a file. The blob SHA of the file being replaced.
+        :param branch:	str
+            The branch name. Default: the repository’s default branch (usually master)
+        :param committer:	dict
+            The person that committed the file. Default: the authenticated user.
+        :param author:	dict
+            The author of the file. Default: The committer or the authenticated user.
+            Both the author and committer parameters have the same keys: {'name': '', 'email': ''}
+        :param encode: bool
+            if True, the content argument is plain text, this function will encode it.
+            default True
+        :return:
+        """
+        import base64
+        if 'sha' not in kwargs:
+            args = {'path': path}
+            if 'branch' in kwargs:
+                args['ref'] = kwargs['branch']
+            c = self(**args)
+            if 'sha' in c:
+                kwargs['sha'] = c['sha']
+
+        if encode:
+            kwargs['content'] = base64.b64encode(kwargs['content'].encode()).decode()
+
+        required = ['message', 'content', 'sha']
+        optional = ['branch', 'committer', 'author']
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k]for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
+        return self._put('/repos/:owner/:repo/contents/:path', path=path,  json =json, **kwargs)
 
 
 class Repositories(_EndpointGroup):
