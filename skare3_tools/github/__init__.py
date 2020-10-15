@@ -1,16 +1,23 @@
-from .github import *
+"""
+A wrapper for Github's APIs and a collection of scripts.
 
-from . import graphql
+In order to use it, one needs to give it an `authentication token`_. The token is usually given
+using the GITHUB_API_TOKEN environmental variable. You can optionally initialize the API with a
+given token::
 
-GITHUB_API_V3 = None
-GITHUB_API_V4 = None
+    >>> from skare3_tools import github
+    >>> github.init(token='c7hvg6pqi3fhqwv0wvlgp4mk9agwbqk1gxc331iz')  # this is optional
+
+.. _`authentication token`: https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token
+"""
+from .github import Repository, Organization
+
+from . import graphql, github
+
+GITHUB_API_V3 = github.GITHUB_API
+GITHUB_API_V4 = graphql.GITHUB_API
 
 
 def init(token=None):
-    global GITHUB_API_V3
-    global GITHUB_API_V4
-    from . import github, graphql
-    GITHUB_API_V3 = github.init(token, force=True)
-    GITHUB_API_V4 = graphql.init(token, force=True)
-
-init()
+    GITHUB_API_V3.init(token=token, force=True)
+    GITHUB_API_V4.init(token=token, force=True)

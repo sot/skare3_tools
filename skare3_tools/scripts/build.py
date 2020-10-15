@@ -1,5 +1,17 @@
 #!/usr/bin/env python
+"""
+Script to wrap the standard skare3 building script.
 
+This script differs in a few ways from the standard build:
+
+* The input is a github repository, and the corresponding conda package name is inferred.
+* The package version of some conda packages can be overwritten. This is used when building a
+  release candidate (with an added 'rc' at the end of the version) without modifying meta.yml.
+* Replace CONDA_PASSWORD in conda channel URLs on the fly (older conda versions failed to do this)
+* ensure there are non-empty directories linux-64, osx-64, noarch, and win-64 in the output
+
+**WARNING** This script has the side effect of setting git's global username and email.
+"""
 import sys
 import os
 import subprocess
@@ -50,10 +62,15 @@ To fix this, I can require that packages are specified as a non-positional argum
 all current workflows.
 """
 def get_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('package')
-    parser.add_argument('--skare3-overwrite-version', default=None)
-    parser.add_argument('--skare3-branch', default='master')
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('package',
+                        help="The repository name in format {owner}/{name}")
+    parser.add_argument('--skare3-overwrite-version',
+                        help="the version of the resulting conda package",
+                        default=None)
+    parser.add_argument('--skare3-branch',
+                        help="The branch to build (default: master",
+                        default='master')
     return parser
 
 

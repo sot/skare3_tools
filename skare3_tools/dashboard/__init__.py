@@ -1,3 +1,8 @@
+"""
+Tools to display package information on web pages.
+Most implementation is in the :mod:`~skare3_tools.dashboard.views` submodule.
+"""
+
 from jinja2 import Environment, PackageLoader, select_autoescape
 
 env = Environment(

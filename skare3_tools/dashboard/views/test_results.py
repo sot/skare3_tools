@@ -50,13 +50,24 @@ def _render(tests, config):
 
 
 def get_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-i', dest='file_in')
-    parser.add_argument('-o', dest='file_out')
+    parser = argparse.ArgumentParser(
+        description="Produce a single html page with a test result report"
+    )
+    parser.add_argument('-i',
+                        help="Directory or JSON file containing all test results. "
+                             "If it is a directory, then it must have a file named all_tests.json.",
+                        dest='file_in')
+    parser.add_argument('-o',
+                        help="Name of file to write to. By default, this creates a file named "
+                             "test_results.html, located in the input directory or the current "
+                             "working directory, depending on whether the '-i' options was given.",
+                        dest='file_out')
     parser.add_argument('-b', action='store_true', default=False,
-                        help='Batch mode: do not open a browser window with the result')
+                        help='Batch mode: do not open a browser window with the result.')
     parser.add_argument('--log-dir', default='.')
-    parser.add_argument('--static-dir', default=os.path.join(os.path.dirname(dashboard.__file__), 'static'))
+    parser.add_argument('--static-dir',
+                        help="Location of static data directory.",
+                        default=os.path.join(os.path.dirname(dashboard.__file__), 'static'))
     return parser
 
 

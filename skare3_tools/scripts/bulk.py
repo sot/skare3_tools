@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
-
+"""
+Script to run the same command in a collection of subdirectories.
+"""
 import argparse
 import subprocess
 
 def parser():
-    parse = argparse.ArgumentParser()
-    parse.add_argument('cmd', nargs='+')
-    parse.add_argument('--repositories', default='git_repositories')
+    parse = argparse.ArgumentParser(description=__doc__)
+    parse.add_argument('cmd',
+                       help="The command to run",
+                       nargs='+')
+    parse.add_argument('--repositories',
+                       help="the name of the subdirectories",
+                       default='git_repositories')
     return parse
 
 def main():

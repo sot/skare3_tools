@@ -4,7 +4,7 @@ import datetime
 import argparse
 
 from skare3_tools.dashboard import get_template
-from skare3_tools import packages, test_results as tr, github
+from skare3_tools import packages, test_results as tr
 
 package_name_map = packages.get_package_list()
 
@@ -54,8 +54,12 @@ def dashboard(config=None):
 
 
 def get_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-o', metavar='FILENAME', help="Output file (index.html)", default='index.html')
+    parser = argparse.ArgumentParser(
+        description="Produce a single html page with package information"
+    )
+    parser.add_argument('-o', metavar='FILENAME',
+                        help="Output file (default: index.html)",
+                        default='index.html')
     return parser
 
 

@@ -1,18 +1,15 @@
 """
-This is a thin wrapper for `Github's REST API`_. It is intended to be easy to extend.
+This is a thin wrapper for `Github's REST API`_ (V3). It is intended to be easy to extend.
 It does not impose much structure on top of what is shown in their online documentation,
 and it should be easy to see the correspondence between both.
 
 .. _`Github's REST API`: https://developer.github.com/v3/
 
-Example Usage
-^^^^^^^^^^^^^^
+As an example, this is how one gets a list of releases and pull requests for a repository:
 
 .. code-block:: python
 
       >>> from skare3_tools import github
-      >>> github.init(token='c7hvg6pqi3fhqwv0wvlgp4mk9agwbqk1gxc331iz')
-      Password:
       >>> repo = github.Repository('sot/Chandra.Maneuver')
       >>> releases = repo.releases()
       >>> for release in releases:
@@ -36,14 +33,12 @@ It is also possible to use the API directly, in case there is no appropriate hig
 .. code-block:: python
 
       >>> from skare3_tools import github
-      >>> api = github.init(token='c7hvg6pqi3fhqwv0wvlgp4mk9agwbqk1gxc331iz')
-      >>> last_tag = api.get('/repos/sot/Chandra.Maneuver/releases/latest').json()
+      >>> last_tag = github.GITHUB_API_V3.get('/repos/sot/Chandra.Maneuver/releases/latest').json()
       >>> last_tag['tag_name']
       '3.7.2'
 """
 
 import logging
-import getpass
 import os
 import requests
 import urllib
@@ -64,84 +59,42 @@ class RestException(Exception):
 
 
 _logger = logging.getLogger('github')
-GITHUB_API = None
 
 
 def init(user=None, password=None, token=None, force=True):
     """
-    Initialize the Github API.
+    Initialize the API.
 
-    If not token is provided, it tries the following:
-    - look for GITHUB_API_TOKEN environmental variable
-    - look for GITHUB_TOKEN environmental variable
-
-    If that fails, try with user/password (deprecated)
-    If no user name is provided, it tries the following:
-
-    - look for GITHUB_USER environmental variable
-    - request in a command line prompt.
-
-    If no password is provided, it tries the following:
-
-    - look for GITHUB_PASSWORD environmental variable
-    - try getting it from the keyring (Keychain in Mac OS)
-
-    If user name or password can not be determined, an AuthException is raised.
-
-    :param user: str (deprecated)
-    :param password: str (deprecated)
     :param token: str
+        a Github auth token
     :param force: bool
-    :return: GithubAPI
+        override a previously initialized API
+    :return:
     """
-    global GITHUB_API
-    if GITHUB_API is None or force:
-        if token is not None:
-            api = GithubAPI(token=os.path.expandvars(token))
-        elif 'GITHUB_API_TOKEN' in os.environ:
-            api = GithubAPI(token=os.environ['GITHUB_API_TOKEN'])
-        elif 'GITHUB_TOKEN' in os.environ:
-            api = GithubAPI(token=os.environ['GITHUB_TOKEN'])
-        else:
-            if user is None:
-                if 'GITHUB_USER' in os.environ:
-                    _logger.debug('Github user from environment')
-                    user = os.environ['GITHUB_USER']
-            else:
-                _logger.debug('Github user from arguments')
-            if password is None:
-                if 'GITHUB_PASSWORD' in os.environ:
-                    password = os.environ['GITHUB_PASSWORD']
-                    _logger.debug('Github password from environment')
-                elif keyring:
-                    try:
-                        password = keyring.get_password("skare3-github", user)
-                        _logger.debug('Github user from keyring')
-                    except RuntimeError as e:
-                        import re
-                        if re.match('No recommended backend was available', str(e)):
-                            _logger.debug('keyring backend failed')
-            if user and password:
-                _logger.warning('Using basic auth, which is deprecated')
-            api = GithubAPI(user=user, password=password)
-        r = api.get('')
-        if r.status_code == 401:
-            msg = r.json()['message'] + '. '
-            msg += ('Github token should be given as argument '
-                    'or set in either GITHUB_TOKEN or GITHUB_API_TOKEN '
-                    'environment variables')
-            raise AuthException(msg)
-        if not r.ok:
-            msg = r.json()['message']
-            raise AuthException(msg)
-        GITHUB_API = api
-        r = GITHUB_API('/user').json()
-        if 'login' in r:
-            user = r['login']
-            _logger.debug(f'Github interface initialized (user={user})')
-        else:
-            _logger.info(f'Github interface initialized: {r}')
+    GITHUB_API.init(user, password, token, force)
     return GITHUB_API
+
+
+def _get_user_password(user, password):
+    if user is None:
+        if 'GITHUB_USER' in os.environ:
+            _logger.debug('Github user from environment')
+            user = os.environ['GITHUB_USER']
+    else:
+        _logger.debug('Github user from arguments')
+    if password is None:
+        if 'GITHUB_PASSWORD' in os.environ:
+            password = os.environ['GITHUB_PASSWORD']
+            _logger.debug('Github password from environment')
+        elif keyring:
+            try:
+                password = keyring.get_password("skare3-github", user)
+                _logger.debug('Github user from keyring')
+            except RuntimeError as e:
+                import re
+                if re.match('No recommended backend was available', str(e)):
+                    _logger.debug('keyring backend failed')
+    return user, password
 
 
 class GithubAPI:
@@ -149,13 +102,93 @@ class GithubAPI:
     Main class that encapsulates Github's REST API.
     """
     def __init__(self, user=None, password=None, token=None):
+        self.initialized = False
+        self.auth = None
+        self.headers = None
+        self.api_url = 'https://api.github.com'
+
+        try:
+            self.init(user, password, token)
+        except AuthException:
+            # the exception is not raised if we are creating the API with default args.
+            # An exception will be raised later, when one tries to use it.
+            if not (user is None and password is None and token is None):
+                raise
+
+    def __bool__(self):
+        return self.initialized
+
+    def init(self, user=None, password=None, token=None, force=True):
+        """
+        Initialize the Github API.
+
+        If not token is provided, it tries the following:
+        - look for GITHUB_API_TOKEN environmental variable
+        - look for GITHUB_TOKEN environmental variable
+
+        If that fails, try with user/password (deprecated)
+        If no user name is provided, it tries the following:
+
+        - look for GITHUB_USER environmental variable
+        - request in a command line prompt.
+
+        If no password is provided, it tries the following:
+
+        - look for GITHUB_PASSWORD environmental variable
+        - try getting it from the keyring (Keychain in Mac OS)
+
+        If user name or password can not be determined, an AuthException is raised.
+
+        :param user: str (deprecated)
+        :param password: str (deprecated)
+        :param token: str
+        :param force: bool
+        :return: GithubAPI
+        """
+        if self.initialized and not force:
+            return
+
+        if token is None:
+            if 'GITHUB_API_TOKEN' in os.environ:
+                token = os.environ['GITHUB_API_TOKEN']
+            elif 'GITHUB_TOKEN' in os.environ:
+                token = os.environ['GITHUB_TOKEN']
+
         if token is not None:
             self.auth = None
             self.headers = {"Authorization": f"token {token}"}
         else:
+            user, password = _get_user_password(user, password)
+            if user and password:
+                _logger.warning('Using basic auth, which is deprecated')
             self.auth = HTTPBasicAuth(user, password)
             self.headers = {"Accept": "application/json"}
-        self.api_url = 'https://api.github.com'
+
+        try:
+            self.initialized = True
+            r = self.get('')
+            if r.status_code == 401:
+                msg = r.json()['message'] + '. '
+                msg += ('Github token should be given as argument '
+                        'or set in either GITHUB_TOKEN or GITHUB_API_TOKEN '
+                        'environment variables')
+                raise AuthException(msg)
+            if not r.ok:
+                msg = r.json()['message']
+                raise AuthException(msg)
+
+            r = self('/user').json()
+            if 'login' in r:
+                user = r['login']
+                _logger.debug(f'Github interface initialized (user={user})')
+            else:
+                _logger.info(f'Github interface initialized: {r}')
+        except Exception:
+            self.auth = None
+            self.headers = None
+            self.initialized = False
+            raise
+
 
     @staticmethod
     def check(response):
@@ -164,6 +197,9 @@ class GithubAPI:
 
     def __call__(self, path, method='get', params=None,
                  check=False, return_json=False, headers=(), **kwargs):
+        if not self.initialized:
+            raise Exception('GithubAPI authentication credentials are not initialized')
+
         path = urllib.parse.urlparse(path).path  # make sure it is just the path
         if ':' in path:
             path = '/'.join([f'{{{p[1:]}}}' if p and p[0] == ':' else p for p in path.split('/')])
@@ -313,8 +349,6 @@ class Repository:
         - checks
     """
     def __init__(self, repo=None, owner=None, api=None):
-        global GITHUB_API
-        init()
         self.api = GITHUB_API if api is None else api
         if '/' in repo:
             owner, repo = repo.split('/')
@@ -879,3 +913,6 @@ class Organization:
         self.args = {'owner': name}
 
         self.repositories = Repositories(self)
+
+
+GITHUB_API = GithubAPI()

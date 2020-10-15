@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Gather test results from log file.
+Deprecated Script: Gather test results from testr's log file.
 """
 
 import re
@@ -39,8 +39,10 @@ def test_results(directory):
 
 def parser():
     parse = argparse.ArgumentParser(description=__doc__)
-    parse.add_argument('directory')
-    parse.add_argument('-o', default='test_results.json')
+    parse.add_argument('directory', help="Directory containing all test results."
+                                         "It must contain a file named test.log")
+    parse.add_argument('-o', help="Output file name (default: test_results.json)",
+                       default='test_results.json')
     return parse
 
 
