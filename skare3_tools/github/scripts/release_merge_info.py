@@ -11,7 +11,7 @@ come from the same branch.
 import argparse
 import re
 import sys
-from skare3_tools import github
+from skare3_tools import github, packages
 
 
 def parser():
@@ -30,8 +30,10 @@ def main():
 
     # get all releases and find the one we are working on
     releases = repository.releases()
-    release_tags = [repository.tags(name=r['tag_name']) for r in releases]
-    release_shas = [t['object']['sha'] for t in release_tags]
+    releases = [r for r in releases if not r['draft'] and not r['prerelease']]
+    releases = sorted(releases, key=lambda r: r['tag_name'], reverse=True)
+    release_commits = [packages._get_release_commit(repository, r["tag_name"]) for r in releases]
+    release_shas = [c['sha'] for c in release_commits]
     i_1 = None
     for i, sha in enumerate(release_shas):
         if sha == args.sha:
