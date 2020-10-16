@@ -40,7 +40,7 @@ It is also possible to use the API directly, in case there is no appropriate hig
 Getting and Editing Content
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Getting content::
+Getting content:
 
     >>> from skare3_tools.github import github
     >>> r = github.Repository('sot/test-actions')
@@ -48,7 +48,8 @@ Getting content::
     >>> c['content']
     '# test-actions\\n\\nA realistic package with which to test GitHub actions...'
 
-Editing content::
+Editing content:
+
     >>> from skare3_tools.github import github
     >>> r = github.Repository('sot/test-actions')
     >>> content = \"""
@@ -968,7 +969,7 @@ class Contents(_EndpointGroup):
         json.update({k: kwargs[k]for k in optional if k in kwargs})
         kwargs = {k: v for k, v in kwargs.items() if k not in json}
         c = self._get('/repos/:owner/:repo/contents/:path', path=path,  params=json, **kwargs)
-        if decode:
+        if decode and 'content' in c and c['response']['ok']:
             c['content'] = base64.b64decode(c['content']).decode()
         return c
 
@@ -1006,8 +1007,8 @@ class Contents(_EndpointGroup):
         if encode:
             kwargs['content'] = base64.b64encode(kwargs['content'].encode()).decode()
 
-        required = ['message', 'content', 'sha']
-        optional = ['branch', 'committer', 'author']
+        required = ['message', 'content']
+        optional = ['branch', 'committer', 'author', 'sha']
         json = {k: kwargs[k] for k in required}
         json.update({k: kwargs[k]for k in optional if k in kwargs})
         kwargs = {k: v for k, v in kwargs.items() if k not in json}
