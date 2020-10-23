@@ -105,10 +105,11 @@ def main():
             if not fail:
                 branch_name = release['target_commitish']
                 pulls = repository.pull_requests(state='open', head=f'sot:{branch_name}')
+                pulls = [p for p in pulls if p['title'] == branch_name]
                 if branch_name not in allowed_names:
                     fail.append(f'Invalid branch name "{branch_name}" for release "{tag_name}". '
                                 f'Allowed branch names for this tag are {", ".join(allowed_names)}')
-                if 'response' not in pulls or not pulls['response']['ok']:
+                if not pulls:
                     fail.append(f'There is no pull request from sot:{branch_name}')
                 if version_info['rc'] is not None and not release["prerelease"]:
                     fail.append(f'Release {tag_name} is marked as a candidate, '
