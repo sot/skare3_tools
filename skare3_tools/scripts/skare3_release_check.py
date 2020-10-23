@@ -153,7 +153,7 @@ def main():
     # this kind of output defines variables 'prerelease' and 'packages' within the workflow.
     print(f'::set-output name=prerelease::{release["prerelease"]}')
     print(f'::set-output name=packages::{packages}')
-    print(f'::set-output name=overwrite_flag::whatever')
+    print(f'::set-output name=overwrite_flag::--skare3-overwrite-version {branch_name}:{tag_name}')
 
 
 if __name__ == '__main__':
