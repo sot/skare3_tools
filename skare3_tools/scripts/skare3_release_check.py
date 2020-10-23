@@ -141,7 +141,7 @@ def main():
     packages = []
     for filename in files:
         with open(filename) as f:
-            data = yaml.load(f)
+            data = yaml.load(f, Loader=yaml.SafeLoader)
             if str(branch_name) == str(data['package']['version']):
                 packages.append(data['package']['name'])
 
