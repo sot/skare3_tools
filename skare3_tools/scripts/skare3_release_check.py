@@ -14,8 +14,8 @@ This script makes the following checks:
 * there exists a PR based on this branch,
 * if tag_name contains an alpha/beta/candidate version, then release must be a pre-release,
 * if tag_name contains a label, then release must be a pre-release,
-* the local copy of the skare3 repo must be in the tag branch.
 * if GITHUB_SHA is defined, it must be the release commit.
+  If not, the local copy of the skare3 repo must be in the tag branch.
 """
 
 import argparse
@@ -91,10 +91,10 @@ def main():
         - the branch where the tag was made must be in the allowed_names list
         - there is a PR based on this branch
         - the tag branch name must be the final_release version, or <final_version>-<label>
-        - if tag_name contains an alpha/beta/candidate version, then release must be a prerelease
-        - if tag_name contains a label, then release must be a prerelease
-        - the local copy of the skare3 repo must be in the tag branch
+        - if tag_name contains an alpha/beta/candidate version, then release must be a pre-release
+        - if tag_name contains a label, then release must be a pre-release
         - if GITHUB_SHA is defined, it must be the release commit.
+          If not, the local copy of the skare3 repo must be in the tag branch.
         """
         try:
             if 'response' not in release or not release['response']['ok']:
@@ -117,14 +117,14 @@ def main():
                 if version_info['label'] is not None and not release["prerelease"]:
                     fail.append(f'Release {tag_name} has label {version_info["label"]}, '
                                 f'but the release is not a prerelease')
-                if git_repo.active_branch.name != branch_name:
-                    fail.append(f'Current branch is different from release branch '
-                                f'({git_repo.active_branch.name} != {branch_name})')
             # when workflow triggered by release, GITHUB_SHA must have the release commit sha
             if 'GITHUB_SHA' in os.environ:
                 if os.environ['GITHUB_SHA'] != tag['object']['sha']:
                     fail.append(f"Tag {tag_name} sha differs from sha in GITHUB_SHA: "
                                 f"{tag['object']['sha']} != {os.environ['GITHUB_SHA']}")
+            elif git_repo.active_branch.name != branch_name:
+                fail.append(f'Current branch is different from release branch '
+                            f'("{git_repo.active_branch.name}" != "{branch_name}")')
         except Exception as e:
             exc_type = sys.exc_info()[0].__name__
             fail.append(f'Unexpected error ({exc_type}): {e}')
