@@ -147,6 +147,9 @@ def main():
 
     packages = ' '.join(packages)
 
+    print(f'prerelease: {release["prerelease"]}')
+    print(f'packages: {packages}')
+    print(f'override: --skare3-overwrite-version {branch_name}:{tag_name}')
     # this kind of output defines variables 'prerelease' and 'packages' within the workflow.
     print(f'::set-output name=prerelease::{release["prerelease"]}')
     print(f'::set-output name=packages::{packages}')
