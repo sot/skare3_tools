@@ -70,7 +70,7 @@ def main():
 
     allowed_names = [version_info['final_version']]
     if version_info['label']:
-        allowed_names += [f'{version_info["final_version"]}-{version_info["label"]}']
+        allowed_names += [f'{version_info["final_version"]}+{version_info["label"]}']
 
     logging.info(f'Sanity check for release {tag_name}')
 
