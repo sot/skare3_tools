@@ -41,12 +41,12 @@ def overwrite_skare3_version(current_version, new_version, skare3_path,
         if str(data['package']['version']) != str(current_version):
             continue
         data['package']['version'] = new_version
-        for i in range(len(data['package']['requirements'])):
-            if re.search('==', data['package']['requirements']['run'][i]):
-                name, pkg_version = data['package']['requirements']['run'][i].split('==')
+        for i in range(len(data['requirements'])):
+            if re.search('==', data['requirements']['run'][i]):
+                name, pkg_version = data['requirements']['run'][i].split('==')
                 name = name.strip()
                 if name in meta_pkgs and pkg_version == current_version:
-                    data['package']['requirements']['run'][i] = f'{name} =={new_version}'
+                    data['requirements']['run'][i] = f'{name} =={new_version}'
         t = Template(yaml.dump(data, indent=4)).substitute(SKA_PKG_VERSION='{{ SKA_PKG_VERSION }}',
                                                            SKA_TOP_SRC_DIR='{{ SKA_TOP_SRC_DIR }}')
         with open(meta_file, 'w') as f:
