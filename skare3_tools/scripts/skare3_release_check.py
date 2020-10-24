@@ -145,6 +145,10 @@ def main():
             if str(branch_name) == str(data['package']['version']):
                 packages.append(data['package']['name'])
 
+    if not packages:
+        logging.warning('No packages to build. Something must be wrong.')
+        sys.exit(4)
+
     packages = ' '.join(packages)
 
     print(f'prerelease: {release["prerelease"]}')
