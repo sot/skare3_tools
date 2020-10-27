@@ -15,42 +15,52 @@ This script differs in a few ways from the standard build:
 import sys
 import os
 import subprocess
-import glob
-import shutil
-import jinja2
-import yaml
 import re
-from string import Template
-from packaging import version
 import argparse
 import tempfile
+import pathlib
 
-def overwrite_skare3_version(current_version, new_version, skare3_path,
-                             meta_pkgs = ['ska3-flight', 'ska3-matlab', 'ska3-core']):
-    for pkg in meta_pkgs:
-        meta_file = os.path.join(skare3_path, 'pkg_defs', pkg, 'meta.yaml')
-        t = jinja2.Template(open(
-            meta_file
-        ).read())
-        text = (t.render(SKA_PKG_VERSION='$SKA_PKG_VERSION',
-                         SKA_TOP_SRC_DIR='$SKA_TOP_SRC_DIR'))
-        if version.parse(yaml.__version__) < version.parse("5.1"):
-            data = yaml.load(text)
-        else:
-            data = yaml.load(text, Loader=yaml.FullLoader)
-        if str(data['package']['version']) != str(current_version):
-            continue
-        data['package']['version'] = new_version
-        for i in range(len(data['requirements'])):
-            if re.search('==', data['requirements']['run'][i]):
-                name, pkg_version = data['requirements']['run'][i].split('==')
-                name = name.strip()
-                if name in meta_pkgs and pkg_version == current_version:
-                    data['requirements']['run'][i] = f'{name} =={new_version}'
-        t = Template(yaml.dump(data, indent=4)).substitute(SKA_PKG_VERSION='{{ SKA_PKG_VERSION }}',
-                                                           SKA_TOP_SRC_DIR='{{ SKA_TOP_SRC_DIR }}')
-        with open(meta_file, 'w') as f:
-            f.write(t)
+
+def overwrite_skare3_version(current_version, new_version, pkg_path):
+    """
+    Replaces `current_version` by `new_version` in the meta.yaml file located at `pkg_path`.
+
+    This is not a general replacement. The version is replaced if:
+
+      - the line matches the pattern "  version: <current_version>"
+      - the line matches the pattern "  <pkg_name> ==<current_version>"
+
+    with possible whitespace before/after, or whitespace around the colon or equality operator.
+
+    Note that this function would not replace the version string if the "version" tag and the value
+    are not in the same line, even though this is correct yaml syntax.
+
+    :param current_version: str
+    :param new_version: str
+    :param pkg_path: pathlib.Path
+    :return:
+    """
+    meta_file = pkg_path / 'meta.yaml'
+    with open(meta_file) as fh:
+        lines = fh.readlines()
+    for i, line in enumerate(lines):
+        m = re.search(r'(\s+)?version(\s+)?:(\s+)?(?P<version>(\S+)+)', line)
+        if m:
+            version = m.groupdict()['version']
+            if version == str(current_version):
+                print(f'    - version: {current_version} -> {new_version}')
+                lines[i] = line.replace(current_version, new_version)
+        m = re.search(r'(\s+)?(?P<name>\S+)(\s+)?==(\s+)?(?P<version>(\S+)+)', line)
+        if m:
+            info = m.groupdict()
+            if re.match(r'ska3-\S+$', info['name']) and info['version'] == current_version:
+                print(f'    - {info["name"]} dependency: {current_version} -> {new_version}')
+                lines[i] = line.replace(current_version, new_version)
+
+    with open(meta_file, 'w') as f:
+        for line in lines:
+            f.write(line)
+
 
 """
 Argument order matters. The first "unknown" positional argument is the package.
@@ -65,7 +75,11 @@ def get_parser():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('package',
                         help="The repository name in format {owner}/{name}")
+    parser.add_argument('--ska3-overwrite-version',
+                        help="the version of the resulting conda package",
+                        default=None)
     parser.add_argument('--skare3-overwrite-version',
+                        dest="ska3_overwrite_version",
                         help="the version of the resulting conda package",
                         default=None)
     parser.add_argument('--skare3-branch',
@@ -77,7 +91,38 @@ def get_parser():
 def main():
     args, unknown_args = get_parser().parse_known_args()
 
-    package = os.path.basename(args.package)
+    if args.ska3_overwrite_version:
+        """
+        the value of  args.ska3_overwrite_version can be of the forms:
+        - `<initial-version>:<final-version>`.
+        - `<final-version>`.
+
+        In the first case, there is nothing to do. In the second case, we assume that the final
+        version is the same as the final version but removing the release candidate part
+        (i.e.: something that looks like "rcN" or "aN" or "bN").
+        """
+        if ':' not in args.ska3_overwrite_version:
+            rc = re.match(
+                r"""(?P<version>
+                    (?P<release>\S+)     # release segment (usually N!N.N.N but not enforced here)
+                    (a|b|rc)[0-9]+       # pre-release segment (rcN, aN or bN, required)
+                    (\+(?P<label>\S+))?  # label fragment (an optional string)
+                )$""",
+                args.ska3_overwrite_version,
+                re.VERBOSE
+            )
+            if not rc:
+                raise Exception(f'wrong format for ska3_overwrite_version: '
+                                f'{args.ska3_overwrite_version}')
+            version_info = rc.groupdict()
+            version_info["label"] = f'+{version_info["label"]}' if version_info["label"] else ''
+            args.ska3_overwrite_version = \
+                f'{version_info["release"]}{version_info["label"]}:{version_info["version"]}'
+
+    print('skare3 build args:', args)
+    print('skare3 build unknown args:', unknown_args)
+
+    package = args.package.split('/')[-1]
 
     # these are packages whose name does not match the repository name
     # at this point, automated builds do not know the package name,
@@ -94,9 +139,9 @@ def main():
 
     # setup condarc, because conda does not seem to replace the env variables
     if 'CONDA_PASSWORD' in os.environ:
-        condarc = os.path.join(os.path.expandvars('$HOME'), '.condarc')
-        condarc_in = condarc + '.in'
-        shutil.move(condarc, condarc_in)
+        condarc = pathlib.Path.home() / '.condarc'
+        condarc_in = condarc.with_suffix('.in')
+        condarc.replace(condarc_in)
         with open(condarc_in) as condarc_in, open(condarc, 'w') as condarc:
             for l in condarc_in.readlines():
                 condarc.write(l.replace('${CONDA_PASSWORD}', os.environ['CONDA_PASSWORD']))
@@ -104,79 +149,64 @@ def main():
         print('Conda password needs to be given as environmental variable CONDA_PASSWORD')
         sys.exit(100)
 
-    # fetch skare3 (make sure it is there)
-    tmp_dir = 'tmp'
-    if not os.path.exists(tmp_dir):
-        os.makedirs(tmp_dir)
+    tmp_dir = pathlib.Path('tmp')
+    if not tmp_dir.exists():
+        tmp_dir.mkdir()
     with tempfile.TemporaryDirectory(dir=tmp_dir) as tmp_dir:
-        subprocess.check_call(['git', 'config', '--global', 'user.email', '"aca@cfa.harvard.edu"'])
-        subprocess.check_call(['git', 'config', '--global', 'user.name', '"Aspect CI"'])
-        skare3_path = os.path.join(tmp_dir, 'skare3')
+        tmp_dir = pathlib.Path(tmp_dir)
+        skare3_path = tmp_dir / 'skare3'
         print(f'skare3_path: {skare3_path}')
-        if os.path.exists(skare3_path):
-            subprocess.check_call(['git', 'pull'], cwd=skare3_path)
-        else:
-            subprocess.check_call(['git', 'clone',
-                                   'https://github.com/sot/skare3.git'], cwd=os.path.dirname(skare3_path))
-            subprocess.check_call(['git', 'checkout', args.skare3_branch], cwd=skare3_path)
 
-        if args.skare3_overwrite_version:
-            rc = re.match('(\S+)rc[0-9]+', args.skare3_overwrite_version)
-            if ':' in args.skare3_overwrite_version:
-                skare3_old_version, skare3_new_version = args.skare3_overwrite_version.split(':')
-            elif rc:
-                skare3_new_version = rc.group(0)
-                skare3_old_version = rc.group(1)
-            else:
-                raise Exception(f'wrong format for skare3_overwrite_version: {args.skare3_overwrite_version}')
-            skare3_new_version = skare3_new_version.split('/')[-1]
-            skare3_old_version = skare3_old_version.split('/')[-1]
-            print(f'overwriting skare3 version {skare3_old_version} -> {skare3_new_version}')
-            overwrite_skare3_version(skare3_old_version, skare3_new_version, skare3_path)
-            # committing because ska_builder.py does not accept dirty repos, but this is not ideal.
-            # and setting author so git does not complain
-            subprocess.check_call(['git', 'commit', '.', '-m', '"Overwriting version"',
-                                   '--author', '"Aspect CI <aca@cfa.harvard.edu>"'],
-                                  cwd=skare3_path)
+        # fetch skare3
+        subprocess.check_call(['git', 'clone',
+                               'https://github.com/sot/skare3.git'],
+                              cwd=skare3_path.parent)
+        subprocess.check_call(['git', 'checkout', args.skare3_branch], cwd=skare3_path)
+
+        # overwrite version
+        if args.ska3_overwrite_version:
+            skare3_old_version, skare3_new_version = args.ska3_overwrite_version.split(':')
+            print(f' - overwriting skare3 version {skare3_old_version} -> {skare3_new_version}')
+            overwrite_skare3_version(skare3_old_version,
+                                     skare3_new_version,
+                                     skare3_path / 'pkg_defs' / package)
 
         # do the actual building
-        cmd = ['python', 'ska_builder.py', '--github-https', '--force',
-               '--build-list', 'ska3_flight_build_order.txt']
-        cmd += unknown_args + [package]
+        cmd = ['python', 'ska_builder.py', '--github-https', '--force'] + unknown_args + [package]
         print(' '.join(cmd))
         subprocess.check_call(cmd, cwd=skare3_path)
-
         print('SKARE3 conda process finished')
+
         # move resulting files to work dir
-        if not os.path.exists('builds'):
-            os.makedirs('builds')
+        build_dir = pathlib.Path('builds')
+        if not build_dir.exists():
+            build_dir.mkdir()
         for d in ['linux-64', 'osx-64', 'noarch', 'win-64']:
             print(d)
-            d_from = os.path.join(skare3_path, 'builds', d)
-            d_to = os.path.join('builds',d)
-            if not os.path.exists(d_to):
-                os.makedirs(d_to)
+            d_from = skare3_path / 'builds' / d
+            d_to = build_dir / d
+            if not d_to.exists():
+                d_to.mkdir()
             # I do this to make sure the directory is not empty
-            with open(os.path.join(d_to, '.ensure-non-empty-dir'), 'w'):
+            with open(d_to / '.ensure-non-empty-dir', 'w'):
                 pass
-            if os.path.exists(d_from):
+            if d_from.exists():
                 print(f'SKARE3 moving {d_from} -> {d_to}')
-                for filename in glob.glob(os.path.join(d_from, '*')):
-                    filename2 = os.path.join(d_to, os.path.basename(filename))
-                    if os.path.exists(filename2):
-                        os.remove(filename2)
-                    shutil.move(filename, filename2)
+                for filename in d_from.glob('*'):
+                    filename2 = d_to / filename.name
+                    filename.replace(filename2)
         print('SKARE3 done')
-        rm = glob.glob(os.path.join('builds', '*', '*json*')) + glob.glob(os.path.join('builds', '*', '.*json*'))
-        for r in rm:
-            os.remove(r)
+        for f in build_dir.glob('*/*json*'):
+            f.unlink()
+        for f in build_dir.glob('*/.*json*'):
+            f.unlink()
 
         # report result
-        files = glob.glob(os.path.join('builds', 'linux-64', '*tar.bz2*')) + \
-                glob.glob(os.path.join('builds', 'osx-64', '*tar.bz2*')) + \
-                glob.glob(os.path.join('builds', 'noarch', '*tar.bz2*')) + \
-                glob.glob(os.path.join('builds', 'win-64', '*tar.bz2*'))
-        files = ' '.join(files)
+        files = (list(build_dir.glob('linux-64/*tar.bz2*')) +
+                 list(build_dir.glob('osx-64/*tar.bz2*')) +
+                 list(build_dir.glob('noarch/*tar.bz2*')) +
+                 list(build_dir.glob('win-64/*tar.bz2*')))
+        files = ' '.join([str(f) for f in files])
 
         if not files:
             print("No files were built. Something should have been built, right?")
