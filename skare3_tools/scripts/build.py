@@ -193,13 +193,11 @@ def main():
                 pass
             if d_from.exists():
                 print(f'SKARE3 moving {d_from} -> {d_to}')
-                for filename in d_from.glob('*'):
+                for filename in d_from.glob('*.bz2'):
                     filename2 = d_to / filename.name
                     filename.replace(filename2)
         print('SKARE3 done')
         for f in build_dir.glob('*/*json*'):
-            f.unlink()
-        for f in build_dir.glob('*/.*json*'):
             f.unlink()
 
         # report result
