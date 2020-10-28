@@ -34,6 +34,9 @@ ARG CONDA_PASSWORD
 RUN : "${CONDA_PASSWORD:?Conda password must be given at build time (e.g. --build-arg CONDA_PASSWORD=\$CONDA_PASSWORD).}" && \
     conda create -y -n ska-builder setuptools_scm gitpython conda-build jinja2 pyyaml python=3.8 numpy
 
+
+# using a different INVALIDATE_CACHE value invalidates the cache here (--build-arg INVALIDATE_CACHE=...)
+ARG INVALIDATE_CACHE=unknown
 RUN conda run -n ska-builder conda install -y jinja2 pyyaml packaging gitpython
 RUN conda run -n ska-builder conda install -y -c https://ska:${CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/masters -c defaults -c conda-forge skare3_tools
 RUN conda init
