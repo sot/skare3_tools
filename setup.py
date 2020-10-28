@@ -18,6 +18,7 @@ entry_points = {
         'skare3-dashboard=skare3_tools.dashboard.views.dashboard:main',
         'skare3-test-dashboard=skare3_tools.dashboard.views.test_results:main',
         'skare3-bulk=skare3_tools.scripts.bulk:main',
+        'skare3-promote=skare3_tools.scripts.skare3_promote:main',
         'skare3-add-secrets=skare3_tools.github.scripts.add_secrets:main',
         'skare3-create-issue=skare3_tools.github.scripts.create_issue:main',
         'skare3-create-pr=skare3_tools.github.scripts.create_pr:main',
