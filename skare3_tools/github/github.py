@@ -316,7 +316,9 @@ class _EndpointGroup:
     def _method_(self, method, url, **kwargs):
         kwargs.update(self.args)
         url = url.format(**kwargs)
-        return self.api(url, method=method, return_json=True, **kwargs)
+        if 'return_json' not in kwargs:
+            kwargs['return_json'] = True
+        return self.api(url, method=method, **kwargs)
 
     def _get(self, url, **kwargs):
         return self._method_('get', url, **kwargs)
@@ -410,6 +412,11 @@ class Repository:
         self.merge = Merge(self)
         self.dispatch_event = DispatchEvent(self)
         self.contents = Contents(self)
+
+        self.workflows = Workflows(self)
+        self.runs = Runs(self)
+        self.artifacts = Artifacts(self)
+        self.jobs = Jobs(self)
 
 
 class Releases(_EndpointGroup):
@@ -913,6 +920,147 @@ class Merge(_EndpointGroup):
         json.update({k: kwargs[k]for k in optional if k in kwargs})
         kwargs = {k: v for k, v in kwargs.items() if k not in json}
         return self._post('/repos/:owner/:repo/pulls/:pull_number/merge', params=json, **kwargs)
+
+
+class Workflows(_EndpointGroup):
+    """
+    Endpoints that have to do with workflows
+    (`Workflows docs <https://developer.github.com/v3/actions/workflows>`_)
+    """
+    def __call__(self, workflow_id=None, **kwargs):
+        required = []
+        optional = []
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k] for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
+        if workflow_id is not None:
+            return self._get('repos/:owner/:repo/actions/workflows/:workflow_id',
+                             workflow_id=workflow_id,
+                             params=json,
+                             **kwargs)
+        return self._get('repos/:owner/:repo/actions/workflows')
+
+
+class Artifacts(_EndpointGroup):
+    """
+    Endpoints that have to do with artifacts
+    (`Artifacts docs <https://developer.github.com/v3/actions/artifacts>`_)
+    """
+    def __call__(self, artifact_id=None, run_id=None, **kwargs):
+        required = []
+        optional = []
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k] for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
+        if run_id is not None:
+            return self._get('/repos/:owner/:repo/actions/runs/:run_id/artifacts',
+                             run_id=run_id,
+                             params=json,
+                             **kwargs)['artifacts']
+        elif artifact_id is not None:
+            return self._get('/repos/:owner/:repo/actions/artifacts/:artifact_id',
+                             artifact_id=artifact_id,
+                             params=json,
+                             **kwargs)
+        return self._get('/repos/:owner/:repo/actions/artifacts')['artifacts']
+
+    def download(self, artifact_id, path):
+        r = self._get('/repos/:owner/:repo/actions/artifacts/:artifact_id/zip',
+                      artifact_id=artifact_id,
+                      return_json=False)
+        chunk_size = 128
+        with open(path, 'wb') as fd:
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                fd.write(chunk)
+
+    def delete(self, artifact_id):
+        return self._delete('/repos/:owner/:repo/actions/artifacts/:artifact_id',
+                            artifact_id=artifact_id)
+
+class Jobs(_EndpointGroup):
+    """
+    Endpoints that have to do with workflow jobs
+    (`Workflow-jobs docs <https://developer.github.com/v3/actions/workflow-jobs>`_)
+    """
+    def __call__(self, run_id=None, job_id=None, **kwargs):
+        required = []
+        optional = []
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k] for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
+        if run_id is not None:
+            return self._get('/repos/:owner/:repo/actions/workflows/:run_id/jobs',
+                             workflow_id=run_id,
+                             params=json,
+                             **kwargs)
+        return self._get('/repos/:owner/:repo/actions/jobs/:job_id',
+                         job_id=job_id)
+
+    def download_logs(self, job_id):
+        return self._get('/repos/:owner/:repo/actions/jobs/:job_id/logs',
+                         job_id=job_id)
+
+class Runs(_EndpointGroup):
+    """
+    Endpoints that have to do with workflow runs
+    (`Workflow-runs docs <https://developer.github.com/v3/actions/workflow-runs>`_)
+    """
+    def __call__(self, workflow_id=None, run_id=None, **kwargs):
+        """
+        :param workflow_id:
+        :param run_id:
+        :param actor: str
+            Returns someone's workflow runs. Use the login for the user who created the
+            push associated with the check suite or workflow run.
+        :param branch: str
+            Returns workflow runs associated with a branch. Use the name of the branch of the push.
+        :param event: str
+            Returns workflow run triggered by the event you specify.
+            For example, push, pull_request or issue. For more information,
+            see "Events that trigger workflows" in the GitHub Help documentation.
+        :param status: str
+            Returns workflow runs associated with the check run status or conclusion you specify.
+            For example, a conclusion can be success or a status can be completed.
+            For more information, see the status and conclusion options available in
+            "Create a check run."
+        :return:
+        """
+        required = []
+        optional = ['actor', 'branch', 'event', 'status']
+        json = {k: kwargs[k] for k in required}
+        json.update({k: kwargs[k] for k in optional if k in kwargs})
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
+        if workflow_id is not None:
+            return self._get('/repos/:owner/:repo/actions/workflows/:workflow_id/runs',
+                             workflow_id=workflow_id,
+                             params=json,
+                             **kwargs)['workflow_runs']
+        elif run_id is not None:
+            return self._get('/repos/:owner/:repo/actions/runs/:run_id',
+                             run_id=run_id,
+                             params=json,
+                             **kwargs)
+        return self._get('repos/:owner/:repo/actions/runs')['workflow_runs']
+
+    def re_run(self, run_id):
+        return self._post('/repos/:owner/:repo/actions/runs/:run_id/rerun',
+                          run_id=run_id)
+
+    def cancel(self, run_id):
+        return self._post('/repos/:owner/:repo/actions/runs/:run_id/cancel',
+                          run_id=run_id)
+
+    def download_logs(self, run_id):
+        return self._get('/repos/:owner/:repo/actions/runs/:run_id/logs',
+                         run_id=run_id)
+
+    def delete_logs(self, run_id):
+        return self._delete('/repos/:owner/:repo/actions/runs/:run_id/logs',
+                            run_id=run_id)
+
+    def usage(self, run_id):
+        return self._get('/repos/:owner/:repo/actions/runs/:run_id/timing',
+                         run_id=run_id)
 
 
 class Checks(_EndpointGroup):
