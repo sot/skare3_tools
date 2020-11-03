@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scripts &#8212; SkaRE3 Tools 1.0.0 documentation</title>
+    <title>Scripts &#8212; SkaRE3 Tools 1.0.1 documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-astropy.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
@@ -60,7 +60,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.0.0 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.0.1 documentation</a>
 	 &#187;
       </li>
       
@@ -110,11 +110,13 @@
 <li><p>The package version of some conda packages can be overwritten. This is used when building a
 release candidate (with an added ‘rc’ at the end of the version) without modifying meta.yml.</p></li>
 <li><p>Replace CONDA_PASSWORD in conda channel URLs on the fly (older conda versions failed to do this)</p></li>
-<li><p>ensure there are non-empty directories linux-64, osx-64, noarch, and win-64 in the output</p></li>
+<li><p>ensure there are non-empty directories linux-64, osx-64, noarch, and win-64 in the output.</p></li>
 </ul>
-<p><strong>WARNING</strong> This script has the side effect of setting git’s global username and email.</p>
+<p>NOTE: Argument order seems to matter. Any argument unknown to this script is passed to ska_builder.
+It seems that unknown arguments must be consecutive, and known arguments must be consecutive.</p>
 </p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">build</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">skare3</span><span class="o">-</span><span class="n">overwrite</span><span class="o">-</span><span class="n">version</span> <span class="n">SKARE3_OVERWRITE_VERSION</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">build</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ska3</span><span class="o">-</span><span class="n">overwrite</span><span class="o">-</span><span class="n">version</span> <span class="n">SKA3_OVERWRITE_VERSION</span><span class="p">]</span>
+                    <span class="p">[</span><span class="o">--</span><span class="n">skare3</span><span class="o">-</span><span class="n">overwrite</span><span class="o">-</span><span class="n">version</span> <span class="n">SKA3_OVERWRITE_VERSION</span><span class="p">]</span>
                     <span class="p">[</span><span class="o">--</span><span class="n">skare3</span><span class="o">-</span><span class="n">branch</span> <span class="n">SKARE3_BRANCH</span><span class="p">]</span>
                     <span class="n">package</span>
 </pre></div>
@@ -130,6 +132,9 @@ release candidate (with an added ‘rc’ at the end of the version) without mod
 <div class="section" id="Named Arguments">
 <h3>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h3>
 <dl class="option-list">
+<dt><kbd>--ska3-overwrite-version</kbd></dt>
+<dd><p>the version of the resulting conda package</p>
+</dd>
 <dt><kbd>--skare3-overwrite-version</kbd></dt>
 <dd><p>the version of the resulting conda package</p>
 </dd>
@@ -143,8 +148,21 @@ release candidate (with an added ‘rc’ at the end of the version) without mod
 <div class="section" id="skare3-release-check">
 <span id="id3"></span><h2><a class="reference internal" href="#skare3-release-check"><span class="std std-ref">skare3-release-check</span></a><a class="headerlink" href="#skare3-release-check" title="Permalink to this headline">¶</a></h2>
 <p><p>Check the environment and conda configuration files to determine which packages to build, if any.
-It also does a sanity check, checking whether the release is from a branch with the same name,
-and whether the release and tag exist.</p>
+It also does a sanity check, checking consistency between release tag and branch. It is assumed that
+the ‘target’ version (the version after all tests pass) is the name of the branch where the release
+is made. This script checks the meta information of all ska3-* packages to see which ones have
+version equal to the target version and adds those to a list of packages to build.</p>
+<p>This script makes the following checks:</p>
+<ul class="simple">
+<li><p>the given tag exists and follows PEP 0440 format (<a class="reference external" href="https://www.python.org/dev/peps/pep-0440">https://www.python.org/dev/peps/pep-0440</a>),</p></li>
+<li><p>there is an existing release with this tag,</p></li>
+<li><p>the tag’s branch must be named ‘&lt;release&gt;’ or ‘&lt;release&gt;-&lt;label&gt;’,</p></li>
+<li><p>there exists a PR based on this branch,</p></li>
+<li><p>if tag_name contains an alpha/beta/candidate version, then release must be a pre-release,</p></li>
+<li><p>if tag_name contains a label, then release must be a pre-release,</p></li>
+<li><p>if GITHUB_SHA is defined, it must be the release commit.
+If not, the local copy of the skare3 repo must be in the tag branch.</p></li>
+</ul>
 </p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">release</span><span class="o">-</span><span class="n">check</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="o">--</span><span class="n">version</span> <span class="n">VERSION</span> <span class="p">[</span><span class="o">--</span><span class="n">skare3</span><span class="o">-</span><span class="n">path</span> <span class="n">SKARE3_PATH</span><span class="p">]</span>
                             <span class="p">[</span><span class="o">--</span><span class="n">repository</span> <span class="n">REPOSITORY</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
@@ -158,11 +176,12 @@ and whether the release and tag exist.</p>
 <dd><p>Target version to build</p>
 </dd>
 <dt><kbd>--skare3-path</kbd></dt>
-<dd><p>skare3 directory</p>
+<dd><p>local copy of the skare3 repo</p>
 <p>Default: “.”</p>
 </dd>
 <dt><kbd>--repository</kbd></dt>
-<dd><p>Default: “sot/skare3”</p>
+<dd><p>Github repository name</p>
+<p>Default: “sot/skare3”</p>
 </dd>
 <dt><kbd>--token, -t</kbd></dt>
 <dd><p>Github token, or name of file that contains token</p>
