@@ -207,10 +207,6 @@ def main():
                  list(build_dir.glob('win-64/*tar.bz2*')))
         files = ' '.join([str(f) for f in files])
 
-        if not files:
-            print("No files were built. Something should have been built, right?")
-            sys.exit(1)
-
         print(f'Built files: {files}')
         print(f'::set-output name=files::{files}')
 

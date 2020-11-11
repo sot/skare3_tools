@@ -8,9 +8,10 @@ This script differs in a few ways from the standard build:
 * The package version of some conda packages can be overwritten. This is used when building a
   release candidate (with an added 'rc' at the end of the version) without modifying meta.yml.
 * Replace CONDA_PASSWORD in conda channel URLs on the fly (older conda versions failed to do this)
-* ensure there are non-empty directories linux-64, osx-64, noarch, and win-64 in the output
+* ensure there are non-empty directories linux-64, osx-64, noarch, and win-64 in the output.
 
-**WARNING** This script has the side effect of setting git's global username and email.
+NOTE: Argument order seems to matter. Any argument unknown to this script is passed to ska_builder.
+It seems that unknown arguments must be consecutive, and known arguments must be consecutive.
 """
 import sys
 import os
@@ -192,13 +193,11 @@ def main():
                 pass
             if d_from.exists():
                 print(f'SKARE3 moving {d_from} -> {d_to}')
-                for filename in d_from.glob('*'):
+                for filename in d_from.glob('*.bz2'):
                     filename2 = d_to / filename.name
                     filename.replace(filename2)
         print('SKARE3 done')
         for f in build_dir.glob('*/*json*'):
-            f.unlink()
-        for f in build_dir.glob('*/.*json*'):
             f.unlink()
 
         # report result
