@@ -296,7 +296,8 @@ REPO_QUERY = """
         endCursor
       }
     }
-    ref(qualifiedName: "master") {
+    defaultBranchRef {
+      name
       target {
         ... on Commit {
           history(first: 100) {

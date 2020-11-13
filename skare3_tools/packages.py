@@ -268,7 +268,7 @@ _PR_QUERY = """
     owner {
       login
     }
-    pullRequests(last: 100, baseRefName: "master", before: "{{ cursor }}") {
+    pullRequests(last: 100, baseRefName: "{{ branch }}", before: "{{ cursor }}") {
       nodes {
         number
         title
@@ -306,7 +306,7 @@ _COMMIT_QUERY = """
     owner {
       login
     }
-    ref(qualifiedName: "master") {
+    ref(qualifiedName: "{{ branch }}") {
       target {
         ... on Commit {
           history(first: 100, after: "{{ cursor }}") {
@@ -346,16 +346,18 @@ def _get_repository_info_v4(owner_repo,
     branches = [n for n in data_v4['data']['repository']['refs']['nodes'] if
                 re.match('heads/', n['name'])]
     releases = data_v4['data']['repository']['releases']['nodes']
-    commits = data_v4['data']['repository']['ref']['target']['history']['nodes']
+    commits = data_v4['data']['repository']['defaultBranchRef']['target']['history']['nodes']
     issues = data_v4['data']['repository']['issues']['nodes']
+    default_branch = data_v4['data']['repository']['defaultBranchRef']['name']
 
     commit_data = data_v4
-    while commit_data['data']['repository']['ref']['target']['history']['pageInfo']['hasNextPage']:
-        cursor = commit_data['data']['repository']['ref']['target']['history']['pageInfo']['endCursor']
+    while commit_data['data']['repository']['defaultBranchRef']['target']['history']['pageInfo']['hasNextPage']:
+        cursor = commit_data['data']['repository']['defaultBranchRef']['target']['history']['pageInfo']['endCursor']
         commit_data = api(jinja2.Template(_COMMIT_QUERY).render(name=name,
                                                                 owner=owner,
+                                                                branch=default_branch,
                                                                 cursor=cursor))
-        commits += (commit_data['data']['repository']['ref']['target']['history']['nodes'])
+        commits += (commit_data['data']['repository']['defaultBranchRef']['target']['history']['nodes'])
 
     pr_data = data_v4
     pull_requests = pr_data['data']['repository']['pullRequests']['nodes']
@@ -363,6 +365,7 @@ def _get_repository_info_v4(owner_repo,
         cursor = pr_data['data']['repository']['pullRequests']['pageInfo']['startCursor']
         pr_data = api(jinja2.Template(_PR_QUERY).render(name=name,
                                                         owner=owner,
+                                                        branch=default_branch,
                                                         cursor=cursor))
         pull_requests += (pr_data['data']['repository']['pullRequests']['nodes'])
 
@@ -618,7 +621,8 @@ def _get_repository_info_v3(owner_repo,
     if use_pr_titles:
         all_pull_requests = repository.pull_requests(state='all')
         all_pull_requests = {pr['number']: pr for pr in all_pull_requests}
-    commits = repository.commits(sha='master', since=date_since)
+    commits = repository.commits(sha=repository.info['default_branch'],
+                                 since=date_since)
     if date_since is not None:
         commits = commits[:-1]  # remove first commit, which was just the starting point
     for commit in commits:
