@@ -401,6 +401,8 @@ class Repository:
             'owner': owner,
             'repo': repo
         }
+        self.info = self.api.get('/repos/:owner/:repo',
+                                 return_json=True, **self.args)
 
         self.releases = Releases(self)
         self.tags = Tags(self)
