@@ -306,7 +306,7 @@ _COMMIT_QUERY = """
     owner {
       login
     }
-    ref(qualifiedName: "{{ branch }}") {
+    defaultBranchRef {
       target {
         ... on Commit {
           history(first: 100, after: "{{ cursor }}") {
@@ -355,7 +355,6 @@ def _get_repository_info_v4(owner_repo,
         cursor = commit_data['data']['repository']['defaultBranchRef']['target']['history']['pageInfo']['endCursor']
         commit_data = api(jinja2.Template(_COMMIT_QUERY).render(name=name,
                                                                 owner=owner,
-                                                                branch=default_branch,
                                                                 cursor=cursor))
         commits += (commit_data['data']['repository']['defaultBranchRef']['target']['history']['nodes'])
 
