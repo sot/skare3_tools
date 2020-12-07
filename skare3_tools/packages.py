@@ -484,6 +484,8 @@ def get_conda_pkg_info(conda_package,
     cmd = ['conda', 'search', conda_package, '--override-channels', '--json']
     if conda_channel is None:
         conda_channels = CONFIG['conda_channels']['main']
+    elif type(conda_channel) is list:
+        conda_channels = conda_channel
     elif conda_channel in CONFIG['conda_channels']:
         conda_channels = CONFIG['conda_channels'][conda_channel]
     else:
