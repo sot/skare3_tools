@@ -86,7 +86,8 @@ def repository_change_summary(pkgs_repo_info, initial_versions='flight', final_v
                             merges.append({
                                 'PR': pr,
                                 'url': url,
-                                'description': merge['title']
+                                'description': merge['title'],
+                                'author': merge['author']
                             })
                         update_info.update({
                             'versions': [version_1] + releases[::-1],
@@ -136,7 +137,7 @@ PKG_SUMMARY_MD = """
 {{ v }}{{ " -> " if not loop.last }}
 {%- endfor %}){% endif %}
 {%-  for merge in package.merges %}
-  - [PR {{ merge.PR }}](https://github.com/{{ merge.url }}): {{ merge.description }}
+  - [PR {{ merge.PR }}](https://github.com/{{ merge.url }}) ({{ merge.author }}): {{ merge.description }}
 {%- endfor %}
 {% endfor %}
 """
