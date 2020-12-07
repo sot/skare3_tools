@@ -30,6 +30,7 @@ def main():
     args = get_parser().parse_args()
     github.init()
     issues = milestone_issues(args.milestone)
+    issues = sorted(issues, key=lambda i: int(i["number"]))
     for issue in issues:
         print(f'Fixes #{issue["number"]}')
 
