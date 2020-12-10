@@ -318,6 +318,11 @@ _COMMIT_QUERY = """
               oid
               message
               pushedDate
+              author {
+                user {
+                  login
+                }
+              }
             }
           }
         }
@@ -406,6 +411,7 @@ def _get_repository_info_v4(owner_repo,
             commit['message'])
         if match:
             merge = match.groupdict()
+            merge['author'] = commit['author']['user']['login']
             merge["pr_number"] = int(merge["pr_number"])
             if use_pr_titles:
                 if merge["pr_number"] in all_pull_requests:
@@ -484,6 +490,8 @@ def get_conda_pkg_info(conda_package,
     cmd = ['conda', 'search', conda_package, '--override-channels', '--json']
     if conda_channel is None:
         conda_channels = CONFIG['conda_channels']['main']
+    elif type(conda_channel) is list:
+        conda_channels = conda_channel
     elif conda_channel in CONFIG['conda_channels']:
         conda_channels = CONFIG['conda_channels'][conda_channel]
     else:

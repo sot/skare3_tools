@@ -308,6 +308,11 @@ REPO_QUERY = """
             nodes {
               oid
               message
+              author {
+                user {
+                  login
+                }
+              }
             }
           }
         }
