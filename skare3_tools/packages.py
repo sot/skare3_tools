@@ -520,7 +520,7 @@ def get_conda_pkg_info(conda_package,
     out = json.loads(p.stdout.decode())
     if 'error' in out and 'exception_name' in out \
             and out['exception_name'] == 'PackagesNotFoundError':
-        out = []
+        out = {}
     if 'error' in out:
         if 'message' in out:
             raise Exception(out['message'])
@@ -798,9 +798,14 @@ def get_repositories_info(repositories=None, version='v4', update=False):
     for pkg in ['ska3-flight', 'ska3-matlab']:
         try:
             assert pkg in meta_pkg_versions
-            conda_info = get_conda_pkg_info(pkg, conda_channel='main')[pkg][-1]
+            conda_info = get_conda_pkg_info(pkg, conda_channel='main')
+            if pkg not in conda_info:
+                raise Exception(f'{pkg} package not found')
+            conda_info = conda_info[pkg][-1]
             info[pkg] = conda_info['version']
-            versions = dict([(p.split('==')[0].strip(), p.split('==')[1].strip())
+            def split(s):
+                return s.split('==') if '==' in s else s.split()
+            versions = dict([(split(p)[0].strip(), split(p)[1].strip())
                              for p in conda_info['depends']])
             for owner_repo in repositories:
                 assert owner_repo in repo_package_map, 'Package {owner_repo} not in package map'.format(owner_repo=owner_repo)
