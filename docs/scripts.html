@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scripts &#8212; SkaRE3 Tools 1.0.1 documentation</title>
+    <title>Scripts &#8212; SkaRE3 Tools 1.0.2 documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-astropy.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
@@ -60,7 +60,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.0.1 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.0.2 documentation</a>
 	 &#187;
       </li>
       
@@ -226,7 +226,7 @@ conda package). This is to merge information from conda and github.</p>
 <dd><p>Default: “ska3-flight”</p>
 </dd>
 <dt><kbd>--conda-channel</kbd></dt>
-<dd><p>Default: “test”</p>
+<dd><p>Default: []</p>
 </dd>
 <dt><kbd>--token</kbd></dt>
 <dd><p>Github token, or name of file that contains token</p>
@@ -234,8 +234,64 @@ conda package). This is to merge information from conda and github.</p>
 </dl>
 </div>
 </div>
+<div class="section" id="skare3-promote">
+<span id="id5"></span><h2><a class="reference internal" href="#skare3-promote"><span class="std std-ref">skare3-promote</span></a><a class="headerlink" href="#skare3-promote" title="Permalink to this headline">¶</a></h2>
+<p><p>Promote ska3 meta-packages from a list of channels to one target channel.</p>
+<p>”Promotion” usually means copying conda package files from the source
+channels to the target channel. The channels are expected to be within
+the same directory, which is specified by the <cite>ska3-conda</cite> argument.</p>
+<p>The meta-packages to be promoted must be defined in skare3. This script
+reads the metapackage’s meta.yaml requirements in skare3, finds the
+corresponding packages in the source channels, and copies/moves them to the
+target channel.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">promote</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ska3</span><span class="o">-</span><span class="n">conda</span> <span class="n">SKA3_CONDA</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="kn">from</span> <span class="nn">FROM_CHANNEL</span> <span class="p">[</span><span class="o">--</span><span class="kn">from</span> <span class="nn">FROM_CHANNEL</span> <span class="o">...</span><span class="p">]</span> <span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">to</span> <span class="n">TO_CHANNEL</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">move</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">skare3</span><span class="o">-</span><span class="n">local</span><span class="o">-</span><span class="n">copy</span> <span class="n">SKARE3</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">log</span><span class="o">-</span><span class="n">level</span> <span class="p">{</span><span class="n">error</span><span class="p">,</span><span class="n">warning</span><span class="p">,</span><span class="n">info</span><span class="p">,</span><span class="n">debug</span><span class="p">}]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">package</span> <span class="n">name</span><span class="o">&gt;==&lt;</span><span class="n">version</span><span class="o">&gt;</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">package</span> <span class="n">name</span><span class="o">&gt;==&lt;</span><span class="n">version</span><span class="o">&gt;</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="Positional Arguments">
+<h3>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>&lt;package name&gt;==&lt;version&gt;</kbd></dt>
+<dd></dd>
+</dl>
+</div>
+<div class="section" id="Named Arguments">
+<h3>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--ska3-conda</kbd></dt>
+<dd><p>ska3-conda directory containing source and target channels</p>
+<p>Default: “/proj/sot/ska/www/ASPECT_ICXC/ska3-conda”</p>
+</dd>
+<dt><kbd>--from</kbd></dt>
+<dd><p>source channel</p>
+</dd>
+<dt><kbd>--to</kbd></dt>
+<dd><p>target channel</p>
+</dd>
+<dt><kbd>--dry-run</kbd></dt>
+<dd><p>do not copy/move and do not index target conda channel</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--move</kbd></dt>
+<dd><p>move packages instead of copying</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--skare3-local-copy</kbd></dt>
+<dd><p>path to the local copy of the skare3 repo (on a tempdir by default)</p>
+</dd>
+<dt><kbd>--log-level</kbd></dt>
+<dd><p>Possible choices: error, warning, info, debug</p>
+<p>verbosity level (error, warning, info, debug)</p>
+<p>Default: “info”</p>
+</dd>
+<dt><kbd>-v</kbd></dt>
+<dd><p>Debug verbosity</p>
+</dd>
+</dl>
+</div>
+</div>
 <div class="section" id="skare3-git-pass">
-<span id="id5"></span><h2><a class="reference internal" href="#skare3-git-pass"><span class="std std-ref">skare3-git-pass</span></a><a class="headerlink" href="#skare3-git-pass" title="Permalink to this headline">¶</a></h2>
+<span id="id6"></span><h2><a class="reference internal" href="#skare3-git-pass"><span class="std std-ref">skare3-git-pass</span></a><a class="headerlink" href="#skare3-git-pass" title="Permalink to this headline">¶</a></h2>
 <p><p>Utility script to provide username/password when authenticating git.
 This script reads the GIT_USERNAME and GIT_PASSWORD environmental variables
 and returns the corresponding value when requested.</p>
@@ -281,6 +337,11 @@ and GIT_PASSWORD, git takes care of the rest.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#skare3-changes-summary"><span class="xref std std-ref">skare3-changes-summary</span></a><ul>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#skare3-promote"><span class="xref std std-ref">skare3-promote</span></a><ul>
+<li><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
 <li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
 </ul>
 </li>

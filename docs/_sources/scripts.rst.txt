@@ -37,6 +37,15 @@ Scripts
    :ref: skare3_tools.scripts.skare3_update_summary.parser
    :prog: skare3-changes-summary
 
+.. _`skare3-promote`:
+
+:ref:`skare3-promote`
+^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+   :ref: skare3_tools.scripts.skare3_promote.parser
+   :prog: skare3-promote
+
 .. _`skare3-git-pass`:
 
 :ref:`skare3-git-pass`
