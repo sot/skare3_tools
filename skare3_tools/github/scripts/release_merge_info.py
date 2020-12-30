@@ -55,6 +55,9 @@ def main():
             'Merge pull request (?P<pr>.+) from (?P<branch>\S+)\n\n(?P<description>.+)', msg)
         if match:
             msg = match.groupdict()
+            if msg["pr"][0] == '#':
+                msg["pr"] = f'[{msg["pr"]}]' \
+                            f'(https://github.com/{args.repository}/pull/{msg["pr"][1:]})'
             merges.append(f'PR {msg["pr"]}: {msg["description"]}')
     if merges:
         # edit the release to include the merge information
