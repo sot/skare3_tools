@@ -29,13 +29,14 @@ def ok_or_exit(response, msg):
         print(f'{msg} ({rc}): {msg2}')
         sys.exit(1)
 
+
 def main():
     args = parser().parse_args()
     github.init(token=args.token)
     if args.latest_release:
         release = github.Repository(args.latest_release) .releases(latest=True)
         ok_or_exit(release, f'Failed to create issue after latest release of {args.latest_release}')
-        args.title = f"Update {args.latest_release} to {release['name']}"
+        args.title = f"Update {args.latest_release} to {release['tag_name']}"
         args.body = release['body']
     elif not args.title or not args.body:
         print('Issue title and body are required unless using --latest-release option.')
