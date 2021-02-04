@@ -22,7 +22,6 @@ import argparse
 import logging
 import subprocess
 import shutil
-import logging
 
 
 SKARE3_URL = 'git@github.com:sot/skare3.git'
@@ -75,11 +74,11 @@ def _files_to_copy(package,
     return pkg_files
 
 
-def promote(package,args, platforms=None):
+def promote(package, args, platforms=None):
     if platforms is None:
         platforms = PLATFORM_OPTIONS
 
-    m = re.search('(?P<name>\S+)(\s+)?==(\s+)?(?P<version>\S+)', package)
+    m = re.search(r'(?P<name>\S+)(\s+)?==(\s+)?(?P<version>\S+)', package)
     if not m:
         raise Exception(f'Could not parse package name/version: {package}')
     package = m.groupdict()
@@ -88,7 +87,7 @@ def promote(package,args, platforms=None):
     skare3_repo.remotes.origin.fetch('--tags')
     try:
         skare3_repo.git.checkout(package['version'])
-    except:
+    except Exception:
         logging.error(f"skare3 has no '{package['version']}' tag")
         return
 
@@ -124,7 +123,7 @@ def promote(package,args, platforms=None):
             if section not in data['requirements']:
                 continue
             for requirement in data['requirements'][section]:
-                m = re.search('(?P<name>\S+)(\s+)?(==(\s+)?(?P<version>\S+))?', requirement)
+                m = re.search(r'(?P<name>\S+)(\s+)?(==(\s+)?(?P<version>\S+))?', requirement)
                 if m:
                     requirement = m.groupdict()
 
@@ -228,13 +227,13 @@ def main():
         logging.info(f'Promoting from: {", ".join(args.from_channels)}')
         logging.info(f'Promoting to:   {args.to_channel}')
         if not args.skare3.exists():
-            repo = git.Repo.clone_from(SKARE3_URL, args.skare3)
+            git.Repo.clone_from(SKARE3_URL, args.skare3)
         else:
-            repo = git.Repo(args.skare3)
+            git.Repo(args.skare3)
 
         for package in args.package:
             logging.info(package)
-            logging.info('='*len(package))
+            logging.info('=' * len(package))
             promote(package, args)
 
     if not args.dry_run:
