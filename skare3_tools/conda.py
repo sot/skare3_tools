@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 import argparse
 import logging
+import re
 
 
 logger = logging.getLogger('skare3_tools.conda')
@@ -21,10 +22,20 @@ def gather_env_pkgs(directory, pkgs_dir=None, include_channels=None, exclude_cha
             else:
                 parts.append(part)
         pkgs_dir = Path(*parts)
-    pkgs = json.loads(subprocess.check_output(['conda', 'list', '--no-pip', '--json']).decode())
-    pkgs = [p for p in pkgs if p['channel'] not in exclude_channels]
-    if include_channels:
-        pkgs = [p for p in pkgs if p['channel'] in include_channels]
+    all_pkgs = json.loads(subprocess.check_output(['conda', 'list', '--no-pip', '--json']).decode())
+    pkgs = []
+    for p in all_pkgs:
+        match = []
+        if exclude_channels:
+            match = [re.search(c, p['channel']) for c in exclude_channels]
+            match = [bool(m) and m.span()[0] == 0 and m.span()[1] == len(p['channel'])
+                     for m in match]
+            if sum(match):
+                continue
+        if include_channels and ['channel'] not in include_channels:
+            continue
+        pkgs.append(p)
+
     if pkgs and not directory.exists():
         directory.mkdir(parents=True)
     for pkg in pkgs:
