@@ -258,7 +258,7 @@ def _get_tag_target(tag):
     if 'target' in tag:
         return _get_tag_target(tag['target'])
     else:
-        return tag['oid']
+        return tag['oid'], tag['committedDate']
 
 
 _PR_QUERY = """
@@ -375,12 +375,13 @@ def _get_repository_info_v4(owner_repo,
 
     releases = [r for r in releases if not r['isPrerelease'] and not r['isDraft']]
     for r in releases:
-        r['tag_oid'] = _get_tag_target(r['tag'])
+        r['tag_oid'], r['committed_date'] = _get_tag_target(r['tag'])
 
     releases = {r['tag_oid']: r for r in releases}
     release_info = [{
         'release_tag': '',
         'release_tag_date': '',
+        'release_commit_date': datetime.datetime.now().isoformat(),
         'commits': [],
         'merges': []
     }]
@@ -400,6 +401,8 @@ def _get_repository_info_v4(owner_repo,
         sha = commit['oid']
         if sha in releases:
             release_info.append({
+                'release_sha': sha,
+                'release_commit_date': releases[sha]['committed_date'],
                 'release_tag': releases[sha]["tagName"],
                 'release_tag_date': releases[sha]["publishedAt"],
                 'commits': [],
@@ -417,6 +420,25 @@ def _get_repository_info_v4(owner_repo,
                 if merge["pr_number"] in all_pull_requests:
                     merge["title"] = all_pull_requests[merge["pr_number"]]['title']  # .strip()
             release_info[-1]['merges'].append(merge)
+
+    # up to now, we followed the default branch commits, collecting all releases along the branch.
+    # Now we will add the remaining releases, which presumably happened in another branch.
+
+    release_shas = [r['release_sha'] for r in release_info[1:]]
+    for sha in releases:
+        if sha not in release_shas:
+            release_info.append({
+                'release_sha': sha,
+                'release_tag': releases[sha]["tagName"],
+                'release_tag_date': releases[sha]["publishedAt"],
+                'release_commit_date': releases[sha]["committed_date"],
+                'commits': [],
+                'merges': []
+            })
+
+    release_info = sorted(release_info,
+                          key=lambda r: r['release_commit_date'],
+                          reverse=True)
 
     release_tags = [r['release_tag'] for r in release_info]
     if type(since) is int:

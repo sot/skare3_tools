@@ -227,18 +227,21 @@ REPO_QUERY = """
           target {
             ... on Commit {
               oid
+              committedDate
             }
             ... on Tag {
               oid
               target {
                 ... on Commit {
                   oid
+                  committedDate
                 }
                 ... on Tag {
                   oid
                   target {
                     ... on Commit {
                       oid
+                      committedDate
                     }
                   }
                 }
