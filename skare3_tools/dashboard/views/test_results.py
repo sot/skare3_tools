@@ -97,6 +97,9 @@ def main():
     else:
         with open(args.file_in, 'r') as f:
             results = json.load(f)
+        for key in ['architecture', 'hostname', 'system', 'platform']:
+            if type(results['run_info'][key]) is list:
+                results['run_info'][key] = ', '.join(results['run_info'][key])
 
     with open(args.file_out, 'w') as out:
         out.write(_render(results, config))
