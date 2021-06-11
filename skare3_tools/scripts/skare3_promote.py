@@ -142,7 +142,7 @@ def promote(package,args, platforms=None):
     if fail:
         logging.error('Failed assembling package list (see errors above).')
 
-    package_names = sorted(package_names)
+    package_names = sorted(set(package_names))
 
     pkg_files_ = []
     for p in pkg_files:
@@ -150,16 +150,30 @@ def promote(package,args, platforms=None):
             pkg_files_.append(p)
     pkg_files = pkg_files_
     pkg_files = {name: [p for p in pkg_files if p['name'] == name] for name in package_names}
+
+    row = '| {package:30s} | {noarch:24s} {noarch-src:7s} | {linux-64:24s} {linux-64-src:7s} | {osx-64:24s} {osx-64-src:7s} | {win-64:24s} {win-64-src:7s} |'
+    div = {"package": "", "noarch": "", "linux-64": "", "osx-64": "", "win-64": ""}
+    div.update({k: "" for k in ['noarch-src', 'linux-64-src', 'osx-64-src', 'win-64-src']})
+    div = row.format(**div).replace(' ', '-').replace('|', '+')
+    header = {"package": "package name", "noarch": "noarch", "linux-64": "linux-64", "osx-64": "osx-64", "win-64": "win-64"}
+    header.update({k: "" for k in ['noarch-src', 'linux-64-src', 'osx-64-src', 'win-64-src']})
+    header = row.format(**header)
+    logging.info(div)
+    logging.info(header)
+    logging.info(div)
     for name in package_names:
-        logging.info(name)
+        versions = {platform: '---' for platform in
+                    ['noarch', 'linux-64', 'osx-64', 'win-64', 'noarch-src', 'linux-64-src', 'osx-64-src', 'win-64-src']}
+        versions['package'] = name
         for pkg in pkg_files[name]:
             if pkg["version"] is None:
-                pkg["version"] = ""
+                pkg["version"] = "???"
             assert pkg["from"].name == pkg["to"].name
             assert pkg["from"].exists()
-            logging.info(f'{pkg["version"]:>25s}: '
-                  f'{str(pkg["from"].parent.relative_to(args.ska3_conda)):16s} -> '
-                  f'{str(pkg["to"].parent.relative_to(args.ska3_conda)):16s}')
+            versions[str(pkg["from"].parent.name)] = pkg["version"]
+            versions[str(pkg["from"].parent.name) + '-src'] = str(pkg["from"].parent.parent.name)
+        logging.info(row.format(**versions))
+    logging.info(div)
 
     if not args.dry_run:
         for name in pkg_files:
@@ -176,9 +190,9 @@ def parser():
     usage = "%(prog)s [-h] [--ska3-conda SKA3_CONDA] [--from FROM_CHANNEL [--from FROM_CHANNEL ...] ] [--to TO_CHANNEL] [--dry-run] [--move] [--skare3-local-copy SKARE3] [--log-level {error,warning,info,debug}] [-v] <package name>==<version> [<package name>==<version> ...]"
     parse = argparse.ArgumentParser(description=__doc__, usage=usage)
     parse.add_argument('package', nargs='+', metavar='<package name>==<version>')
-    parse.add_argument('--ska3-conda', help="ska3-conda directory containing source and target channels", default=SKA3_CONDA)
-    parse.add_argument('--from', help="source channel", dest='from_channels', action='append')
-    parse.add_argument('--to', help="target channel", dest='to_channel')
+    parse.add_argument('--ska3-conda', help="ska3-conda directory containing source and target channels (defaults to the standard location)", default=SKA3_CONDA)
+    parse.add_argument('--from', help="source channel (default: ['masters', 'test'])", dest='from_channels', action='append')
+    parse.add_argument('--to', help="target channel (default: 'flight')", dest='to_channel')
     parse.add_argument('--dry-run', help="do not copy/move and do not index target conda channel", action='store_true', default=False)
     parse.add_argument('--move', help="move packages instead of copying", action='store_true', default=False)
     parse.add_argument('--skare3-local-copy', help='path to the local copy of the skare3 repo (on a tempdir by default)', dest='skare3')
@@ -211,6 +225,8 @@ def main():
             logging.error(f'"{args.ska3_conda}" does not exist.')
             sys.exit(1)
 
+        logging.info(f'Promoting from: {", ".join(args.from_channels)}')
+        logging.info(f'Promoting to:   {args.to_channel}')
         if not args.skare3.exists():
             repo = git.Repo.clone_from(SKARE3_URL, args.skare3)
         else:
