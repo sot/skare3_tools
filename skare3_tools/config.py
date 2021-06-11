@@ -8,7 +8,7 @@ standard password to conda channels called CONDA_PASSWORD.
 
 The configuration is saved in JSON format, in the location:
 
-- specifyed by the SKARE3_TOOLS_DATA environmental variable,
+- specified by the SKARE3_TOOLS_DATA environmental variable,
 - or:
 
   - Linux/Mac OS: ~/.skare3
