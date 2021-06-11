@@ -190,9 +190,9 @@ def parser():
     usage = "%(prog)s [-h] [--ska3-conda SKA3_CONDA] [--from FROM_CHANNEL [--from FROM_CHANNEL ...] ] [--to TO_CHANNEL] [--dry-run] [--move] [--skare3-local-copy SKARE3] [--log-level {error,warning,info,debug}] [-v] <package name>==<version> [<package name>==<version> ...]"
     parse = argparse.ArgumentParser(description=__doc__, usage=usage)
     parse.add_argument('package', nargs='+', metavar='<package name>==<version>')
-    parse.add_argument('--ska3-conda', help="ska3-conda directory containing source and target channels", default=SKA3_CONDA)
-    parse.add_argument('--from', help="source channel", dest='from_channels', action='append')
-    parse.add_argument('--to', help="target channel", dest='to_channel')
+    parse.add_argument('--ska3-conda', help="ska3-conda directory containing source and target channels (defaults to the standard location)", default=SKA3_CONDA)
+    parse.add_argument('--from', help="source channel (default: ['masters', 'test'])", dest='from_channels', action='append')
+    parse.add_argument('--to', help="target channel (default: 'flight')", dest='to_channel')
     parse.add_argument('--dry-run', help="do not copy/move and do not index target conda channel", action='store_true', default=False)
     parse.add_argument('--move', help="move packages instead of copying", action='store_true', default=False)
     parse.add_argument('--skare3-local-copy', help='path to the local copy of the skare3 repo (on a tempdir by default)', dest='skare3')
@@ -225,6 +225,8 @@ def main():
             logging.error(f'"{args.ska3_conda}" does not exist.')
             sys.exit(1)
 
+        logging.info(f'Promoting from: {", ".join(args.from_channels)}')
+        logging.info(f'Promoting to:   {args.to_channel}')
         if not args.skare3.exists():
             repo = git.Repo.clone_from(SKARE3_URL, args.skare3)
         else:
