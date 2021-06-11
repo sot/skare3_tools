@@ -59,7 +59,7 @@ def get_parser():
                         dest='file_in')
     parser.add_argument('-o',
                         help="Name of file to write to. By default, this creates a file named "
-                             "test_results.html, located in the input directory or the current "
+                             "index.html, located in the input directory or the current "
                              "working directory, depending on whether the '-i' options was given.",
                         dest='file_out')
     parser.add_argument('-b', action='store_true', default=False,
@@ -67,7 +67,7 @@ def get_parser():
     parser.add_argument('--log-dir', default='.')
     parser.add_argument('--static-dir',
                         help="Location of static data directory.",
-                        default=os.path.join(os.path.dirname(dashboard.__file__), 'static'))
+                        default='https://cxc.cfa.harvard.edu/mta/ASPECT/skare3/dashboard/static')
     return parser
 
 
@@ -83,9 +83,9 @@ def main():
 
     if args.file_out is None:
         if args.file_in:
-            args.file_out = os.path.join(os.path.dirname(args.file_in), 'test_results.html')
+            args.file_out = os.path.join(os.path.dirname(args.file_in), 'index.html')
         else:
-            args.file_out = 'test_results.html'
+            args.file_out = 'index.html'
 
     if args.file_in and not os.path.exists(args.file_in):
         print('{filename} does not exist'.format(filename=args.file_in))
@@ -97,6 +97,9 @@ def main():
     else:
         with open(args.file_in, 'r') as f:
             results = json.load(f)
+        for key in ['architecture', 'hostname', 'system', 'platform']:
+            if type(results['run_info'][key]) is list:
+                results['run_info'][key] = ', '.join(results['run_info'][key])
 
     with open(args.file_out, 'w') as out:
         out.write(_render(results, config))
