@@ -90,15 +90,14 @@ def get_parser():
 
 
 def main():
-    import pyyaks
 
     args = get_parser().parse_args()
 
-    pyyaks.logger.get_logger(
-        name='skare3_tools.conda',
-        level=args.log_level.upper(),
-        format="%(asctime)s %(message)s"
-    )
+    # not using pyyaks so it can be used out of Ska.
+    hdlr = logging.StreamHandler()
+    hdlr.setLevel(args.log_level.upper())
+    logger.addHandler(hdlr)
+    logger.setLevel(args.log_level.upper())
 
     gather_env_pkgs(args.directory,
                     pkgs_dir=args.pkgs_dir,
