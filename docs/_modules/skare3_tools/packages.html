@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>skare3_tools.packages &#8212; SkaRE3 Tools 1.0.3 documentation</title>
+    <title>skare3_tools.packages &#8212; SkaRE3 Tools 1.0.4 documentation</title>
     <link rel="stylesheet" href="../../_static/bootstrap-astropy.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     
@@ -47,7 +47,7 @@
     <h3>Navigation</h3>
     <ul>
       <li>
-	<a href="../../index.html">SkaRE3 Tools 1.0.3 documentation</a>
+	<a href="../../index.html">SkaRE3 Tools 1.0.4 documentation</a>
 	 &#187;
       </li>
       <li><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
@@ -323,7 +323,7 @@
     <span class="k">if</span> <span class="s1">&#39;target&#39;</span> <span class="ow">in</span> <span class="n">tag</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_get_tag_target</span><span class="p">(</span><span class="n">tag</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">tag</span><span class="p">[</span><span class="s1">&#39;oid&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">tag</span><span class="p">[</span><span class="s1">&#39;oid&#39;</span><span class="p">],</span> <span class="n">tag</span><span class="p">[</span><span class="s1">&#39;committedDate&#39;</span><span class="p">]</span>
 
 
 <span class="n">_PR_QUERY</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
@@ -440,12 +440,13 @@
 
     <span class="n">releases</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">releases</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;isPrerelease&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;isDraft&#39;</span><span class="p">]]</span>
     <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">:</span>
-        <span class="n">r</span><span class="p">[</span><span class="s1">&#39;tag_oid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_get_tag_target</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;tag&#39;</span><span class="p">])</span>
+        <span class="n">r</span><span class="p">[</span><span class="s1">&#39;tag_oid&#39;</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;committed_date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_get_tag_target</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;tag&#39;</span><span class="p">])</span>
 
     <span class="n">releases</span> <span class="o">=</span> <span class="p">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;tag_oid&#39;</span><span class="p">]:</span> <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">}</span>
     <span class="n">release_info</span> <span class="o">=</span> <span class="p">[{</span>
         <span class="s1">&#39;release_tag&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
         <span class="s1">&#39;release_tag_date&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;release_commit_date&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
         <span class="s1">&#39;commits&#39;</span><span class="p">:</span> <span class="p">[],</span>
         <span class="s1">&#39;merges&#39;</span><span class="p">:</span> <span class="p">[]</span>
     <span class="p">}]</span>
@@ -465,6 +466,8 @@
         <span class="n">sha</span> <span class="o">=</span> <span class="n">commit</span><span class="p">[</span><span class="s1">&#39;oid&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">sha</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">:</span>
             <span class="n">release_info</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;release_sha&#39;</span><span class="p">:</span> <span class="n">sha</span><span class="p">,</span>
+                <span class="s1">&#39;release_commit_date&#39;</span><span class="p">:</span> <span class="n">releases</span><span class="p">[</span><span class="n">sha</span><span class="p">][</span><span class="s1">&#39;committed_date&#39;</span><span class="p">],</span>
                 <span class="s1">&#39;release_tag&#39;</span><span class="p">:</span> <span class="n">releases</span><span class="p">[</span><span class="n">sha</span><span class="p">][</span><span class="s2">&quot;tagName&quot;</span><span class="p">],</span>
                 <span class="s1">&#39;release_tag_date&#39;</span><span class="p">:</span> <span class="n">releases</span><span class="p">[</span><span class="n">sha</span><span class="p">][</span><span class="s2">&quot;publishedAt&quot;</span><span class="p">],</span>
                 <span class="s1">&#39;commits&#39;</span><span class="p">:</span> <span class="p">[],</span>
@@ -482,6 +485,25 @@
                 <span class="k">if</span> <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_pull_requests</span><span class="p">:</span>
                     <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_pull_requests</span><span class="p">[</span><span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]][</span><span class="s1">&#39;title&#39;</span><span class="p">]</span>  <span class="c1"># .strip()</span>
             <span class="n">release_info</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;merges&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">merge</span><span class="p">)</span>
+
+    <span class="c1"># up to now, we followed the default branch commits, collecting all releases along the branch.</span>
+    <span class="c1"># Now we will add the remaining releases, which presumably happened in another branch.</span>
+
+    <span class="n">release_shas</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;release_sha&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">release_info</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+    <span class="k">for</span> <span class="n">sha</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">sha</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">release_shas</span><span class="p">:</span>
+            <span class="n">release_info</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;release_sha&#39;</span><span class="p">:</span> <span class="n">sha</span><span class="p">,</span>
+                <span class="s1">&#39;release_tag&#39;</span><span class="p">:</span> <span class="n">releases</span><span class="p">[</span><span class="n">sha</span><span class="p">][</span><span class="s2">&quot;tagName&quot;</span><span class="p">],</span>
+                <span class="s1">&#39;release_tag_date&#39;</span><span class="p">:</span> <span class="n">releases</span><span class="p">[</span><span class="n">sha</span><span class="p">][</span><span class="s2">&quot;publishedAt&quot;</span><span class="p">],</span>
+                <span class="s1">&#39;release_commit_date&#39;</span><span class="p">:</span> <span class="n">releases</span><span class="p">[</span><span class="n">sha</span><span class="p">][</span><span class="s2">&quot;committed_date&quot;</span><span class="p">],</span>
+                <span class="s1">&#39;commits&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s1">&#39;merges&#39;</span><span class="p">:</span> <span class="p">[]</span>
+            <span class="p">})</span>
+
+    <span class="n">release_info</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">release_info</span><span class="p">,</span>
+                          <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;release_commit_date&#39;</span><span class="p">],</span>
+                          <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">release_tags</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;release_tag&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">release_info</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">since</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
