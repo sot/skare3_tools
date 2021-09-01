@@ -48,6 +48,7 @@ def overwrite_skare3_version(current_version, new_version, pkg_path):
         m = re.search(r'(\s+)?version(\s+)?:(\s+)?(?P<version>(\S+)+)', line)
         if m:
             version = m.groupdict()['version']
+            version = version.strip('"').strip("'")
             if version == str(current_version):
                 print(f'    - version: {current_version} -> {new_version}')
                 lines[i] = line.replace(current_version, new_version)
