@@ -152,6 +152,7 @@ def parser():
     parse.add_argument('--meta-package', default='ska3-flight')
     parse.add_argument('--conda-channel', action='append', default=[])
     parse.add_argument('--token', help='Github token, or name of file that contains token')
+    parse.add_argument('--update-pr', action='store_true', default=False)
     return parse
 
 
@@ -187,6 +188,79 @@ def split_versions(depends):
         p_version = v[1].strip() if len(v) == 2 else '---'
         result[p_name] = p_version
     return result
+
+
+def split_sections(pr_body, section_symbol='#'):
+    ss = f'\n{section_symbol} '
+    i = -1
+    sections = {}
+    if pr_body[:2] == ss[1:]:
+        title_end = pr_body.find('\n', i + 1) + 1
+        title = pr_body[i + len(section_symbol) + 1: title_end].strip()
+        pr_body_ends = n + 1 if (n := pr_body.find(ss, i + 1)) > 0 else -1
+        sections[title] = {
+            'title': title,
+            'body': pr_body[title_end:pr_body_ends],
+        }
+    else:
+        title_end = 0
+        title = ''
+        pr_body_ends = n + 1 if (n := pr_body.find(ss, i + 1)) > 0 else -1
+        sections['i'] = {
+            'title': title,
+            'body': pr_body[title_end:pr_body_ends]
+        }
+    while (i := pr_body.find(ss, i + 1)) > 0:
+        title_end = pr_body.find('\n', i + 1) + 1
+        pr_body_ends = n + 1 if (n := pr_body.find(ss, i + 1)) > 0 else len(pr_body)
+        title = pr_body[i + len(section_symbol) + 1: title_end].strip()
+        sections[title] = {
+            'title': title,
+            'body': pr_body[title_end:pr_body_ends],
+        }
+    return sections
+
+
+def update_pr(final_version, change_summary):
+    """
+    Write conda package change summary in markdown format
+
+    :param change_summary: dict
+        the summary
+    :return:
+    """
+    import jinja2
+    import re
+    from skare3_tools import github
+
+    template = jinja2.Template(PKG_SUMMARY_MD)
+    summary = template.render(summary=change_summary)
+
+    repo = github.Repository('sot/skare3')
+    pulls = repo.pull_requests()
+
+    if (m := re.match('(?P<version>\S+)rc[0-9]*', final_version)):
+        version = m.groupdict()['version']
+    else:
+        version = final_version
+
+    pulls = [p for p in pulls if p['title'] == version]
+
+    assert len(pulls) > 0, f'There is no PR with title {version}'
+    assert len(pulls) < 2, f'There is more than one PR with title {version}'
+
+    sections = split_sections(pulls[0]['body'])
+
+    assert 'Code changes' in sections, 'No section named "Code changes" in PR'
+
+    sections['Code changes']['body'] = f'{summary}\n'
+
+    body = ''
+    for title, section in sections.items():
+        if title:
+            body += f'# {title}\n'
+        body += section['body']
+    print(body)
 
 
 def main():
@@ -226,7 +300,10 @@ def main():
             'final_version': args.final_version,
         })
 
-        write_conda_pkg_change_summary(change_summary)
+        if args.update_pr:
+            update_pr(args.final_version, change_summary)
+        else:
+            write_conda_pkg_change_summary(change_summary)
     except ArgumentException as e:
         parse.exit(1, str(e))
 
