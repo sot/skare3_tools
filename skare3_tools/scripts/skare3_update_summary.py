@@ -14,6 +14,7 @@ Each dictionary lists the different names by which this package is known (pyton 
 conda package). This is to merge information from conda and github.
 """
 import os
+import re
 import json
 import argparse
 import logging
@@ -65,8 +66,14 @@ def repository_change_summary(pkgs_repo_info, initial_versions='flight', final_v
                 if package_name in package_to_repo:
                     full_name = package_to_repo[package_name]
                     if full_name in pkgs_repo_info:
+                        def clean_version(v):
+                            # this function is used to give a 'standard' version string
+                            # but it only handles a possible V in the first position (like V1.0.0)
+                            # I do not need more right now
+                            return v[1:] if re.match('[vV]\S+', v) else v
                         p = pkgs_repo_info[full_name]
                         releases = [r['release_tag'] for r in p['release_info']]
+                        releases = [clean_version(r) for r in releases]
                         if version_1 not in releases:
                             logging.warning(f" - Initial version of {full_name} is not in release list:"
                                             f" {version_1}, {releases}")
@@ -78,7 +85,7 @@ def repository_change_summary(pkgs_repo_info, initial_versions='flight', final_v
                             releases = releases[releases.index(version_2):releases.index(version_1)]
                         else:
                             releases = releases[releases.index(version_2):]
-                        release_info = {r['release_tag']: r['merges'] for r in p['release_info']}
+                        release_info = {clean_version(r['release_tag']): r['merges'] for r in p['release_info']}
                         merges = []
                         for merge in sum([release_info[k] for k in releases], []):
                             pr = merge['pr_number']
