@@ -4,16 +4,16 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Github &#8212; SkaRE3 Tools 1.0.5 documentation</title>
-    <link rel="stylesheet" href="_static/bootstrap-astropy.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Github &#8212; SkaRE3 Tools 1.0.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css" />
     
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
     <script type="text/javascript" src="_static/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -60,7 +60,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.0.5 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.0.6 documentation</a>
 	 &#187;
       </li>
       
@@ -74,7 +74,7 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="module-skare3_tools.github">
+  <section id="module-skare3_tools.github">
 <span id="github"></span><h1>Github<a class="headerlink" href="#module-skare3_tools.github" title="Permalink to this headline">¶</a></h1>
 <p>A wrapper for Github’s APIs and a collection of scripts.</p>
 <p>In order to use it, one needs to give it an <a class="reference external" href="https://docs.github.com/en/free-pro-team&#64;latest/github/authenticating-to-github/creating-a-personal-access-token">authentication token</a>. The token is usually given
@@ -84,7 +84,7 @@ given token:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">github</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="s1">&#39;c7hvg6pqi3fhqwv0wvlgp4mk9agwbqk1gxc331iz&#39;</span><span class="p">)</span>  <span class="c1"># this is optional</span>
 </pre></div>
 </div>
-<div class="section" id="module-skare3_tools.github.github">
+<section id="module-skare3_tools.github.github">
 <span id="rest-interface-v3"></span><h2>REST Interface (V3)<a class="headerlink" href="#module-skare3_tools.github.github" title="Permalink to this headline">¶</a></h2>
 <p>This is a thin wrapper for <a class="reference external" href="https://developer.github.com/v3/">Github’s REST API</a> (V3). It is intended to be easy to extend.
 It does not impose much structure on top of what is shown in their online documentation,
@@ -117,7 +117,7 @@ and it should be easy to see the correspondence between both.</p>
 <span class="go">&#39;3.7.2&#39;</span>
 </pre></div>
 </div>
-<div class="section" id="getting-and-editing-content">
+<section id="getting-and-editing-content">
 <h3>Getting and Editing Content<a class="headerlink" href="#getting-and-editing-content" title="Permalink to this headline">¶</a></h3>
 <p>Getting content:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools.github</span> <span class="kn">import</span> <span class="n">github</span>
@@ -138,8 +138,8 @@ and it should be easy to see the correspondence between both.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">edit</span><span class="p">(</span><span class="s1">&#39;README.md&#39;</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s1">&#39;changing readme&#39;</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">content</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="repository-dispatch">
+</section>
+<section id="repository-dispatch">
 <h3>Repository Dispatch<a class="headerlink" href="#repository-dispatch" title="Permalink to this headline">¶</a></h3>
 <p>A typical use is to dispatch an event to cause an action. For example, the docs for some
 repositories are deployed when a repository_dispatch event of type ‘build-docs’ is triggered.
@@ -157,9 +157,9 @@ This can be seen in the corresponding workflow:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">dispatch_event</span><span class="p">(</span><span class="n">event_type</span><span class="o">=</span><span class="s1">&#39;build-docs&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="module-skare3_tools.github.graphql">
+</section>
+</section>
+<section id="module-skare3_tools.github.graphql">
 <span id="graphql-interface-v4"></span><h2>GraphQL Interface (V4)<a class="headerlink" href="#module-skare3_tools.github.graphql" title="Permalink to this headline">¶</a></h2>
 <p>This is a thin wrapper for <a class="reference external" href="https://developer.github.com/v4/">Github’s GraphQL API</a> (V4).</p>
 <p>This module does not build the query for you. This is because the possibilities afforded by GraphQL
@@ -219,13 +219,13 @@ example, to get a list all pull requests of a repository:</p>
 <li><p>ORG_QUERY(owner)</p></li>
 <li><p>REPO_QUERY(owner, name)</p></li>
 </ul>
-</div>
-<div class="section" id="github-scripts">
+</section>
+<section id="github-scripts">
 <h2>Github Scripts<a class="headerlink" href="#github-scripts" title="Permalink to this headline">¶</a></h2>
 <p>Some of these scripts are superseded by <a class="reference external" href="https://cli.github.com/">Github’s own CLI</a>,
 while some provide functionality specific to Ska. At the very least,
 the exemplify the usage of the API.</p>
-<div class="section" id="skare3-create-issue">
+<section id="skare3-create-issue">
 <h3>skare3-create-issue<a class="headerlink" href="#skare3-create-issue" title="Permalink to this headline">¶</a></h3>
 <p><p>Create a github issue</p>
 </p>
@@ -234,7 +234,7 @@ the exemplify the usage of the API.</p>
                            <span class="p">[</span><span class="o">--</span><span class="n">body</span> <span class="n">BODY</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">label</span> <span class="n">LABEL</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
 </pre></div>
 </div>
-<div class="section" id="Named Arguments">
+<section id="Named Arguments">
 <h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>--repository</kbd></dt>
@@ -256,9 +256,9 @@ the exemplify the usage of the API.</p>
 <dd><p>Github token, or name of file that contains token</p>
 </dd>
 </dl>
-</div>
-</div>
-<div class="section" id="skare3-create-pr">
+</section>
+</section>
+<section id="skare3-create-pr">
 <h3>skare3-create-pr<a class="headerlink" href="#skare3-create-pr" title="Permalink to this headline">¶</a></h3>
 <p><p>Create a pull request</p>
 </p>
@@ -266,7 +266,7 @@ the exemplify the usage of the API.</p>
                         <span class="o">--</span><span class="n">base</span> <span class="n">BASE</span> <span class="o">--</span><span class="n">body</span> <span class="n">BODY</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
 </pre></div>
 </div>
-<div class="section" id="Named Arguments">
+<section id="Named Arguments">
 <h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>--repository</kbd></dt>
@@ -286,9 +286,9 @@ the exemplify the usage of the API.</p>
 <dd><p>Github token, or name of file that contains token</p>
 </dd>
 </dl>
-</div>
-</div>
-<div class="section" id="skare3-merge-pr">
+</section>
+</section>
+<section id="skare3-merge-pr">
 <h3>skare3-merge-pr<a class="headerlink" href="#skare3-merge-pr" title="Permalink to this headline">¶</a></h3>
 <p><p>Create a pull request</p>
 </p>
@@ -298,7 +298,7 @@ the exemplify the usage of the API.</p>
                    <span class="p">[</span><span class="o">--</span><span class="n">merge</span><span class="o">-</span><span class="n">method</span> <span class="n">MERGE_METHOD</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
 </pre></div>
 </div>
-<div class="section" id="Named Arguments">
+<section id="Named Arguments">
 <h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>--repository</kbd></dt>
@@ -329,9 +329,9 @@ the exemplify the usage of the API.</p>
 <dd><p>Github token, or name of file that contains token</p>
 </dd>
 </dl>
-</div>
-</div>
-<div class="section" id="skare3-release-merge-info">
+</section>
+</section>
+<section id="skare3-release-merge-info">
 <h3>skare3-release-merge-info<a class="headerlink" href="#skare3-release-merge-info" title="Permalink to this headline">¶</a></h3>
 <p><p>Amend a release description to mention merges after previous release.</p>
 <p>This script takes the sha of a release. It checks the commits between the time of this release and
@@ -342,7 +342,7 @@ come from the same branch.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">__main__</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="o">--</span><span class="n">repository</span> <span class="n">REPOSITORY</span> <span class="p">[</span><span class="o">--</span><span class="n">sha</span> <span class="n">SHA</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
 </pre></div>
 </div>
-<div class="section" id="Named Arguments">
+<section id="Named Arguments">
 <h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>--repository</kbd></dt>
@@ -355,9 +355,9 @@ come from the same branch.</p>
 <dd><p>Github token, or name of file that contains token</p>
 </dd>
 </dl>
-</div>
-</div>
-<div class="section" id="skare3-add-secrets">
+</section>
+</section>
+<section id="skare3-add-secrets">
 <h3>skare3-add-secrets<a class="headerlink" href="#skare3-add-secrets" title="Permalink to this headline">¶</a></h3>
 <p><p>A script to add encrypted secrets to Github repositories.</p>
 <p>At some point, Github’s API did not have an endpoint for setting secrets.
@@ -384,14 +384,14 @@ asdf</p>
                           <span class="n">repositories</span> <span class="p">[</span><span class="n">repositories</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
-<div class="section" id="Positional Arguments">
+<section id="Positional Arguments">
 <h4>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this headline">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>repositories</kbd></dt>
 <dd></dd>
 </dl>
-</div>
-<div class="section" id="Named Arguments">
+</section>
+<section id="Named Arguments">
 <h4>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>--secrets</kbd></dt>
@@ -406,10 +406,10 @@ asdf</p>
 <p>Default: True</p>
 </dd>
 </dl>
-</div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
+</section>
 
 
             <div class="clearer"></div>
@@ -484,7 +484,7 @@ asdf</p>
     <a href="#">Back to Top</a></p>
   <p>
     &copy; Copyright 2020, Javier Gonzalez.<br/>
-    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 3.1.2. &nbsp;
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 4.2.0. &nbsp;
   </p>
 </footer>
   </body>

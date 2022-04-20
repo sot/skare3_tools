@@ -4,16 +4,16 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Packages &#8212; SkaRE3 Tools 1.0.5 documentation</title>
-    <link rel="stylesheet" href="_static/bootstrap-astropy.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Packages &#8212; SkaRE3 Tools 1.0.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css" />
     
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
     <script type="text/javascript" src="_static/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -54,7 +54,7 @@
 	
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.0.5 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.0.6 documentation</a>
 	 &#187;
       </li>
       <li><a href="api.html" accesskey="U">API</a> &#187;</li>
@@ -69,11 +69,11 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="packages">
+  <section id="packages">
 <h1>Packages<a class="headerlink" href="#packages" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
-<dt id="skare3_tools.packages.get_package_list">
-<code class="sig-prename descclassname">skare3_tools.packages.</code><code class="sig-name descname">get_package_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_package_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.packages.get_package_list" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="skare3_tools.packages.get_package_list">
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_package_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_package_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_package_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a list of dictionaries, one per package.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -84,8 +84,8 @@ Dictionary contains only basic information</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="skare3_tools.packages.get_repository_info">
-<code class="sig-prename descclassname">skare3_tools.packages.</code><code class="sig-name descname">get_repository_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">owner_repo</span></em>, <em class="sig-param"><span class="n">version</span><span class="o">=</span><span class="default_value">'v4'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_repository_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.packages.get_repository_info" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="skare3_tools.packages.get_repository_info">
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_repository_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner_repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'v4'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_repository_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_repository_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get information about a Github repository</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -117,13 +117,13 @@ Force update of the cached info. By default updates only if pushed_at or updated
 </dd></dl>
 
 <dl class="py function">
-<dt id="skare3_tools.packages.get_repositories_info">
-<code class="sig-prename descclassname">skare3_tools.packages.</code><code class="sig-name descname">get_repositories_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">repositories</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">version</span><span class="o">=</span><span class="default_value">'v4'</span></em>, <em class="sig-param"><span class="n">update</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_repositories_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.packages.get_repositories_info" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="skare3_tools.packages.get_repositories_info">
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_repositories_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repositories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'v4'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_repositories_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_repositories_info" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt id="skare3_tools.packages.get_conda_pkg_info">
-<code class="sig-prename descclassname">skare3_tools.packages.</code><code class="sig-name descname">get_conda_pkg_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">conda_package</span></em>, <em class="sig-param"><span class="n">conda_channel</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_conda_pkg_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.packages.get_conda_pkg_info" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="skare3_tools.packages.get_conda_pkg_info">
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_conda_pkg_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conda_package</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conda_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_conda_pkg_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_conda_pkg_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get information on a conda package.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -141,8 +141,8 @@ url of the channel</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="skare3_tools.packages.get_conda_pkg_dependencies">
-<code class="sig-prename descclassname">skare3_tools.packages.</code><code class="sig-name descname">get_conda_pkg_dependencies</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">conda_package</span></em>, <em class="sig-param"><span class="n">conda_channel</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_conda_pkg_dependencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.packages.get_conda_pkg_dependencies" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="skare3_tools.packages.get_conda_pkg_dependencies">
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_conda_pkg_dependencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conda_package</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conda_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_conda_pkg_dependencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_conda_pkg_dependencies" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get dependencies of a conda package.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -159,11 +159,11 @@ url of the channel</p></li>
 </dl>
 </dd></dl>
 
-<div class="section" id="caching">
+<section id="caching">
 <h2>Caching<a class="headerlink" href="#caching" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
-<dt id="skare3_tools.packages.json_cache">
-<code class="sig-prename descclassname">skare3_tools.packages.</code><code class="sig-name descname">json_cache</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">directory</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">ignore</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">expires</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">update_policy</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#json_cache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.packages.json_cache" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="skare3_tools.packages.json_cache">
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">json_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expires</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#json_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.json_cache" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decorator to cache function results in json format.</p>
 <p>This decorator adds an ‘update’ argument to decorated functions. update is False by default,
 but one can set it to True to force-update the cache entry.</p>
@@ -192,8 +192,8 @@ should be updated.</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="skare3_tools.packages.repository_info_is_outdated">
-<code class="sig-prename descclassname">skare3_tools.packages.</code><code class="sig-name descname">repository_info_is_outdated</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">_</span></em>, <em class="sig-param"><span class="n">pkg_info</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#repository_info_is_outdated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#skare3_tools.packages.repository_info_is_outdated" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="skare3_tools.packages.repository_info_is_outdated">
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">repository_info_is_outdated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pkg_info</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#repository_info_is_outdated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.repository_info_is_outdated" title="Permalink to this definition">¶</a></dt>
 <dd><p>Cache update policy that returns True if the Github repository has been updated or pushed into.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -208,8 +208,8 @@ should be updated.</p></li>
 </dl>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
             <div class="clearer"></div>
@@ -252,7 +252,7 @@ should be updated.</p></li>
     <a href="#">Back to Top</a></p>
   <p>
     &copy; Copyright 2020, Javier Gonzalez.<br/>
-    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 3.1.2. &nbsp;
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 4.2.0. &nbsp;
   </p>
 </footer>
   </body>
