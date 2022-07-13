@@ -85,21 +85,25 @@ def promote(package, args, platforms=None):
 
     skare3_repo = git.Repo(args.skare3)
     skare3_repo.remotes.origin.fetch('--tags')
-    try:
-        skare3_repo.git.checkout(package['version'])
-    except Exception:
-        logging.error(f"skare3 has no '{package['version']}' tag")
-        return
-
-    with open(args.skare3 / 'pkg_defs' / package['name'] / 'meta.yaml') as fh:
-        meta = fh.read()
+    meta = None
+    if re.match('ska3-', package['name']):
+        try:
+            skare3_repo.git.checkout(package['version'])
+            with open(args.skare3 / 'pkg_defs' / package['name'] / 'meta.yaml') as fh:
+                meta = fh.read()
+        except git.exc.GitCommandError:
+            logging.error(f"skare3 has no '{package['version']}' tag")
+            return
 
     pkg_files = []
     package_names = []
     fail = False
     for platform in platforms:
-        data = conda_build.metadata.select_lines(meta, platforms[platform], {})
-        data = yaml.load(data, Loader=yaml.BaseLoader)
+        if meta is None:
+            data = {'requirements': {}}
+        else:
+            data = conda_build.metadata.select_lines(meta, platforms[platform], {})
+            data = yaml.load(data, Loader=yaml.BaseLoader)
 
         pkgs = _files_to_copy(package, platform, args.ska3_conda, args.to_channel, args.from_channels)
         # this might not be obvious...
