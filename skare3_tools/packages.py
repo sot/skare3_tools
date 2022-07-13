@@ -261,6 +261,14 @@ def _get_tag_target(tag):
         return tag['oid'], tag['committedDate']
 
 
+# I did not assemble these queries in my mind.
+# If you need to change one of these queries,
+# go to https://docs.github.com/en/graphql/overview/explorer
+# copy the query into the dialog, edit the template parameters
+# (you can remove the 'before: "{{ cursor }}"' part)
+# run it to see it works, then click where it says "explorer"
+# and that should bring up a tree view where you can click to edit the query.
+
 _PR_QUERY = """
 {
   repository(name: "{{ name }}", owner: "{{ owner }}") {
@@ -268,7 +276,7 @@ _PR_QUERY = """
     owner {
       login
     }
-    pullRequests(last: 100, baseRefName: "{{ branch }}", before: "{{ cursor }}") {
+    pullRequests(last: 100, before: "{{ cursor }}") {
       nodes {
         number
         title
@@ -285,6 +293,11 @@ _PR_QUERY = """
         }
         baseRefName
         headRefName
+        author {
+          ... on User {
+            name
+          }
+        }
         state
       }
       pageInfo {
@@ -369,7 +382,6 @@ def _get_repository_info_v4(owner_repo,
         cursor = pr_data['data']['repository']['pullRequests']['pageInfo']['startCursor']
         pr_data = api(jinja2.Template(_PR_QUERY).render(name=name,
                                                         owner=owner,
-                                                        branch=default_branch,
                                                         cursor=cursor))
         pull_requests += (pr_data['data']['repository']['pullRequests']['nodes'])
 
@@ -387,9 +399,13 @@ def _get_repository_info_v4(owner_repo,
     }]
 
     all_pull_requests = {pr['number']: pr for pr in pull_requests}
-    pull_requests = [pr for pr in pull_requests if pr['state'] not in ['CLOSED', 'MERGED']]
+    pull_requests = [
+        pr for pr in pull_requests
+        if pr['state'] not in ['CLOSED', 'MERGED'] and pr['baseRefName'] == default_branch
+    ]
     pull_requests = [{
         'number': pr['number'],
+        'author': pr['author']['name'],
         'url': pr['url'],
         'title': pr['title'],
         'n_commits': pr['commits']['totalCount'],
@@ -414,10 +430,15 @@ def _get_repository_info_v4(owner_repo,
             commit['message'])
         if match:
             merge = match.groupdict()
-            merge['author'] = commit['author']['user']['login']
             merge["pr_number"] = int(merge["pr_number"])
-            if use_pr_titles:
-                if merge["pr_number"] in all_pull_requests:
+            # It is possible that a commit says "Merge pull request #..." without an actual PR.
+            # One such case is commits before a fork, in which case one has to do more digging to
+            # get the PR author or title. We do not care and set the author as Unknown.
+            merge['author'] = 'Unknown'
+            if merge["pr_number"] in all_pull_requests:
+                merge['author'] = all_pull_requests[merge["pr_number"]]['author']['name']
+                if use_pr_titles:
+                    # some times PR titles are changed after merging. Use that instead of the commit
                     merge["title"] = all_pull_requests[merge["pr_number"]]['title']  # .strip()
             release_info[-1]['merges'].append(merge)
 
@@ -548,7 +569,29 @@ def get_conda_pkg_info(conda_package,
             raise Exception(out['message'])
         else:
             raise Exception(str(out))
+    for key in out:
+        for pkg in out[key]:
+            pkg['depends'] = _split_versions(pkg['depends'])
     return out
+
+
+def _split_versions(depends):
+    """
+    Convert a list of package dependencies into a dictionary of the form {name: version}.
+
+    Typically, "depends" comes from calling `conda search ska3-flight --info --json`.
+    This function expects each row to be of the form "name==version" or "name version".
+    If the version is not given, it is set to ''.
+    """
+    result = {}
+    for depend in depends:
+        v = depend.split('==') if '==' in depend else depend.split()
+        if len(v) > 2:
+            raise Exception(f'Version spec got split into too many parts: {depend}')
+        p_name = v[0].strip()
+        p_version = v[1].strip() if len(v) == 2 else ''
+        result[p_name] = p_version
+    return result
 
 
 def get_conda_pkg_dependencies(conda_package,
@@ -565,10 +608,7 @@ def get_conda_pkg_dependencies(conda_package,
     out = get_conda_pkg_info(conda_package, conda_channel)
     if not out:
         raise Exception('{conda_package} not found.'.format(conda_package=conda_package))
-    packages = out[conda_package][-1]['depends']
-    packages = dict([(p.split('==')[0].strip(), p.split('==')[1].strip())
-                     for p in packages])
-    return packages
+    return out[conda_package][-1]['depends']
 
 
 def _get_release_commit(repository, release_name):
@@ -825,10 +865,7 @@ def get_repositories_info(repositories=None, version='v4', update=False):
                 raise Exception(f'{pkg} package not found')
             conda_info = conda_info[pkg][-1]
             info[pkg] = conda_info['version']
-            def split(s):
-                return s.split('==') if '==' in s else s.split()
-            versions = dict([(split(p)[0].strip(), split(p)[1].strip())
-                             for p in conda_info['depends']])
+            versions = conda_info['depends']
             for owner_repo in repositories:
                 assert owner_repo in repo_package_map, 'Package {owner_repo} not in package map'.format(owner_repo=owner_repo)
                 conda_pkg = repo_package_map[owner_repo]

@@ -272,6 +272,11 @@ REPO_QUERY = """
         }
         baseRefName
         headRefName
+        author {
+          ... on User {
+            name
+          }
+        }
         state
       }
       pageInfo {
