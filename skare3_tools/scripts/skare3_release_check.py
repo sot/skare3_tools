@@ -71,8 +71,6 @@ def main():
     allowed_names = [version_info['final_version']]
     if version_info['label']:
         allowed_names += [f'{version_info["final_version"]}+{version_info["label"]}']
-    if not release["prerelease"]:
-        allowed_names += ['master']
 
     logging.info(f'Sanity check for release {tag_name}')
 
@@ -81,6 +79,8 @@ def main():
 
     tag = repository.tags(name=tag_name)
     release = repository.releases(tag_name=tag_name)
+    if not release["prerelease"]:
+        allowed_names += ['master']
 
     # some sanity checks
     fail = []
