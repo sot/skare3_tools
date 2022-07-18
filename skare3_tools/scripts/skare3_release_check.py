@@ -108,7 +108,7 @@ def main():
                 branch_name = release['target_commitish']
                 pulls = repository.pull_requests(
                     state='open' if release["prerelease"] else 'all',
-                    head=f'sot:{branch_name}'
+                    head=f'sot:{tag_name}'
                 )
                 pulls = [p for p in pulls if p['title'] == branch_name]
                 if branch_name not in allowed_names:
