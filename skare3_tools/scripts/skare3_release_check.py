@@ -139,7 +139,7 @@ def main():
             sys.exit(3)
 
     # at this point, branch_name must be set, and it is taken to be the target version
-    logging.info(f'Target version {branch_name}')
+    logging.info(f'Target version {tag_name}')
     # checking package versions
     # whenever a version equals `branch_name`, replace it by the full version.
     files = glob.glob(os.path.join(args.skare3_path, 'pkg_defs', 'ska3-*', 'meta.yaml'))
@@ -147,7 +147,7 @@ def main():
     for filename in files:
         with open(filename) as f:
             data = yaml.load(f, Loader=yaml.SafeLoader)
-            if str(branch_name) == str(data['package']['version']):
+            if str(tag_name) == str(data['package']['version']):
                 packages.append(data['package']['name'])
 
     if not packages:
