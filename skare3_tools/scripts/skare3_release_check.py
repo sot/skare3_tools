@@ -110,7 +110,7 @@ def main():
                     state='open' if release["prerelease"] else 'all',
                     head=f'sot:{tag_name}'
                 )
-                pulls = [p for p in pulls if p['title'] == branch_name]
+                pulls = [p for p in pulls if p['title'] == tag_name]
                 if branch_name not in allowed_names:
                     fail.append(f'Invalid branch name "{branch_name}" for release "{tag_name}". '
                                 f'Allowed branch names for this tag are {", ".join(allowed_names)}')
