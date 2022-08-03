@@ -108,14 +108,14 @@ def main():
                 branch_name = release['target_commitish']
                 pulls = repository.pull_requests(
                     state='open' if release["prerelease"] else 'all',
-                    head=f'sot:{tag_name}'
+                    head=f'sot:{tag_name}-branch'
                 )
                 pulls = [p for p in pulls if p['title'] == tag_name]
                 if branch_name not in allowed_names:
                     fail.append(f'Invalid branch name "{branch_name}" for release "{tag_name}". '
                                 f'Allowed branch names for this tag are {", ".join(allowed_names)}')
                 if not pulls:
-                    fail.append(f'There is no pull request from sot:{tag_name}')
+                    fail.append(f'There is no pull request from sot:{tag_name}-branch')
                 if version_info['rc'] is not None and not release["prerelease"]:
                     fail.append(f'Release {tag_name} is marked as a candidate, '
                                 f'but the release is not a prerelease')
