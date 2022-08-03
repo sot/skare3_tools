@@ -156,9 +156,10 @@ def main():
 
     packages = ' '.join(packages)
 
+    target_tag = branch_name.replace('-branch', '')
     print(f'prerelease: {release["prerelease"]}')
     print(f'packages: {packages}')
-    print(f'overwrite_flag: --skare3-overwrite-version {branch_name}:{tag_name}')
+    print(f'overwrite_flag: --skare3-overwrite-version {target_tag}:{tag_name}')
     # this kind of output defines variables 'prerelease' and 'packages' within the workflow.
     print(f'::set-output name=prerelease::{release["prerelease"]}')
     print(f'::set-output name=packages::{packages}')
