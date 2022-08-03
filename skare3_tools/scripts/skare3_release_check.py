@@ -68,7 +68,7 @@ def main():
         sys.exit(2)
     version_info = version_info.groupdict()
 
-    allowed_names = [version_info['final_version']]
+    allowed_names = [f"{version_info['final_version']}-branch"]
     if version_info['label']:
         allowed_names += [f'{version_info["final_version"]}+{version_info["label"]}']
 
