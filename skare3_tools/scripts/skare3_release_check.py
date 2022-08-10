@@ -147,7 +147,7 @@ def main():
     for filename in files:
         with open(filename) as f:
             data = yaml.load(f, Loader=yaml.SafeLoader)
-            if str(tag_name) == str(data['package']['version']):
+            if str(version_info["final_version"]) == str(data['package']['version']):
                 packages.append(data['package']['name'])
 
     if not packages:
