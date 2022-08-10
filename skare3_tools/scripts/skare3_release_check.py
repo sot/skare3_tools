@@ -108,9 +108,9 @@ def main():
                 branch_name = release['target_commitish']
                 pulls = repository.pull_requests(
                     state='open' if release["prerelease"] else 'all',
-                    head=f'sot:{tag_name}-branch'
+                    head=f'sot:{version_info["final_version"]}-branch'
                 )
-                pulls = [p for p in pulls if p['title'] == tag_name]
+                pulls = [p for p in pulls if p['title'] == version_info["final_version"]]
                 if branch_name not in allowed_names:
                     fail.append(f'Invalid branch name "{branch_name}" for release "{tag_name}". '
                                 f'Allowed branch names for this tag are {", ".join(allowed_names)}')
