@@ -144,11 +144,22 @@ def main():
     # whenever a version equals `branch_name`, replace it by the full version.
     files = glob.glob(os.path.join(args.skare3_path, 'pkg_defs', 'ska3-*', 'meta.yaml'))
     packages = []
+    possible_error = []
     for filename in files:
         with open(filename) as f:
             data = yaml.load(f, Loader=yaml.SafeLoader)
             if str(version_info["final_version"]) == str(data['package']['version']):
                 packages.append(data['package']['name'])
+            if str(float(version_info["final_version"])) == str(data['package']['version']):
+                possible_error.append(data['package']['name'])
+
+    if possible_error:
+        float_version = float(version_info["final_version"])
+        logging.warning(f'The following package(s) have a version matching {float_version}:')
+        for pkg in possible_error:
+            logging.warning(f' - {pkg}')
+        logging.warning(f'This can happen if YAML interprets version {version_info["final_version"]} as a float.')
+        logging.warning('They will not be built.')
 
     if not packages:
         logging.warning('No packages to build. Something must be wrong.')
