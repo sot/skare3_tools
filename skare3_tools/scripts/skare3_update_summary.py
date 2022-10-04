@@ -204,7 +204,7 @@ PKG_SUMMARY_MD = """
 {%- if 'versions' in package %} ({% for v in package.versions -%}
 {{ v }}{{ " -> " if not loop.last }}
 {%- endfor %}){% endif %}
-{%-  for mrg in package.mrgs %}
+{%-  for mrg in package.merges %}
   - [PR {{ mrg.PR }}](https://github.com/{{ mrg.url }}) ({{ mrg.author }}): {{ mrg.description }}
 {%- endfor %}
 {% endfor %}
