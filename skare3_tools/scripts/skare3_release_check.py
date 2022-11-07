@@ -115,7 +115,10 @@ def main():
                     fail.append(f'Invalid branch name "{branch_name}" for release "{tag_name}". '
                                 f'Allowed branch names for this tag are {", ".join(allowed_names)}')
                 if not pulls:
-                    fail.append(f'There is no pull request from sot:{tag_name}-branch')
+                    fail.append(
+                        f'There is no pull request named {version_info["final_version"]} '
+                        f'from sot:{version_info["final_version"]}-branch'
+                    )
                 if version_info['rc'] is not None and not release["prerelease"]:
                     fail.append(f'Release {tag_name} is marked as a candidate, '
                                 f'but the release is not a prerelease')
