@@ -10,9 +10,8 @@ given token::
 
 .. _`authentication token`: https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token
 """
-from .github import Repository, Organization
-
-from . import graphql, github
+from . import github, graphql
+from .github import Organization, Repository
 
 GITHUB_API_V3 = github.GITHUB_API
 GITHUB_API_V4 = graphql.GITHUB_API

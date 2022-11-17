@@ -1,7 +1,7 @@
-from pkg_resources import get_distribution, DistributionNotFound
-from setuptools_scm import get_version
 import warnings
 
+from pkg_resources import DistributionNotFound, get_distribution
+from setuptools_scm import get_version
 
 try:
     try:
@@ -11,7 +11,7 @@ try:
         assert __file__.lower().startswith(_dist_info.location.lower())
     except (DistributionNotFound, AssertionError):
         # this might be a local git repo
-        __version__ = get_version(root='..', relative_to=__file__)
+        __version__ = get_version(root="..", relative_to=__file__)
 except Exception:
-    warnings.warn('Failed to find skare3_tools package version, setting to 0.0.0')
-    __version__ = '0.0.0'
+    warnings.warn("Failed to find skare3_tools package version, setting to 0.0.0")
+    __version__ = "0.0.0"

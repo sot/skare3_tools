@@ -69,18 +69,21 @@ THere is a (possibly incomplete) list of queries (with the template parameters i
 
 """
 
-import os
 import logging
+import os
+
 import requests
+
 
 class GithubException(Exception):
     pass
+
 
 class AuthException(Exception):
     pass
 
 
-_logger = logging.getLogger('github')
+_logger = logging.getLogger("github")
 
 
 REPO_ISSUES_QUERY = """
@@ -351,10 +354,11 @@ class GithubAPI:
     """
     Main class that encapsulates Github's GraphQL API.
     """
+
     def __init__(self, token=None):
         self.initialized = False
         self.headers = None
-        self.api_url = 'https://api.github.com/graphql'
+        self.api_url = "https://api.github.com/graphql"
         try:
             self.init(token)
         except AuthException:
@@ -384,35 +388,37 @@ class GithubAPI:
 
         if token is not None:
             token = os.path.expandvars(token)
-        elif 'GITHUB_API_TOKEN' in os.environ:
-            token = os.path.expandvars(os.environ['GITHUB_API_TOKEN'])
-        elif 'GITHUB_TOKEN' in os.environ:
-            token = os.path.expandvars(os.environ['GITHUB_TOKEN'])
+        elif "GITHUB_API_TOKEN" in os.environ:
+            token = os.path.expandvars(os.environ["GITHUB_API_TOKEN"])
+        elif "GITHUB_TOKEN" in os.environ:
+            token = os.path.expandvars(os.environ["GITHUB_TOKEN"])
         else:
-            raise AuthException('Bad credentials. '
-                                'Github token needs to be given as argument '
-                                'or set in either GITHUB_TOKEN or GITHUB_API_TOKEN '
-                                'environment variables')
+            raise AuthException(
+                "Bad credentials. "
+                "Github token needs to be given as argument "
+                "or set in either GITHUB_TOKEN or GITHUB_API_TOKEN "
+                "environment variables"
+            )
         try:
             self.initialized = True
             self.headers = {"Authorization": f"token {token}"}
-            response = self('{viewer {login}}')
+            response = self("{viewer {login}}")
         except Exception:
             self.headers = None
             self.initialized = False
             raise
 
         try:
-            user = response['data']['viewer']['login']
-            _logger.debug(f'Github interface initialized (user={user})')
+            user = response["data"]["viewer"]["login"]
+            _logger.debug(f"Github interface initialized (user={user})")
         except Exception:
-            _logger.info(f'Github interface initialized ({response})')
+            _logger.info(f"Github interface initialized ({response})")
         self.headers = {"Authorization": f"token {token}"}
 
     @staticmethod
     def check(response):
         if not response.ok:
-            raise GithubException(f'Error: {response.reason} ({response.status_code})')
+            raise GithubException(f"Error: {response.reason} ({response.status_code})")
 
     def __call__(self, query, headers=(), **kwargs):
         """
@@ -425,15 +431,16 @@ class GithubAPI:
         :return:
         """
         if not self.initialized:
-            raise Exception('GithubAPI authentication credentials are not initialized')
+            raise Exception("GithubAPI authentication credentials are not initialized")
 
         _headers = self.headers.copy()
         _headers.update(headers)
-        response = requests.request('post', self.api_url, headers=_headers, json={'query': query},
-                                    **kwargs)
+        response = requests.request(
+            "post", self.api_url, headers=_headers, json={"query": query}, **kwargs
+        )
 
         if not response.ok:
-            raise GithubException(f'Error: {response.reason} ({response.status_code})')
+            raise GithubException(f"Error: {response.reason} ({response.status_code})")
 
         return response.json()
 
