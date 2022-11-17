@@ -72,6 +72,8 @@ while this one tries to build master at tag ska3-flight:
 To fix this, I can require that packages are specified as a non-positional argument, but that breaks
 all current workflows.
 """
+
+
 def get_parser():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('package',
@@ -91,34 +93,6 @@ def get_parser():
 
 def main():
     args, unknown_args = get_parser().parse_known_args()
-
-    if args.ska3_overwrite_version:
-        """
-        the value of  args.ska3_overwrite_version can be of the forms:
-        - `<initial-version>:<final-version>`.
-        - `<final-version>`.
-
-        In the first case, there is nothing to do. In the second case, we assume that the final
-        version is the same as the final version but removing the release candidate part
-        (i.e.: something that looks like "rcN" or "aN" or "bN").
-        """
-        if ':' not in args.ska3_overwrite_version:
-            rc = re.match(
-                r"""(?P<version>
-                    (?P<release>\S+)     # release segment (usually N!N.N.N but not enforced here)
-                    (a|b|rc)[0-9]+       # pre-release segment (rcN, aN or bN, required)
-                    (\+(?P<label>\S+))?  # label fragment (an optional string)
-                )$""",
-                args.ska3_overwrite_version,
-                re.VERBOSE
-            )
-            if not rc:
-                raise Exception(f'wrong format for ska3_overwrite_version: '
-                                f'{args.ska3_overwrite_version}')
-            version_info = rc.groupdict()
-            version_info["label"] = f'+{version_info["label"]}' if version_info["label"] else ''
-            args.ska3_overwrite_version = \
-                f'{version_info["release"]}{version_info["label"]}:{version_info["version"]}'
 
     print('skare3 build args:', args)
     print('skare3 build unknown args:', unknown_args)
@@ -144,8 +118,8 @@ def main():
         condarc_in = condarc.with_suffix('.in')
         condarc.replace(condarc_in)
         with open(condarc_in) as condarc_in, open(condarc, 'w') as condarc:
-            for l in condarc_in.readlines():
-                condarc.write(l.replace('${CONDA_PASSWORD}', os.environ['CONDA_PASSWORD']))
+            for line in condarc_in.readlines():
+                condarc.write(line.replace('${CONDA_PASSWORD}', os.environ['CONDA_PASSWORD']))
     else:
         print('Conda password needs to be given as environmental variable CONDA_PASSWORD')
         sys.exit(100)
@@ -164,16 +138,11 @@ def main():
                               cwd=skare3_path.parent)
         subprocess.check_call(['git', 'checkout', args.skare3_branch], cwd=skare3_path)
 
-        # overwrite version
-        if args.ska3_overwrite_version:
-            skare3_old_version, skare3_new_version = args.ska3_overwrite_version.split(':')
-            print(f' - overwriting skare3 version {skare3_old_version} -> {skare3_new_version}')
-            overwrite_skare3_version(skare3_old_version,
-                                     skare3_new_version,
-                                     skare3_path / 'pkg_defs' / package)
-
         # do the actual building
         cmd = ['python', 'ska_builder.py', '--github-https', '--force'] + unknown_args + [package]
+        # overwrite version
+        if args.ska3_overwrite_version:
+            cmd += ['--ska3-overwrite-version', args.ska3_overwrite_version]
         print(' '.join(cmd))
         subprocess.check_call(cmd, cwd=skare3_path)
         print('SKARE3 conda process finished')
@@ -201,10 +170,12 @@ def main():
             f.unlink()
 
         # report result
-        files = (list(build_dir.glob('linux-64/*tar.bz2*')) +
-                 list(build_dir.glob('osx-64/*tar.bz2*')) +
-                 list(build_dir.glob('noarch/*tar.bz2*')) +
-                 list(build_dir.glob('win-64/*tar.bz2*')))
+        files = (
+            list(build_dir.glob('linux-64/*tar.bz2*'))
+            + list(build_dir.glob('osx-64/*tar.bz2*'))
+            + list(build_dir.glob('noarch/*tar.bz2*'))
+            + list(build_dir.glob('win-64/*tar.bz2*'))
+        )
         files = ' '.join([str(f) for f in files])
 
         print(f'Built files: {files}')

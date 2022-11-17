@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-from sys import argv
 from os import environ
+from sys import argv
 
+if "username" in argv[1].lower():
+    print(environ["GIT_USERNAME"])
 
-if 'username' in argv[1].lower():
-    print(environ['GIT_USERNAME'])
-
-if 'password' in argv[1].lower():
-    print(environ['GIT_PASSWORD'])
+if "password" in argv[1].lower():
+    print(environ["GIT_PASSWORD"])

@@ -8,11 +8,10 @@ given token::
     >>> from skare3_tools import github
     >>> github.init(token='c7hvg6pqi3fhqwv0wvlgp4mk9agwbqk1gxc331iz')  # this is optional
 
-.. _`authentication token`: https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token
+.. _`authentication token`: https://docs.github.com/en/authentication
 """
-from .github import Repository, Organization
-
-from . import graphql, github
+from . import github, graphql
+from .github import Organization, Repository  # noqa
 
 GITHUB_API_V3 = github.GITHUB_API
 GITHUB_API_V4 = graphql.GITHUB_API

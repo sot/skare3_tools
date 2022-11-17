@@ -26,15 +26,16 @@ A valid YAML file looks like this:
 """
 
 
+import argparse
+import getpass
 import json
-import yaml
-import time
+import logging
 import os
 import sys
-import getpass
-import argparse
-import logging
+import time
 from urllib.parse import urlparse
+
+import yaml
 
 _driver_ = None
 
@@ -44,7 +45,8 @@ def go(url, allow_timeout=True, ok=None, verbose=False, max_tries=5):
     get one URL. Try max_tries before throwing.
     """
     from selenium.common.exceptions import TimeoutException
-    for i in range(max_tries+1):
+
+    for i in range(max_tries + 1):
         if i > max_tries:
             raise Exception()
         try:
@@ -54,21 +56,22 @@ def go(url, allow_timeout=True, ok=None, verbose=False, max_tries=5):
         except TimeoutException:
             if ok is not None and not ok():
                 if verbose:
-                    print(url, 'time out fail')
+                    print(url, "time out fail")
                 continue
             if allow_timeout:
                 if verbose:
-                    print(url, 'time out')
+                    print(url, "time out")
                 break
         except Exception as e:
             if verbose:
-                print(url, 'timeout', str(e))
+                print(url, "timeout", str(e))
 
 
 def init():
     from selenium import webdriver
+
     global _driver_
-    _driver_ = webdriver.Chrome('chromedriver')
+    _driver_ = webdriver.Chrome("chromedriver")
     _driver_.implicitly_wait(20)
     _driver_.set_page_load_timeout(20)
 
@@ -79,41 +82,45 @@ def login(username, password=None):
         init()
 
     if password is None:
-        if 'GITHUB_PASSWORD' in os.environ:
-            password = os.environ['GITHUB_PASSWORD']
+        if "GITHUB_PASSWORD" in os.environ:
+            password = os.environ["GITHUB_PASSWORD"]
         else:
             try:
                 import keyring
+
                 password = keyring.get_password("skare3-github", username)
             except ModuleNotFoundError:
                 pass
             except keyring.errors.KeyringLocked:
                 pass
         if password is None:
-            password = getpass.getpass(f'Password for {username}:')
+            password = getpass.getpass(f"Password for {username}:")
 
-    go('https://github.com/login')
-    _driver_.find_element_by_id('login_field').send_keys(username)
-    _driver_.find_element_by_id('password').send_keys(password)
-    _driver_.find_element_by_name('commit').click()
+    go("https://github.com/login")
+    _driver_.find_element_by_id("login_field").send_keys(username)
+    _driver_.find_element_by_id("password").send_keys(password)
+    _driver_.find_element_by_name("commit").click()
 
     # this can be improved if I ever use it heavily.
-    if urlparse(_driver_.current_url).path == '/sessions/two-factor':
+    if urlparse(_driver_.current_url).path == "/sessions/two-factor":
         wait = 30
-        logging.warning(f'two-factor authentication. Waiting {wait} seconds before proceeding')
+        logging.warning(
+            f"two-factor authentication. Waiting {wait} seconds before proceeding"
+        )
         import time
+
         time.sleep(wait)
 
-    meta = _driver_.find_elements_by_tag_name('meta')
-    meta = [m for m in meta if m.get_attribute('name') == 'user-login']
-    username = meta[0].get_attribute('content')
+    meta = _driver_.find_elements_by_tag_name("meta")
+    meta = [m for m in meta if m.get_attribute("name") == "user-login"]
+    username = meta[0].get_attribute("content")
     if not username:
-        raise Exception('Login failed')
-    logging.info(f'logged in as {username}')
+        raise Exception("Login failed")
+    logging.info(f"logged in as {username}")
 
 
 def _get_button(text):
-    buttons = _driver_.find_elements_by_tag_name('button')
+    buttons = _driver_.find_elements_by_tag_name("button")
     button = [button for button in buttons if button.text == text]
     if not button:
         raise Exception(f'Unexpected format: No "{text}" button')
@@ -123,43 +130,50 @@ def _get_button(text):
 
 
 def _get_link(text=None, **attributes):
-    links = _driver_.find_elements_by_tag_name('a')
+    links = _driver_.find_elements_by_tag_name("a")
     if text is not None:
-        links = [l for l in links if l.text == text]
+        links = [line for line in links if line.text == text]
     for att in attributes:
-        links = [l for l in links if l.get_attribute(att) == attributes[att]]
-    msg = f'link with attributes={attributes}'
+        links = [line for line in links if line.get_attribute(att) == attributes[att]]
+    msg = f"link with attributes={attributes}"
     if text is not None:
-        msg += f' and text={text}'
+        msg += f" and text={text}"
     if len(links) == 0:
-        raise Exception(f'No {msg}')
+        raise Exception(f"No {msg}")
     if len(links) > 1:
-        logging.warning(f'More than one {msg}')
+        logging.warning(f"More than one {msg}")
     return links[0]
 
 
 def add_secrets(repository, secrets):
-    go(f'https://github.com/{repository}/settings/secrets')
+    go(f"https://github.com/{repository}/settings/secrets")
 
     for secret in secrets:
-        _get_link(text='New secret', role='button').click()
+        _get_link(text="New secret", role="button").click()
 
-        _driver_.find_element_by_id('secret_name').send_keys(secret)
+        _driver_.find_element_by_id("secret_name").send_keys(secret)
         value = secrets[secret]
         if type(value) == dict:
             value = json.dumps(value)
-        _driver_.find_element_by_id('secret_value').send_keys(value)
+        _driver_.find_element_by_id("secret_value").send_keys(value)
 
-        _get_button('Add secret').click()
+        _get_button("Add secret").click()
 
 
 def parser():
     parse = argparse.ArgumentParser(description=__doc__)
-    parse.add_argument('repositories', nargs='+')
-    parse.add_argument('--secrets', default='secrets.json', help='JSON file with all secrets')
-    parse.add_argument('--user', required=True, help='Github user name')
-    parse.add_argument('--no-quit', dest='quit', default=True, action='store_false',
-                       help='Do not close chrome browser at the end')
+    parse.add_argument("repositories", nargs="+")
+    parse.add_argument(
+        "--secrets", default="secrets.json", help="JSON file with all secrets"
+    )
+    parse.add_argument("--user", required=True, help="Github user name")
+    parse.add_argument(
+        "--no-quit",
+        dest="quit",
+        default=True,
+        action="store_false",
+        help="Do not close chrome browser at the end",
+    )
     return parse
 
 
@@ -169,20 +183,24 @@ def main():
     args = the_parser.parse_args()
 
     try:
-        import selenium
+        import selenium  # noqa
     except ModuleNotFoundError:
-        logging.error(f'The script requires the selenium module. Run `{sys.argv[0]} -h` for help.')
+        logging.error(
+            f"The script requires the selenium module. Run `{sys.argv[0]} -h` for help."
+        )
         the_parser.exit(2)
 
     if not os.path.exists(args.secrets):
-        logging.error(f'The secrets file {args.secrets} does not exist. '
-                      f'Run `{sys.argv[0]} -h` for help.')
+        logging.error(
+            f"The secrets file {args.secrets} does not exist. "
+            f"Run `{sys.argv[0]} -h` for help."
+        )
         the_parser.exit(3)
 
     with open(args.secrets) as f:
-        if args.secrets[-4:] in ['.yaml', '.yml']:
+        if args.secrets[-4:] in [".yaml", ".yml"]:
             secrets = yaml.load(f, Loader=yaml.FullLoader)
-        elif args.secrets[-5:] == '.json':
+        elif args.secrets[-5:] == ".json":
             secrets = json.load(f)
         else:
             logging.error(f"don't know how to handle file '{args.secrets}'")
@@ -195,14 +213,14 @@ def main():
             try:
                 add_secrets(repository, secrets)
             except Exception as e:
-                print(f' - Failed setting {repository} secrets: {e}')
+                print(f" - Failed setting {repository} secrets: {e}")
     except Exception as e:
-        print(f'Failed setting secrets: {e}')
+        print(f"Failed setting secrets: {e}")
     finally:
         if _driver_ is not None and args.quit:
             _driver_.quit()
             _driver_ = None
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -19,26 +19,39 @@ This script makes the following checks:
 """
 
 import argparse
-import sys
-import os
-import re
-import yaml
 import glob
 import logging
+import os
+import re
+import sys
+
 import git
+import yaml
+
 from skare3_tools import github
 
-logging.basicConfig(level='INFO')
+logging.basicConfig(level="INFO")
 
 
 def parser():
     parse = argparse.ArgumentParser(description=__doc__)
-    parse.add_argument('--version', required=True, help='Target version to build')
-    parse.add_argument('--skare3-path', default='.', help='local copy of the skare3 repo')
-    parse.add_argument('--repository', default='sot/skare3', help='Github repository name')
-    parse.add_argument('--token', '-t', help='Github token, or name of file that contains token')
-    parse.add_argument('--no-check', dest='ci_sanity_check', action='store_false',
-                       default=True, help='Checks for CI')
+    parse.add_argument("--version", required=True, help="Target version to build")
+    parse.add_argument(
+        "--skare3-path", default=".", help="local copy of the skare3 repo"
+    )
+    parse.add_argument(
+        "--repository", default="sot/skare3", help="Github repository name"
+    )
+    parse.add_argument(
+        "--token", "-t", help="Github token, or name of file that contains token"
+    )
+    parse.add_argument(
+        "--no-check",
+        dest="ci_sanity_check",
+        action="store_false",
+        default=True,
+        help="Checks for CI",
+    )
     return parse
 
 
@@ -51,28 +64,38 @@ def main():
     try:
         git_repo = git.Repo(args.skare3_path)
     except git.NoSuchPathError:
-        logging.error(f'--skare3-path points to non-existent directory "{args.skare3_path}".')
+        logging.error(
+            f'--skare3-path points to non-existent directory "{args.skare3_path}".'
+        )
     except git.InvalidGitRepositoryError:
-        logging.error(f'--skare3-path points to an invalid git repo "{args.skare3_path}".')
+        logging.error(
+            f'--skare3-path points to an invalid git repo "{args.skare3_path}".'
+        )
     if git_repo is None:
         sys.exit(1)
 
-    tag_name = args.version.strip('/').split('/')[-1]  # versions can be git refs like refs/tags/V2
+    tag_name = args.version.strip("/").split("/")[
+        -1
+    ]  # versions can be git refs like refs/tags/V2
     # regular expression (mostly) matching PEP-0440 version format
-    fmt = '(?P<final_version>((?P<epoch>[0-9]+)!)?(?P<release>[0-9]+(.[0-9]+(.[0-9]+)?)?))' \
-          '((a|b|rc)(?P<rc>[0-9]+))?(\+(?P<label>[a-zA-Z]+))?$'
+    fmt = (
+        r"(?P<final_version>((?P<epoch>[0-9]+)!)?(?P<release>[0-9]+(.[0-9]+(.[0-9]+)?)?))"
+        r"((a|b|rc)(?P<rc>[0-9]+))?(\+(?P<label>[a-zA-Z]+))?$"
+    )
     version_info = re.match(fmt, tag_name)
     if not version_info:
-        logging.warning(f'Tag name must conform to PEP-440 format'
-                        f' (https://www.python.org/dev/peps/pep-0440)')
+        logging.warning(
+            f"Tag name must conform to PEP-440 format"
+            f" (https://www.python.org/dev/peps/pep-0440)"
+        )
         sys.exit(2)
     version_info = version_info.groupdict()
 
     allowed_names = [f"{version_info['final_version']}-branch"]
-    if version_info['label']:
+    if version_info["label"]:
         allowed_names += [f'{version_info["final_version"]}+{version_info["label"]}']
 
-    logging.info(f'Sanity check for release {tag_name}')
+    logging.info(f"Sanity check for release {tag_name}")
 
     github.init(token=args.token)
     repository = github.Repository(args.repository)
@@ -80,7 +103,7 @@ def main():
     tag = repository.tags(name=tag_name)
     release = repository.releases(tag_name=tag_name)
     if not release["prerelease"]:
-        allowed_names += ['master']
+        allowed_names += ["master"]
 
     # some sanity checks
     fail = []
@@ -99,85 +122,106 @@ def main():
           If not, the local copy of the skare3 repo must be in the tag branch.
         """
         try:
-            if 'response' not in release or not release['response']['ok']:
-                fail.append(f'Release {tag_name} does not exist')
-            if 'response' not in tag or not tag['response']['ok']:
-                fail.append(f'Tag {tag_name} does not exist')
-            branch_name = ''
+            if "response" not in release or not release["response"]["ok"]:
+                fail.append(f"Release {tag_name} does not exist")
+            if "response" not in tag or not tag["response"]["ok"]:
+                fail.append(f"Tag {tag_name} does not exist")
+            branch_name = ""
             if not fail:
-                branch_name = release['target_commitish']
+                branch_name = release["target_commitish"]
                 pulls = repository.pull_requests(
-                    state='open' if release["prerelease"] else 'all',
-                    head=f'sot:{version_info["final_version"]}-branch'
+                    state="open" if release["prerelease"] else "all",
+                    head=f'sot:{version_info["final_version"]}-branch',
                 )
-                pulls = [p for p in pulls if p['title'] == version_info["final_version"]]
+                pulls = [
+                    p for p in pulls if p["title"] == version_info["final_version"]
+                ]
                 if branch_name not in allowed_names:
-                    fail.append(f'Invalid branch name "{branch_name}" for release "{tag_name}". '
-                                f'Allowed branch names for this tag are {", ".join(allowed_names)}')
+                    fail.append(
+                        f'Invalid branch name "{branch_name}" for release "{tag_name}". '
+                        f'Allowed branch names for this tag are {", ".join(allowed_names)}'
+                    )
                 if not pulls:
-                    fail.append(f'There is no pull request from sot:{tag_name}-branch')
-                if version_info['rc'] is not None and not release["prerelease"]:
-                    fail.append(f'Release {tag_name} is marked as a candidate, '
-                                f'but the release is not a prerelease')
-                if version_info['label'] is not None and not release["prerelease"]:
-                    fail.append(f'Release {tag_name} has label {version_info["label"]}, '
-                                f'but the release is not a prerelease')
+                    fail.append(f"There is no pull request from sot:{tag_name}-branch")
+                if version_info["rc"] is not None and not release["prerelease"]:
+                    fail.append(
+                        f"Release {tag_name} is marked as a candidate, "
+                        f"but the release is not a prerelease"
+                    )
+                if version_info["label"] is not None and not release["prerelease"]:
+                    fail.append(
+                        f'Release {tag_name} has label {version_info["label"]}, '
+                        f"but the release is not a prerelease"
+                    )
             # when workflow triggered by release, GITHUB_SHA must have the release commit sha
-            if 'GITHUB_SHA' in os.environ:
-                if os.environ['GITHUB_SHA'] != tag['object']['sha']:
-                    fail.append(f"Tag {tag_name} sha differs from sha in GITHUB_SHA: "
-                                f"{tag['object']['sha']} != {os.environ['GITHUB_SHA']}")
+            if "GITHUB_SHA" in os.environ:
+                if os.environ["GITHUB_SHA"] != tag["object"]["sha"]:
+                    fail.append(
+                        f"Tag {tag_name} sha differs from sha in GITHUB_SHA: "
+                        f"{tag['object']['sha']} != {os.environ['GITHUB_SHA']}"
+                    )
             elif git_repo.active_branch.name != branch_name:
-                fail.append(f'Current branch is different from release branch '
-                            f'("{git_repo.active_branch.name}" != "{branch_name}")')
+                fail.append(
+                    f"Current branch is different from release branch "
+                    f'("{git_repo.active_branch.name}" != "{branch_name}")'
+                )
         except Exception as e:
             exc_type = sys.exc_info()[0].__name__
-            fail.append(f'Unexpected error ({exc_type}): {e}')
+            fail.append(f"Unexpected error ({exc_type}): {e}")
         for f in fail:
             logging.warning(f)
         if fail:
             sys.exit(3)
 
     # at this point, branch_name must be set, and it is taken to be the target version
-    logging.info(f'Target version {tag_name}')
+    logging.info(f"Target version {tag_name}")
     # checking package versions
     # whenever a version equals `branch_name`, replace it by the full version.
-    files = glob.glob(os.path.join(args.skare3_path, 'pkg_defs', 'ska3-*', 'meta.yaml'))
+    files = glob.glob(os.path.join(args.skare3_path, "pkg_defs", "ska3-*", "meta.yaml"))
     packages = []
     possible_error = []
     for filename in files:
         with open(filename) as f:
             data = yaml.load(f, Loader=yaml.SafeLoader)
-            if str(version_info["final_version"]) == str(data['package']['version']):
-                packages.append(data['package']['name'])
-            if str(float(version_info["final_version"])) == str(data['package']['version']):
-                possible_error.append(data['package']['name'])
+            if str(version_info["final_version"]) == str(data["package"]["version"]):
+                packages.append(data["package"]["name"])
+            if str(float(version_info["final_version"])) == str(
+                data["package"]["version"]
+            ):
+                possible_error.append(data["package"]["name"])
 
     if possible_error:
         float_version = float(version_info["final_version"])
-        logging.warning(f'The following package(s) have a version matching {float_version}:')
+        logging.warning(
+            f"The following package(s) have a version matching {float_version}:"
+        )
         for pkg in possible_error:
-            logging.warning(f' - {pkg}')
-        logging.warning(f'This can happen if YAML interprets version {version_info["final_version"]} as a float.')
-        logging.warning('They will not be built.')
+            logging.warning(f" - {pkg}")
+        logging.warning(
+            "This can happen if YAML interprets version"
+            f' {version_info["final_version"]} as a float.'
+        )
+        logging.warning("They will not be built.")
 
     if not packages:
-        logging.warning('No packages to build. Something must be wrong.')
+        logging.warning("No packages to build. Something must be wrong.")
         sys.exit(4)
 
-    packages = ' '.join(packages)
+    packages = " ".join(packages)
 
     print(f'prerelease: {release["prerelease"]}')
-    print(f'packages: {packages}')
-    print(f'overwrite_flag: --skare3-overwrite-version {version_info["final_version"]}:{tag_name}')
+    print(f"packages: {packages}")
+    print(
+        f'overwrite_flag: --skare3-overwrite-version {version_info["final_version"]}:{tag_name}'
+    )
     # this kind of output defines variables 'prerelease' and 'packages' within the workflow.
     print(f'::set-output name=prerelease::{release["prerelease"]}')
-    print(f'::set-output name=packages::{packages}')
+    print(f"::set-output name=packages::{packages}")
     print(
-        '::set-output name=overwrite_flag::'
+        "::set-output name=overwrite_flag::"
         f'--skare3-overwrite-version {version_info["final_version"]}:{tag_name}'
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
