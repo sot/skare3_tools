@@ -72,6 +72,8 @@ while this one tries to build master at tag ska3-flight:
 To fix this, I can require that packages are specified as a non-positional argument, but that breaks
 all current workflows.
 """
+
+
 def get_parser():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('package',
@@ -116,8 +118,8 @@ def main():
         condarc_in = condarc.with_suffix('.in')
         condarc.replace(condarc_in)
         with open(condarc_in) as condarc_in, open(condarc, 'w') as condarc:
-            for l in condarc_in.readlines():
-                condarc.write(l.replace('${CONDA_PASSWORD}', os.environ['CONDA_PASSWORD']))
+            for line in condarc_in.readlines():
+                condarc.write(line.replace('${CONDA_PASSWORD}', os.environ['CONDA_PASSWORD']))
     else:
         print('Conda password needs to be given as environmental variable CONDA_PASSWORD')
         sys.exit(100)
@@ -168,10 +170,12 @@ def main():
             f.unlink()
 
         # report result
-        files = (list(build_dir.glob('linux-64/*tar.bz2*')) +
-                 list(build_dir.glob('osx-64/*tar.bz2*')) +
-                 list(build_dir.glob('noarch/*tar.bz2*')) +
-                 list(build_dir.glob('win-64/*tar.bz2*')))
+        files = (
+            list(build_dir.glob('linux-64/*tar.bz2*'))
+            + list(build_dir.glob('osx-64/*tar.bz2*'))
+            + list(build_dir.glob('noarch/*tar.bz2*'))
+            + list(build_dir.glob('win-64/*tar.bz2*'))
+        )
         files = ' '.join([str(f) for f in files])
 
         print(f'Built files: {files}')

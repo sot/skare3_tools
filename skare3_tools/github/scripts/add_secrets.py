@@ -132,9 +132,9 @@ def _get_button(text):
 def _get_link(text=None, **attributes):
     links = _driver_.find_elements_by_tag_name("a")
     if text is not None:
-        links = [l for l in links if l.text == text]
+        links = [line for line in links if line.text == text]
     for att in attributes:
-        links = [l for l in links if l.get_attribute(att) == attributes[att]]
+        links = [line for line in links if line.get_attribute(att) == attributes[att]]
     msg = f"link with attributes={attributes}"
     if text is not None:
         msg += f" and text={text}"
@@ -183,7 +183,7 @@ def main():
     args = the_parser.parse_args()
 
     try:
-        import selenium
+        import selenium  # noqa
     except ModuleNotFoundError:
         logging.error(
             f"The script requires the selenium module. Run `{sys.argv[0]} -h` for help."

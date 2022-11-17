@@ -79,8 +79,8 @@ def main():
     ]  # versions can be git refs like refs/tags/V2
     # regular expression (mostly) matching PEP-0440 version format
     fmt = (
-        "(?P<final_version>((?P<epoch>[0-9]+)!)?(?P<release>[0-9]+(.[0-9]+(.[0-9]+)?)?))"
-        "((a|b|rc)(?P<rc>[0-9]+))?(\+(?P<label>[a-zA-Z]+))?$"
+        r"(?P<final_version>((?P<epoch>[0-9]+)!)?(?P<release>[0-9]+(.[0-9]+(.[0-9]+)?)?))"
+        r"((a|b|rc)(?P<rc>[0-9]+))?(\+(?P<label>[a-zA-Z]+))?$"
     )
     version_info = re.match(fmt, tag_name)
     if not version_info:
@@ -198,7 +198,8 @@ def main():
         for pkg in possible_error:
             logging.warning(f" - {pkg}")
         logging.warning(
-            f'This can happen if YAML interprets version {version_info["final_version"]} as a float.'
+            "This can happen if YAML interprets version"
+            f' {version_info["final_version"]} as a float.'
         )
         logging.warning("They will not be built.")
 

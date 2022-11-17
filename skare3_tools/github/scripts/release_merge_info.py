@@ -64,7 +64,7 @@ def main():
     for commit in commits:
         msg = commit["commit"]["message"]
         match = re.match(
-            "Merge pull request (?P<pr>.+) from (?P<branch>\S+)\n\n(?P<description>.+)",
+            r"Merge pull request (?P<pr>.+) from (?P<branch>\S+)\n\n(?P<description>.+)",
             msg,
         )
         if match:

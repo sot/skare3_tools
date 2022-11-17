@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""
+r"""
 A module to keep track of all package information (repository, conda package info, etc).
 
 Package List
@@ -93,7 +93,7 @@ class NetworkException(Exception):
 
 
 def json_cache(name, directory="", ignore=None, expires=None, update_policy=None):
-    """
+    r"""
     Decorator to cache function results in json format.
 
     This decorator adds an 'update' argument to decorated functions. update is False by default,
@@ -231,9 +231,9 @@ def _conda_package_list(update=True):
         if "about" in info and "home" in info["about"]:
             home = info["about"]["home"].strip()
             matches = [
-                re.match("git@github.com:(?P<org>[^/]+)/(?P<repo>\S+)\.git$", home),
-                re.match("git@github.com:(?P<org>[^/]+)/(?P<repo>\S+)$", home),
-                re.match("https?://github.com/(?P<org>[^/]+)/(?P<repo>[^/]+)/?", home),
+                re.match(r"git@github.com:(?P<org>[^/]+)/(?P<repo>\S+)\.git$", home),
+                re.match(r"git@github.com:(?P<org>[^/]+)/(?P<repo>\S+)$", home),
+                re.match(r"https?://github.com/(?P<org>[^/]+)/(?P<repo>[^/]+)/?", home),
             ]
             m = {}
             for m in matches:
@@ -479,7 +479,7 @@ def _get_repository_info_v4(
             )
         release_info[-1]["commits"].append(commit)
         match = re.match(
-            "Merge pull request #(?P<pr_number>.+) from (?P<branch>\S+)\n\n(?P<title>.+)",
+            r"Merge pull request #(?P<pr_number>.+) from (?P<branch>\S+)\n\n(?P<title>.+)",
             commit["message"],
         )
         if match:
@@ -799,7 +799,7 @@ def _get_repository_info_v3(
             }
         )
         match = re.match(
-            "Merge pull request #(?P<pr_number>.+) from (?P<branch>\S+)\n\n(?P<title>.+)",
+            r"Merge pull request #(?P<pr_number>.+) from (?P<branch>\S+)\n\n(?P<title>.+)",
             commit["commit"]["message"],
         )
         if match:

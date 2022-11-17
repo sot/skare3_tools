@@ -159,13 +159,14 @@ def main():
         condarc_in = condarc.with_suffix(".in")
         condarc.replace(condarc_in)
         with open(condarc_in) as condarc_in, open(condarc, "w") as condarc:
-            for l in condarc_in.readlines():
+            for line in condarc_in.readlines():
                 condarc.write(
-                    l.replace("${CONDA_PASSWORD}", os.environ["CONDA_PASSWORD"])
+                    line.replace("${CONDA_PASSWORD}", os.environ["CONDA_PASSWORD"])
                 )
     else:
         print(
-            "Conda password needs to be given as environmental variable CONDA_PASSWORD"
+            "Conda password needs to be given"
+            " as environmental variable CONDA_PASSWORD"
         )
         sys.exit(100)
 

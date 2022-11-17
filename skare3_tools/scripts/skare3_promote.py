@@ -115,7 +115,8 @@ def promote(package, args, platforms=None):
         # was not found.
         if pkgs == []:
             logging.warning(
-                f'package {package["name"]}=={package["version"]} not found for platform {platform}.'
+                f'package {package["name"]}=={package["version"]}'
+                f" not found for platform {platform}."
             )
             continue
 
@@ -148,7 +149,8 @@ def promote(package, args, platforms=None):
                         pkg_files += pkgs
                         if not pkgs:
                             logging.warning(
-                                f"package {requirement['name']}=={requirement['version']} was not found"
+                                f"package {requirement['name']}=={requirement['version']}"
+                                " was not found"
                             )
                 else:
                     logging.error(f'Could not parse requirement: "{requirement}"')
@@ -168,7 +170,13 @@ def promote(package, args, platforms=None):
         name: [p for p in pkg_files if p["name"] == name] for name in package_names
     }
 
-    row = "| {package:30s} | {noarch:24s} {noarch-src:7s} | {linux-64:24s} {linux-64-src:7s} | {osx-64:24s} {osx-64-src:7s} | {win-64:24s} {win-64-src:7s} |"
+    row = (
+        "| {package:30s} "
+        "| {noarch:24s} {noarch-src:7s} "
+        "| {linux-64:24s} {linux-64-src:7s} "
+        "| {osx-64:24s} {osx-64-src:7s} "
+        "| {win-64:24s} {win-64-src:7s} |"
+    )
     div = {"package": "", "noarch": "", "linux-64": "", "osx-64": "", "win-64": ""}
     div.update(
         {k: "" for k in ["noarch-src", "linux-64-src", "osx-64-src", "win-64-src"]}
@@ -227,12 +235,26 @@ def promote(package, args, platforms=None):
 
 
 def parser():
-    usage = "%(prog)s [-h] [--ska3-conda SKA3_CONDA] [--from FROM_CHANNEL [--from FROM_CHANNEL ...] ] [--to TO_CHANNEL] [--dry-run] [--move] [--skare3-local-copy SKARE3] [--log-level {error,warning,info,debug}] [-v] <package name>==<version> [<package name>==<version> ...]"
+    usage = (
+        "%(prog)s [-h]"
+        " [--ska3-conda SKA3_CONDA]"
+        " [--from FROM_CHANNEL [--from FROM_CHANNEL ...] ]"
+        " [--to TO_CHANNEL]"
+        " [--dry-run]"
+        " [--move]"
+        " [--skare3-local-copy SKARE3]"
+        " [--log-level {error,warning,info,debug}]"
+        " [-v]"
+        " <package name>==<version> [<package name>==<version> ...]"
+    )
     parse = argparse.ArgumentParser(description=__doc__, usage=usage)
     parse.add_argument("package", nargs="+", metavar="<package name>==<version>")
     parse.add_argument(
         "--ska3-conda",
-        help="ska3-conda directory containing source and target channels (defaults to the standard location)",
+        help=(
+            "ska3-conda directory containing source and target channels"
+            " (defaults to the standard location)"
+        ),
         default=SKA3_CONDA,
     )
     parse.add_argument(

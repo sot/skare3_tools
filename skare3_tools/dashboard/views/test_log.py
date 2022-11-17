@@ -20,7 +20,7 @@ def html(text):
     span = {
         "\x1b[1m": '<span style="font-weight: bold;">',
         "\x1b[4m": '<span style="text-decoration: underline">',
-        #'\x1b[7m': '<span>',  # reverse
+        # '\x1b[7m': '<span>',  # reverse
         "\x1b[30m": '<span style="color:black">',
         "\x1b[31m": '<span style="color:red">',
         "\x1b[32m": '<span style="color:green">',
@@ -61,7 +61,7 @@ def html(text):
     result = ""
     depth = 0
     i = 0
-    matches = [m for m in re.finditer("\x1b\[[0-9;]+m", text)]
+    matches = [m for m in re.finditer(r"\x1b\[[0-9;]+m", text)]
     for m in matches:
         s, e = m.span()
         c = text[s:e]

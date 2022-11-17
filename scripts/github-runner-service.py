@@ -20,7 +20,11 @@ def get_pid(runner):
 
     if pid is not None:
         a = subprocess.run(["ps", "-A"], capture_output=True)
-        ps = [l for l in a.stdout.decode().split("\n") if re.match(f"{pid}\s", l)]
+        ps = [
+            line
+            for line in a.stdout.decode().split("\n")
+            if re.match(f"{pid}\\s", line)
+        ]
         if not ps:
             logging.debug(f"process {pid} (runner={runner}) is not running. Resetting.")
             pid = None

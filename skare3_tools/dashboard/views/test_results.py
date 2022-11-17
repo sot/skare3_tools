@@ -124,7 +124,7 @@ def main():
 
     if not args.b:
         file_out = os.path.abspath(args.file_out)
-        webbrowser.open("file://{file_out}".format(file_out=args.file_out), new=2)
+        webbrowser.open("file://{file_out}".format(file_out=file_out), new=2)
 
 
 if __name__ == "__main__":

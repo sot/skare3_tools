@@ -20,7 +20,7 @@ def parser():
 def main():
     args, extra = parser().parse_known_args()
     args.cmd += extra
-    packages = [l.strip() for l in open(args.repositories).readlines()]
+    packages = [line.strip() for line in open(args.repositories).readlines()]
     for package in packages:
         header = f"\n\n{package}\n{'-'*len(package)}" ""
         print(header)

@@ -13,19 +13,19 @@ import re
 def test_results(directory):
     filename = os.path.join(directory, "test.log")
     with open(filename) as f:
-        for l in f:
-            if re.match("\*\*\*\s+Package\s+Script\s+Status\s+\*\*\*", l):
+        for line in f:
+            if re.match(r"\*\*\*\s+Package\s+Script\s+Status\s+\*\*\*", line):
                 break
         results = []
-        for l in f:
-            if re.search("fail", l.lower()) or re.search("pass", l.lower()):
-                results.append(l.split()[1:-1])
+        for line in f:
+            if re.search("fail", line.lower()) or re.search("pass", line.lower()):
+                results.append(line.split()[1:-1])
         result_dict = {k[0]: {"tests": {}} for k in results}
         for k in results:
             try:
                 module = importlib.import_module(k[0])
                 version = module.__version__
-            except:
+            except Exception:
                 version = ""
             result_dict[k[0]]["tests"][k[1]] = k[2].upper()
             res = result_dict[k[0]]["tests"].values()
