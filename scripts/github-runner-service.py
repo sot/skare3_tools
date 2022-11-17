@@ -1,12 +1,11 @@
 #!/usr/bin/env python3.8
 
-import subprocess
-import re
-import os
-import sys
-import logging
 import argparse
-
+import logging
+import os
+import re
+import subprocess
+import sys
 
 TOP_DIR = "/export/jgonzale/github-workflows"
 EXECUTABLE = "./bin/runsvc.sh"
