@@ -142,7 +142,10 @@ def main():
                         f'Allowed branch names for this tag are {", ".join(allowed_names)}'
                     )
                 if not pulls:
-                    fail.append(f"There is no pull request from sot:{tag_name}-branch")
+                    fail.append(
+                        f"There is no pull request titled {version_info['final_version']}"
+                        f" from sot:{version_info['final_version']}-branch into master."
+                    )
                 if version_info["rc"] is not None and not release["prerelease"]:
                     fail.append(
                         f"Release {tag_name} is marked as a candidate, "
@@ -185,10 +188,13 @@ def main():
             data = yaml.load(f, Loader=yaml.SafeLoader)
             if str(version_info["final_version"]) == str(data["package"]["version"]):
                 packages.append(data["package"]["name"])
-            if str(float(version_info["final_version"])) == str(
-                data["package"]["version"]
-            ):
-                possible_error.append(data["package"]["name"])
+            try:
+                if str(float(version_info["final_version"])) == str(
+                    data["package"]["version"]
+                ):
+                    possible_error.append(data["package"]["name"])
+            except Exception:
+                pass
 
     if possible_error:
         float_version = float(version_info["final_version"])
