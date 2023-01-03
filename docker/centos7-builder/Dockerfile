@@ -32,7 +32,7 @@ RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-py38_4.8.3-Linux-x86_
 # CONDA_PASSWORD must be passed as argument
 ARG CONDA_PASSWORD
 RUN : "${CONDA_PASSWORD:?Conda password must be given at build time (e.g. --build-arg CONDA_PASSWORD=\$CONDA_PASSWORD).}" && \
-    conda create -y -n ska-builder setuptools_scm gitpython conda-build jinja2 pyyaml python=3.8 numpy
+    conda create -y -n ska-builder setuptools_scm gitpython conda-build jinja2 pyyaml python=3.8 numpy testr ska_helpers
 
 
 # using a different INVALIDATE_CACHE value invalidates the cache here (--build-arg INVALIDATE_CACHE=...)
