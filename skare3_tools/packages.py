@@ -661,12 +661,15 @@ def _split_versions(depends):
     """
     result = {}
     for depend in depends:
-        v = depend.split("==") if "==" in depend else depend.split()
-        if len(v) > 2:
-            raise Exception(f"Version spec got split into too many parts: {depend}")
-        p_name = v[0].strip()
-        p_version = v[1].strip() if len(v) == 2 else ""
-        result[p_name] = p_version
+        if "==" in depend:
+            name_version = depend.split("==", maxsplit=1)
+        else:
+            name_version = depend.split(maxsplit=1)
+        if len(name_version) == 2:
+            name, version = name_version
+        else:
+            name, version = name_version[0], ""
+        result[name.strip()] = version.strip()
     return result
 
 
