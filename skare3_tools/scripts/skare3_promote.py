@@ -82,7 +82,7 @@ def promote(package, args, platforms=None):
     package = m.groupdict()
 
     skare3_repo = git.Repo(args.skare3)
-    skare3_repo.remotes.origin.fetch("--tags")
+    skare3_repo.remotes.origin.fetch()
     meta = None
     if re.match("ska3-", package["name"]):
         try:
