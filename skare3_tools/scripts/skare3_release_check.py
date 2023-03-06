@@ -108,7 +108,6 @@ def main():
     # some sanity checks
     fail = []
     if args.ci_sanity_check:
-
         """
         The following checks that:
         - release exists
