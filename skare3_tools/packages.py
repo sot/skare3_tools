@@ -433,7 +433,6 @@ def _get_repository_info_v4(
     for r in releases:
         r["tag_oid"], r["committed_date"] = _get_tag_target(r["tag"])
 
-    releases = {r["tag_oid"]: r for r in releases}
     release_info = [
         {
             "release_tag": "",
@@ -466,17 +465,19 @@ def _get_repository_info_v4(
 
     for commit in commits:
         sha = commit["oid"]
-        if sha in releases:
-            release_info.append(
-                {
-                    "release_sha": sha,
-                    "release_commit_date": releases[sha]["committed_date"],
-                    "release_tag": releases[sha]["tagName"],
-                    "release_tag_date": releases[sha]["publishedAt"],
-                    "commits": [],
-                    "merges": [],
-                }
-            )
+        releases_at_commit = [
+            {
+                "release_sha": release["tag_oid"],
+                "release_commit_date": release["committed_date"],
+                "release_tag": release["tagName"],
+                "release_tag_date": release["publishedAt"],
+                "commits": [],
+                "merges": [],
+            }
+            for release in releases if release["tag_oid"] == sha
+        ]
+        release_info += releases_at_commit
+
         release_info[-1]["commits"].append(commit)
         match = re.match(
             r"Merge pull request #(?P<pr_number>.+) from (?P<branch>\S+)\n\n(?P<title>.+)",
@@ -504,14 +505,14 @@ def _get_repository_info_v4(
     # Now we will add the remaining releases, which presumably happened in another branch.
 
     release_shas = [r["release_sha"] for r in release_info[1:]]
-    for sha in releases:
-        if sha not in release_shas:
+    for release in releases:
+        if release["tag_oid"] not in release_shas:
             release_info.append(
                 {
-                    "release_sha": sha,
-                    "release_tag": releases[sha]["tagName"],
-                    "release_tag_date": releases[sha]["publishedAt"],
-                    "release_commit_date": releases[sha]["committed_date"],
+                    "release_sha": release["tag_oid"],
+                    "release_tag": release["tagName"],
+                    "release_tag_date": release["publishedAt"],
+                    "release_commit_date": release["committed_date"],
                     "commits": [],
                     "merges": [],
                 }
@@ -751,9 +752,6 @@ def _get_repository_info_v3(
         for r, c in zip(releases, release_commits)
     }
 
-    # later on, the releases are referred by commit sha
-    releases = {c["sha"]: r for r, c in zip(releases, release_commits)}
-
     date_since = None
     if type(since) is int:
         # only the latest 'since' releases (at most) will be included in summary
@@ -783,15 +781,16 @@ def _get_repository_info_v3(
         commits = commits[:-1]  # remove first commit, which was just the starting point
     for commit in commits:
         sha = commit["sha"]
-        if sha in releases.keys():
-            release_info.append(
-                {
-                    "release_tag": releases[sha]["tag_name"],
-                    "release_tag_date": releases[sha]["published_at"],
-                    "commits": [],
-                    "merges": [],
-                }
-            )
+        releases_at_commit = [
+            {
+                "release_tag": release["tag_name"],
+                "release_tag_date": release["published_at"],
+                "commits": [],
+                "merges": [],
+            }
+            for release in [r for r, c in zip(releases, release_commits) if c['sha'] == sha]
+        ]
+        release_info += releases_at_commit
 
         release_info[-1]["commits"].append(
             {
