@@ -2,8 +2,8 @@
 
 import argparse
 import json
-import os
 import webbrowser
+from pathlib import Path
 
 from skare3_tools import dashboard
 from skare3_tools import test_results as tr
@@ -15,10 +15,10 @@ def test_results():
         "static_dir": "static",
         "log_dir": "tests/logs/{uid}".format(uid=test_run["run_info"]["uid"]),
     }
-    return _render(test_run, config)
+    return _get_results(test_run, config)
 
 
-def _render(tests, config):
+def _get_results(tests, config, render=True):
     if "run_info" not in tests:
         tests["run_info"] = {
             k: ""
@@ -56,6 +56,9 @@ def _render(tests, config):
         ts["pass"] = n_pass
         ts["fail"] = n_fail
 
+    if not render:
+        return tests
+
     template = dashboard.get_template("test-results.html")
     return template.render(title="Skare3 Tests", data=tests, config=config)
 
@@ -69,6 +72,7 @@ def get_parser():
         help="Directory or JSON file containing all test results. "
         "If it is a directory, then it must have a file named all_tests.json.",
         dest="file_in",
+        type=Path,
     )
     parser.add_argument(
         "-o",
@@ -76,6 +80,7 @@ def get_parser():
         "index.html, located in the input directory or the current "
         "working directory, depending on whether the '-i' options was given.",
         dest="file_out",
+        type=Path,
     )
     parser.add_argument(
         "-b",
@@ -96,16 +101,16 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
     config = {"static_dir": args.static_dir, "log_dir": args.log_dir}
-    if args.file_in and os.path.isdir(args.file_in):
-        args.file_in = os.path.join(args.file_in, "all_tests.json")
+    if args.file_in and args.file_in.is_dir():
+        args.file_in = args.file_in / "all_tests.json"
 
     if args.file_out is None:
         if args.file_in:
-            args.file_out = os.path.join(os.path.dirname(args.file_in), "index.html")
+            args.file_out = args.file_in.parent / "index.html"
         else:
             args.file_out = "index.html"
 
-    if args.file_in and not os.path.exists(args.file_in):
+    if args.file_in and not args.file_in.exists():
         print("{filename} does not exist".format(filename=args.file_in))
         parser.print_help()
         parser.exit(1)
@@ -120,10 +125,13 @@ def main():
                 results["run_info"][key] = ", ".join(results["run_info"][key])
 
     with open(args.file_out, "w") as out:
-        out.write(_render(results, config))
+        if args.file_out.suffix == ".json":
+            json.dump(_get_results(results, config, render=False), out)
+        else:
+            out.write(_get_results(results, config))
 
-    if not args.b:
-        file_out = os.path.abspath(args.file_out)
+    if not args.b and args.file_out.suffix in [".html", ".htm"]:
+        file_out = args.file_out.absolute()
         webbrowser.open("file://{file_out}".format(file_out=file_out), new=2)
 
 
