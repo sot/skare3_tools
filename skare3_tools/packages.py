@@ -474,7 +474,8 @@ def _get_repository_info_v4(
                 "commits": [],
                 "merges": [],
             }
-            for release in releases if release["tag_oid"] == sha
+            for release in releases
+            if release["tag_oid"] == sha
         ]
         release_info += releases_at_commit
 
@@ -788,7 +789,9 @@ def _get_repository_info_v3(
                 "commits": [],
                 "merges": [],
             }
-            for release in [r for r, c in zip(releases, release_commits) if c['sha'] == sha]
+            for release in [
+                r for r, c in zip(releases, release_commits) if c["sha"] == sha
+            ]
         ]
         release_info += releases_at_commit
 
