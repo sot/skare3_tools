@@ -2,6 +2,8 @@
 
 import argparse
 import datetime
+import json
+from pathlib import Path
 
 from skare3_tools import packages
 from skare3_tools import test_results as tr
@@ -10,7 +12,7 @@ from skare3_tools.dashboard import get_template
 package_name_map = packages.get_package_list()
 
 
-def dashboard(config=None):
+def dashboard(config=None, render=True):
     if config is None:
         config = {"static_dir": "static"}
 
@@ -60,6 +62,9 @@ def dashboard(config=None):
                 else:
                     p["test_status"] = "PASS"
 
+    if not render:
+        return info
+
     template = get_template("dashboard.html")
     return template.render(title="Skare3 Packages", info=info, config=config)
 
@@ -73,6 +78,7 @@ def get_parser():
         metavar="FILENAME",
         help="Output file (default: index.html)",
         default="index.html",
+        type=Path,
     )
     return parser
 
@@ -80,7 +86,10 @@ def get_parser():
 def main():
     args = get_parser().parse_args()
     with open(args.o, "w") as out:
-        out.write(dashboard())
+        if args.o.suffix == ".json":
+            json.dump(dashboard(render=False), out)
+        else:
+            out.write(dashboard())
 
 
 if __name__ == "__main__":
