@@ -84,6 +84,7 @@ import jinja2
 import requests
 import yaml
 
+from packaging.version import Version, InvalidVersion
 from skare3_tools import github
 from skare3_tools.config import CONFIG
 
@@ -508,6 +509,13 @@ def _get_repository_info_v4(
     release_shas = [r["release_sha"] for r in release_info[1:]]
     for release in releases:
         if release["tag_oid"] not in release_shas:
+            try:
+                Version(release["tagName"])
+            except InvalidVersion:
+                logging.debug(
+                    f"Version {release['tagName']} does not conform to PEP 440 and will be ignored"
+                )
+                continue
             release_info.append(
                 {
                     "release_sha": release["tag_oid"],
@@ -519,8 +527,9 @@ def _get_repository_info_v4(
                 }
             )
 
+    # the first entry in the list is not a release, but the current main branch
     release_info = release_info[:1] + sorted(
-        release_info[1:], key=lambda r: r["release_commit_date"], reverse=True
+        release_info[1:], key=lambda r: Version(r["release_tag"]), reverse=True
     )
 
     release_tags = [r["release_tag"] for r in release_info]
