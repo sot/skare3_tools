@@ -153,7 +153,7 @@ def add_secrets(repository, secrets):
 
         _driver_.find_element_by_id("secret_name").send_keys(secret)
         value = secrets[secret]
-        if type(value) == dict:
+        if type(value) is dict:
             value = json.dumps(value)
         _driver_.find_element_by_id("secret_value").send_keys(value)
 
