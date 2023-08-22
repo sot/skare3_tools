@@ -12,6 +12,7 @@ import argparse
 import re
 import sys
 
+from packaging.version import Version
 from skare3_tools import github, packages
 
 
@@ -35,7 +36,7 @@ def main():
     # get all releases and find the one we are working on
     releases = repository.releases()
     releases = [r for r in releases if not r["draft"] and not r["prerelease"]]
-    releases = sorted(releases, key=lambda r: r["tag_name"], reverse=True)
+    releases = sorted(releases, key=lambda r: Version(r["tag_name"]), reverse=True)
     release_commits = [
         packages._get_release_commit(repository, r["tag_name"]) for r in releases
     ]
