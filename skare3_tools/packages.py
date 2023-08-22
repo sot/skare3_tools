@@ -519,8 +519,8 @@ def _get_repository_info_v4(
                 }
             )
 
-    release_info = sorted(
-        release_info, key=lambda r: r["release_commit_date"], reverse=True
+    release_info = release_info[:1] + sorted(
+        release_info[1:], key=lambda r: r["release_commit_date"], reverse=True
     )
 
     release_tags = [r["release_tag"] for r in release_info]
