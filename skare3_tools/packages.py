@@ -716,7 +716,9 @@ def _get_repository_info_v3(
     include_commits=False,
 ):
     """
-    Get information about a Github repository
+    Get information about a Github repository.
+
+    This uses Github API v3. This function is DEPRECATED, use v4 instead.
 
     :param owner_repo: str
         the name of the repository, including owner, something like 'sot/skare3'.
@@ -911,11 +913,6 @@ def repository_info_is_outdated(_, pkg_info):
     return outdated
 
 
-@json_cache(
-    "pkg_repository_info",
-    directory="pkg_info",
-    update_policy=repository_info_is_outdated,
-)
 def get_repository_info(owner_repo, version="v4", **kwargs):
     """
     Get information about a Github repository
@@ -940,6 +937,18 @@ def get_repository_info(owner_repo, version="v4", **kwargs):
         Force update of the cached info. By default updates only if pushed_at or updated_at change.
     :return:
     """
+    # the indirect call is to make sure the version argument is set at this point
+    # otherwise, there are two caches if the version is explicitly set to the default value
+    # (one where it is set and one where it is not)
+    return _get_repository_info(owner_repo, version, **kwargs)
+
+
+@json_cache(
+    "pkg_repository_info",
+    directory="pkg_info",
+    update_policy=repository_info_is_outdated,
+)
+def _get_repository_info(owner_repo, version, **kwargs):
     owner, name = owner_repo.split("/")
 
     if version == "v4":
@@ -953,6 +962,10 @@ def get_repository_info(owner_repo, version="v4", **kwargs):
         info["master_version"] = conda_info[name.lower()][-1]["version"]
 
     return info
+
+
+get_repository_info.clear_cache =_get_repository_info.clear_cache
+get_repository_info.rm_cache_entry =_get_repository_info.rm_cache_entry
 
 
 def get_repositories_info(repositories=None, version="v4", update=False):
