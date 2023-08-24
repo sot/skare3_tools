@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 """
-Promote ska3 meta-packages from a list of channels to one target channel.
+Promote ska3 meta-packages or packages from a list of channels to one target channel.
 
 "Promotion" usually means copying conda package files from the source
 channels to the target channel. The channels are expected to be within
 the same directory, which is specified by the `ska3-conda` argument.
 
-The meta-packages to be promoted must be defined in skare3. This script
-reads the metapackage's meta.yaml requirements in skare3, finds the
-corresponding packages in the source channels, and copies/moves them to the
-target channel.
+The packages to be promoted must be defined in skare3. If the package is
+a ska3- metapackage, this script reads the metapackage's meta.yaml requirements
+in skare3, finds the corresponding packages in the source channels, and copies/moves
+them to the target channel.
 """
 import argparse
 import logging
