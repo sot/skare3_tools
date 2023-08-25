@@ -65,12 +65,14 @@ def main():
     for commit in commits:
         msg = commit["commit"]["message"]
         match = re.match(
-            r"Merge pull request (?P<pr>.+) from (?P<branch>\S+)\n\n(?P<description>.+)",
+            r"Merge pull request (?P<pr>.+) from (?P<branch>\S+)(\n\n(?P<description>.+))?",
             msg,
         )
         if match:
             msg = match.groupdict()
             if msg["pr"][0] == "#":
+                if msg["description"] is None:
+                    msg["description"] = repo.pull_requests(msg["pr"][1:])[0]['title']
                 msg["pr"] = (
                     f'[{msg["pr"]}]'
                     f'(https://github.com/{args.repository}/pull/{msg["pr"][1:]})'

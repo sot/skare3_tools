@@ -482,7 +482,7 @@ def _get_repository_info_v4(
 
         release_info[-1]["commits"].append(commit)
         match = re.match(
-            r"Merge pull request #(?P<pr_number>.+) from (?P<branch>\S+)\n\n(?P<title>.+)",
+            r"Merge pull request #(?P<pr_number>.+) from (?P<branch>\S+)(\n\n(?P<title>.+))?",
             commit["message"],
         )
         if match:
@@ -496,7 +496,7 @@ def _get_repository_info_v4(
                 merge["author"] = all_pull_requests[merge["pr_number"]]["author"][
                     "name"
                 ]
-                if use_pr_titles:
+                if use_pr_titles or merge['title'] is None:
                     # some times PR titles are changed after merging. Use that instead of the commit
                     merge["title"] = all_pull_requests[merge["pr_number"]][
                         "title"
