@@ -833,7 +833,7 @@ class PullRequests(_EndpointGroup):
         json = {k: kwargs[k] for k in required}
         json.update({k: kwargs[k] for k in optional if k in kwargs})
         kwargs = {k: v for k, v in kwargs.items() if k not in json}
-        return self._get("/repos/:owner/:repo/pulls", params=json, **kwargs)
+        return self._get_list("/repos/:owner/:repo/pulls", params=json, **kwargs)
 
     def create(self, **kwargs):
         """
