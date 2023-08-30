@@ -393,7 +393,7 @@ class _EndpointGroup:
                 yield item
                 count += 1
                 if limit and count >= limit:
-                    raise StopIteration()
+                    return
 
     def _get_list(self, *args, **kwargs):
         """
