@@ -340,6 +340,38 @@ _PR_QUERY = """
 """
 
 
+_COMPARE_COMMITS_QUERY = """
+{
+  repository(name: "{{ name }}", owner: "{{ owner }}") {
+    ref(qualifiedName: "{{ base }}") {
+      compare(headRef: "{{ head }}") {
+        aheadBy
+        behindBy
+        commits(first: 100, after: "{{ after }}") {
+          nodes {
+            oid
+            message
+            pushedDate
+            author {
+              user {
+                  login
+              }
+            }
+          }
+          pageInfo {
+            hasPreviousPage
+            hasNextPage
+            startCursor
+            endCursor
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+
 _COMMIT_QUERY = """
 {
   repository(name: "{{ name }}", owner: "{{ owner }}") {
@@ -374,6 +406,82 @@ _COMMIT_QUERY = """
 """
 
 
+class Dict(dict):
+    def __getitem__(self, i):
+        if i in self.keys():
+            return super().__getitem__(i)
+        return self.node(self, i)
+
+    @staticmethod
+    def _node(root, path):
+        if path:
+            return Dict._node(root[path[0]], path[1:])
+        return root
+
+    @staticmethod
+    def node(root, path):
+        path = path.split("/")
+        return Dict._node(root, path)
+
+
+def get_all_nodes(owner, name, path, query, query_2=None, at="", reverse=False, **kwargs):
+    if reverse:
+        cursor = "startCursor"
+        has_more = "hasPreviousPage"
+    else:
+        cursor = "endCursor"
+        has_more = "hasNextPage"
+    data = Dict(github.GITHUB_API_V4(
+            jinja2.Template(query).render(name=name, owner=owner, cursor=at, **kwargs)
+        ))
+    check_api_errors(data)
+    commits = data[path]["nodes"]
+    if query_2 is None:
+        query_2 = query
+    while data[path]["pageInfo"][has_more]:
+        at = data[path]["pageInfo"][cursor]
+        data = Dict(github.GITHUB_API_V4(
+            jinja2.Template(query_2).render(name=name, owner=owner, cursor=at, **kwargs)
+        ))
+        check_api_errors(data)
+        commits += data[path]["nodes"]
+    return commits
+
+
+def check_api_errors(data):
+    if "errors" in data:
+        try:
+            msg = "\n".join([e["message"] for e in data["errors"]])
+        except Exception:
+            raise Exception(str(data["errors"]))
+        raise Exception(msg)
+
+
+def _pr_commits(commits, all_pull_requests, use_pr_titles=True):
+    merges = []
+    for commit in commits:
+        match = re.match(
+            r"Merge pull request #(?P<pr_number>.+) from (?P<branch>\S+)(\n\n(?P<title>.+))?",
+            commit["message"],
+        )
+        if match:
+            merge = match.groupdict()
+            merge["pr_number"] = int(merge["pr_number"])
+            merges.append(merge)
+
+    for merge in merges:
+        merge["author"] = "Unknown"
+        if merge["pr_number"] in all_pull_requests:
+            merge["author"] = all_pull_requests[merge["pr_number"]]["author"][
+                "name"
+            ]
+            if use_pr_titles or merge['title'] is None:
+                # some times PR titles are changed after merging. Use that instead of the commit
+                merge["title"] = all_pull_requests[merge["pr_number"]]["title"]
+
+    return merges
+
+
 def _get_repository_info_v4(
     owner_repo,
     since=7,
@@ -383,9 +491,9 @@ def _get_repository_info_v4(
 ):
     owner, name = owner_repo.split("/")
     api = github.GITHUB_API_V4
-    data_v4 = api(
+    data_v4 = Dict(api(
         jinja2.Template(github.graphql.REPO_QUERY).render(name=name, owner=owner)
-    )
+    ))
     if "errors" in data_v4:
         try:
             msg = "\n".join([e["message"] for e in data_v4["errors"]])
@@ -395,55 +503,34 @@ def _get_repository_info_v4(
 
     branches = [
         n
-        for n in data_v4["data"]["repository"]["refs"]["nodes"]
+        for n in data_v4["data/repository/refs/nodes"]
         if re.match("heads/", n["name"])
     ]
-    releases = data_v4["data"]["repository"]["releases"]["nodes"]
-    commits = data_v4["data"]["repository"]["defaultBranchRef"]["target"]["history"][
-        "nodes"
-    ]
-    issues = data_v4["data"]["repository"]["issues"]["nodes"]
-    default_branch = data_v4["data"]["repository"]["defaultBranchRef"]["name"]
+    releases = data_v4["data/repository/releases/nodes"]
+    issues = data_v4["data/repository/issues/nodes"]
+    default_branch = data_v4["data/repository/defaultBranchRef/name"]
 
-    commit_data = data_v4
-    while commit_data["data"]["repository"]["defaultBranchRef"]["target"]["history"][
-        "pageInfo"
-    ]["hasNextPage"]:
-        cursor = commit_data["data"]["repository"]["defaultBranchRef"]["target"][
-            "history"
-        ]["pageInfo"]["endCursor"]
-        commit_data = api(
-            jinja2.Template(_COMMIT_QUERY).render(name=name, owner=owner, cursor=cursor)
-        )
-        commits += commit_data["data"]["repository"]["defaultBranchRef"]["target"][
-            "history"
-        ]["nodes"]
+    commits_path = "data/repository/defaultBranchRef/target/history"
+    commits = data_v4[commits_path]["nodes"]
+    commits += get_all_nodes(
+        owner, name,
+        commits_path,
+        _COMMIT_QUERY,
+        reverse=False,
+        at=data_v4[commits_path]['pageInfo']['endCursor']
+    )
 
-    pr_data = data_v4
-    pull_requests = pr_data["data"]["repository"]["pullRequests"]["nodes"]
-    while pr_data["data"]["repository"]["pullRequests"]["pageInfo"]["hasPreviousPage"]:
-        cursor = pr_data["data"]["repository"]["pullRequests"]["pageInfo"][
-            "startCursor"
-        ]
-        pr_data = api(
-            jinja2.Template(_PR_QUERY).render(name=name, owner=owner, cursor=cursor)
-        )
-        pull_requests += pr_data["data"]["repository"]["pullRequests"]["nodes"]
+    pull_requests_path = "data/repository/pullRequests"
+    pull_requests = data_v4[pull_requests_path]["nodes"]
+    pull_requests += get_all_nodes(
+        owner, name,
+        pull_requests_path,
+        _PR_QUERY,
+        reverse=True,
+        at=data_v4[pull_requests_path]["pageInfo"]["startCursor"]
+    )
 
-    releases = [r for r in releases if not r["isPrerelease"] and not r["isDraft"]]
-    for r in releases:
-        r["tag_oid"], r["committed_date"] = _get_tag_target(r["tag"])
-
-    release_info = [
-        {
-            "release_tag": "",
-            "release_tag_date": "",
-            "release_commit_date": datetime.datetime.now().isoformat(),
-            "commits": [],
-            "merges": [],
-        }
-    ]
-
+    # from now, keep a list of the open pull requests on the main branch
     all_pull_requests = {pr["number"]: pr for pr in pull_requests}
     pull_requests = [
         pr
@@ -464,85 +551,79 @@ def _get_repository_info_v4(
     ]
     pull_requests = sorted(pull_requests, key=lambda pr: pr["number"], reverse=True)
 
-    for commit in commits:
-        sha = commit["oid"]
-        releases_at_commit = [
-            {
-                "release_sha": release["tag_oid"],
-                "release_commit_date": release["committed_date"],
-                "release_tag": release["tagName"],
-                "release_tag_date": release["publishedAt"],
-                "commits": [],
-                "merges": [],
-            }
-            for release in releases
-            if release["tag_oid"] == sha
-        ]
-        release_info += releases_at_commit
-
-        release_info[-1]["commits"].append(commit)
-        match = re.match(
-            r"Merge pull request #(?P<pr_number>.+) from (?P<branch>\S+)(\n\n(?P<title>.+))?",
-            commit["message"],
-        )
-        if match:
-            merge = match.groupdict()
-            merge["pr_number"] = int(merge["pr_number"])
-            # It is possible that a commit says "Merge pull request #..." without an actual PR.
-            # One such case is commits before a fork, in which case one has to do more digging to
-            # get the PR author or title. We do not care and set the author as Unknown.
-            merge["author"] = "Unknown"
-            if merge["pr_number"] in all_pull_requests:
-                merge["author"] = all_pull_requests[merge["pr_number"]]["author"][
-                    "name"
-                ]
-                if use_pr_titles or merge['title'] is None:
-                    # some times PR titles are changed after merging. Use that instead of the commit
-                    merge["title"] = all_pull_requests[merge["pr_number"]][
-                        "title"
-                    ]  # .strip()
-            release_info[-1]["merges"].append(merge)
-
-    # up to now, we followed the default branch commits, collecting all releases along the branch.
-    # Now we will add the remaining releases, which presumably happened in another branch.
-
-    release_shas = [r["release_sha"] for r in release_info[1:]]
-    for release in releases:
-        if release["tag_oid"] not in release_shas:
-            try:
-                Version(release["tagName"])
-            except InvalidVersion:
-                logging.debug(
-                    f"Version {release['tagName']} does not conform to PEP 440 and will be ignored"
-                )
-                continue
-            release_info.append(
-                {
-                    "release_sha": release["tag_oid"],
-                    "release_tag": release["tagName"],
-                    "release_tag_date": release["publishedAt"],
-                    "release_commit_date": release["committed_date"],
-                    "commits": [],
-                    "merges": [],
-                }
+    # get release info since "since", excluding drafts, pre-releases, invalid versions
+    releases = [r for r in releases if not r["isPrerelease"] and not r["isDraft"]]
+    exclude = []
+    for rel in releases:
+        rel["tag_oid"], rel["committed_date"] = _get_tag_target(rel["tag"])
+        try:
+            Version(rel["tagName"])
+        except InvalidVersion:
+            logging.debug(
+                f"{owner_repo} release {rel['tagName']} does not conform to PEP 440. "
+                "It will be ignored"
             )
+            exclude += [rel['tagName']]
+    releases = [r for r in releases if r['tagName'] not in exclude]
+    releases = sorted(releases, key=lambda r: Version(r["tagName"]), reverse=True)
 
-    # the first entry in the list is not a release, but the current main branch
-    release_info = release_info[:1] + sorted(
-        release_info[1:], key=lambda r: Version(r["release_tag"]), reverse=True
-    )
-
-    release_tags = [r["release_tag"] for r in release_info]
+    release_tags = [r["tagName"] for r in releases]
     if type(since) is int:
-        release_info = release_info[: since + 1]
+        # keeping the last "since" releases, plus the current main branch
+        releases = releases[: since + 1]
     elif since in release_tags:
-        release_info = release_info[: release_tags.index(since)]
+        # keeping up to the "since" tag (inclusive), plus the current main branch
+        releases = releases[: release_tags.index(since) + 2]
     elif since is not None:
         raise Exception(
             "Requested repository info with since={since},".format(since=since)
             + "which is not and integer and is not one of the known releases"
             + "({release_tags})".format(release_tags=release_tags)
         )
+
+    rel_commits = get_all_nodes(
+        owner, name,
+        "data/repository/ref/compare/commits",
+        _COMPARE_COMMITS_QUERY,
+        reverse=False,
+        base=releases[0]["tagName"],
+        head=default_branch,
+    )
+    rel_prs = _pr_commits(rel_commits, all_pull_requests, use_pr_titles=use_pr_titles)
+    release_info = [
+        {
+            "release_tag": "",
+            "release_tag_date": "",
+            "release_commit_date": datetime.datetime.now().isoformat(),
+            "commits": [],
+            "merges": rel_prs,
+        }
+    ]
+
+    for base, head in zip(releases[1:], releases[:-1]):
+        rel_commits = get_all_nodes(
+            owner, name,
+            "data/repository/ref/compare/commits",
+            _COMPARE_COMMITS_QUERY,
+            reverse=False,
+            base=base['tagName'],
+            head=head['tagName'],
+        )
+        rel_prs = _pr_commits(rel_commits, all_pull_requests, use_pr_titles=use_pr_titles)
+        release = {
+            "release_sha": head["tag_oid"],
+            "release_commit_date": head["committed_date"],
+            "release_tag": head["tagName"],
+            "release_tag_date": head["publishedAt"],
+            "commits": [],
+            "merges": rel_prs,
+        }
+        release_info.append(release)
+
+    # the first entry in the list is not a release, but the current main branch
+    release_info = release_info[:1] + sorted(
+        release_info[1:], key=lambda r: Version(r["release_tag"]), reverse=True
+    )
 
     if len(release_info) > 1:
         last_tag = release_info[1]["release_tag"]
@@ -551,7 +632,7 @@ def _get_repository_info_v4(
         last_tag = ""
         last_tag_date = ""
 
-    # workflows are only in v4
+    # workflows are only in v3
     headers = {"Accept": "application/vnd.github.antiope-preview+json"}
     workflows = github.GITHUB_API_V3.get(
         "/repos/{owner}/{name}/actions/workflows".format(owner=owner, name=name),
