@@ -424,25 +424,33 @@ class Dict(dict):
         return Dict._node(root, path)
 
 
-def get_all_nodes(owner, name, path, query, query_2=None, at="", reverse=False, **kwargs):
+def get_all_nodes(
+    owner, name, path, query, query_2=None, at="", reverse=False, **kwargs
+):
     if reverse:
         cursor = "startCursor"
         has_more = "hasPreviousPage"
     else:
         cursor = "endCursor"
         has_more = "hasNextPage"
-    data = Dict(github.GITHUB_API_V4(
+    data = Dict(
+        github.GITHUB_API_V4(
             jinja2.Template(query).render(name=name, owner=owner, cursor=at, **kwargs)
-        ))
+        )
+    )
     check_api_errors(data)
     commits = data[path]["nodes"]
     if query_2 is None:
         query_2 = query
     while data[path]["pageInfo"][has_more]:
         at = data[path]["pageInfo"][cursor]
-        data = Dict(github.GITHUB_API_V4(
-            jinja2.Template(query_2).render(name=name, owner=owner, cursor=at, **kwargs)
-        ))
+        data = Dict(
+            github.GITHUB_API_V4(
+                jinja2.Template(query_2).render(
+                    name=name, owner=owner, cursor=at, **kwargs
+                )
+            )
+        )
         check_api_errors(data)
         commits += data[path]["nodes"]
     return commits
@@ -472,10 +480,8 @@ def _pr_commits(commits, all_pull_requests, use_pr_titles=True):
     for merge in merges:
         merge["author"] = "Unknown"
         if merge["pr_number"] in all_pull_requests:
-            merge["author"] = all_pull_requests[merge["pr_number"]]["author"][
-                "name"
-            ]
-            if use_pr_titles or merge['title'] is None:
+            merge["author"] = all_pull_requests[merge["pr_number"]]["author"]["name"]
+            if use_pr_titles or merge["title"] is None:
                 # some times PR titles are changed after merging. Use that instead of the commit
                 merge["title"] = all_pull_requests[merge["pr_number"]]["title"]
 
@@ -491,9 +497,9 @@ def _get_repository_info_v4(
 ):
     owner, name = owner_repo.split("/")
     api = github.GITHUB_API_V4
-    data_v4 = Dict(api(
-        jinja2.Template(github.graphql.REPO_QUERY).render(name=name, owner=owner)
-    ))
+    data_v4 = Dict(
+        api(jinja2.Template(github.graphql.REPO_QUERY).render(name=name, owner=owner))
+    )
     if "errors" in data_v4:
         try:
             msg = "\n".join([e["message"] for e in data_v4["errors"]])
@@ -513,21 +519,23 @@ def _get_repository_info_v4(
     commits_path = "data/repository/defaultBranchRef/target/history"
     commits = data_v4[commits_path]["nodes"]
     commits += get_all_nodes(
-        owner, name,
+        owner,
+        name,
         commits_path,
         _COMMIT_QUERY,
         reverse=False,
-        at=data_v4[commits_path]['pageInfo']['endCursor']
+        at=data_v4[commits_path]["pageInfo"]["endCursor"],
     )
 
     pull_requests_path = "data/repository/pullRequests"
     pull_requests = data_v4[pull_requests_path]["nodes"]
     pull_requests += get_all_nodes(
-        owner, name,
+        owner,
+        name,
         pull_requests_path,
         _PR_QUERY,
         reverse=True,
-        at=data_v4[pull_requests_path]["pageInfo"]["startCursor"]
+        at=data_v4[pull_requests_path]["pageInfo"]["startCursor"],
     )
 
     # from now, keep a list of the open pull requests on the main branch
@@ -563,8 +571,8 @@ def _get_repository_info_v4(
                 f"{owner_repo} release {rel['tagName']} does not conform to PEP 440. "
                 "It will be ignored"
             )
-            exclude += [rel['tagName']]
-    releases = [r for r in releases if r['tagName'] not in exclude]
+            exclude += [rel["tagName"]]
+    releases = [r for r in releases if r["tagName"] not in exclude]
     releases = sorted(releases, key=lambda r: Version(r["tagName"]), reverse=True)
 
     release_tags = [r["tagName"] for r in releases]
@@ -582,7 +590,8 @@ def _get_repository_info_v4(
         )
 
     rel_commits = get_all_nodes(
-        owner, name,
+        owner,
+        name,
         "data/repository/ref/compare/commits",
         _COMPARE_COMMITS_QUERY,
         reverse=False,
@@ -602,14 +611,17 @@ def _get_repository_info_v4(
 
     for base, head in zip(releases[1:], releases[:-1]):
         rel_commits = get_all_nodes(
-            owner, name,
+            owner,
+            name,
             "data/repository/ref/compare/commits",
             _COMPARE_COMMITS_QUERY,
             reverse=False,
-            base=base['tagName'],
-            head=head['tagName'],
+            base=base["tagName"],
+            head=head["tagName"],
         )
-        rel_prs = _pr_commits(rel_commits, all_pull_requests, use_pr_titles=use_pr_titles)
+        rel_prs = _pr_commits(
+            rel_commits, all_pull_requests, use_pr_titles=use_pr_titles
+        )
         release = {
             "release_sha": head["tag_oid"],
             "release_commit_date": head["committed_date"],
@@ -1054,8 +1066,8 @@ def _get_repository_info(owner_repo, version, **kwargs):
     return info
 
 
-get_repository_info.clear_cache =_get_repository_info.clear_cache
-get_repository_info.rm_cache_entry =_get_repository_info.rm_cache_entry
+get_repository_info.clear_cache = _get_repository_info.clear_cache
+get_repository_info.rm_cache_entry = _get_repository_info.rm_cache_entry
 
 
 def get_repositories_info(repositories=None, version="v4", update=False):

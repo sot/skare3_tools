@@ -786,16 +786,16 @@ class Compare(_EndpointGroup):
     """
 
     def __call__(self, base, head, **kwargs):
-        """
-        """
+        """ """
         required = []
         json = {k: kwargs[k] for k in required}
         kwargs = {k: v for k, v in kwargs.items() if k not in json}
         return self._get(
             "/repos/:owner/:repo/compare/:basehead",
             basehead=f"{base}...{head}",
-            **kwargs
+            **kwargs,
         )
+
 
 class PullRequests(_EndpointGroup):
     """
