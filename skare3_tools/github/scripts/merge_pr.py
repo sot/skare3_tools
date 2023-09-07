@@ -46,7 +46,7 @@ def main():
     kwargs["state"] = "open"
     prs = repository.pull_requests(**kwargs)
 
-    if type(prs) == dict and not prs["response"]["ok"]:
+    if type(prs) is dict and not prs["response"]["ok"]:
         print(f'Failed getting requested PR: {prs["response"]["reason"]}')
         sys.exit(1)
 

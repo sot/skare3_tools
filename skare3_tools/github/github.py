@@ -393,7 +393,7 @@ class _EndpointGroup:
                 yield item
                 count += 1
                 if limit and count >= limit:
-                    raise StopIteration()
+                    return
 
     def _get_list(self, *args, **kwargs):
         """
@@ -436,6 +436,7 @@ class Repository:
         self.branches = Branches(self)
         self.checks = Checks(self)
         self.pull_requests = PullRequests(self)
+        self.compare = Compare(self)
         self.merge = Merge(self)
         self.dispatch_event = DispatchEvent(self)
         self.contents = Contents(self)
@@ -615,7 +616,7 @@ class Commits(_EndpointGroup):
         json.update({k: kwargs[k] for k in optional if k in kwargs})
         kwargs = {k: v for k, v in kwargs.items() if k not in json}
         if ref is not None:
-            return self._get(
+            return self._get_list(
                 "repos/:owner/:repo/commits/:ref", ref=ref, params=json, **kwargs
             )
         return self._get_list("repos/:owner/:repo/commits", params=json, **kwargs)
@@ -778,6 +779,24 @@ class Issues(_EndpointGroup):
         )
 
 
+class Compare(_EndpointGroup):
+    """Compare two commits
+
+    (`compare API docs </repos/{owner}/{repo}/compare/{basehead}>`)
+    """
+
+    def __call__(self, base, head, **kwargs):
+        """ """
+        required = []
+        json = {k: kwargs[k] for k in required}
+        kwargs = {k: v for k, v in kwargs.items() if k not in json}
+        return self._get(
+            "/repos/:owner/:repo/compare/:basehead",
+            basehead=f"{base}...{head}",
+            **kwargs,
+        )
+
+
 class PullRequests(_EndpointGroup):
     """
     Endpoints that have to do with pull requests
@@ -833,7 +852,7 @@ class PullRequests(_EndpointGroup):
         json = {k: kwargs[k] for k in required}
         json.update({k: kwargs[k] for k in optional if k in kwargs})
         kwargs = {k: v for k, v in kwargs.items() if k not in json}
-        return self._get("/repos/:owner/:repo/pulls", params=json, **kwargs)
+        return self._get_list("/repos/:owner/:repo/pulls", params=json, **kwargs)
 
     def create(self, **kwargs):
         """
