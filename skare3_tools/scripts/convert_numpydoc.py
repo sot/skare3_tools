@@ -336,9 +336,7 @@ def convert_lines_to_numpydoc(lines):
     """
     lines_out = None
 
-    idx_any = get_first_marker_index(
-        lines, REST_MARKERS_RETURNS + REST_MARKERS_PARAMS
-    )
+    idx_any = get_first_marker_index(lines, REST_MARKERS_RETURNS + REST_MARKERS_PARAMS)
     idx_params = get_first_marker_index(lines, REST_MARKERS_PARAMS)
     idx_returns = get_first_marker_index(lines, REST_MARKERS_RETURNS)
 
