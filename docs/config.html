@@ -1,19 +1,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Configuration &#8212; SkaRE3 Tools 1.0.10 documentation</title>
+    <title>Configuration &#8212; SkaRE3 Tools 1.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
     <script type="text/javascript" src="_static/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -60,7 +59,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.0.10 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.1.0 documentation</a>
 	 &#187;
       </li>
       
@@ -75,7 +74,7 @@
           <div class="body" role="main">
             
   <section id="configuration">
-<span id="id1"></span><h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
+<span id="id1"></span><h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading">¶</a></h1>
 <span class="target" id="module-skare3_tools.config"></span><p>The configuration is automatically set with default values which specify the location of the skare3
 repository, the different conda channels used, the Github organizations who own the packages, and
 the directory where to store cached data. This happens the first time this module is imported.</p>
@@ -93,50 +92,50 @@ standard password to conda channels called CONDA_PASSWORD.</p>
 </ul>
 <p>The default looks like this:</p>
 <div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="nt">&quot;config_version&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-  <span class="nt">&quot;repository&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/sot/skare3&quot;</span><span class="p">,</span>
-  <span class="nt">&quot;conda_channels&quot;</span><span class="p">:</span> <span class="p">{</span>
-    <span class="nt">&quot;masters&quot;</span><span class="p">:</span> <span class="p">[</span>
-      <span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/masters&quot;</span>
-    <span class="p">],</span>
-    <span class="nt">&quot;main&quot;</span><span class="p">:</span> <span class="p">[</span>
-      <span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight&quot;</span>
-    <span class="p">],</span>
-    <span class="nt">&quot;dull&quot;</span><span class="p">:</span> <span class="p">[</span>
-      <span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight-2020.12&quot;</span>
-    <span class="p">],</span>
-    <span class="nt">&quot;test&quot;</span><span class="p">:</span> <span class="p">[</span>
-      <span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/test&quot;</span>
-    <span class="p">]</span>
-  <span class="p">},</span>
-  <span class="nt">&quot;organizations&quot;</span><span class="p">:</span> <span class="p">[</span>
-    <span class="s2">&quot;sot&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;acisops&quot;</span>
-  <span class="p">],</span>
-  <span class="nt">&quot;data_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="nt">&quot;config_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;repository&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://github.com/sot/skare3&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;conda_channels&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;masters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/masters&quot;</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;main&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight&quot;</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;dull&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight-2020.12&quot;</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;test&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/test&quot;</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;organizations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;sot&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;acisops&quot;</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;data_dir&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <section id="cache-directory">
-<h2>Cache Directory<a class="headerlink" href="#cache-directory" title="Permalink to this headline">¶</a></h2>
+<h2>Cache Directory<a class="headerlink" href="#cache-directory" title="Permalink to this heading">¶</a></h2>
 <p>The cached data is stored in the same directory as the configuration, unless otherwise specified in
 the configuration itself (i.e.: one can have the config in ~/.skare3 and set ‘data_dir’ in this
 configuration to some other directory).</p>
 </section>
 <section id="conda-channels">
-<h2>Conda Channels<a class="headerlink" href="#conda-channels" title="Permalink to this headline">¶</a></h2>
+<h2>Conda Channels<a class="headerlink" href="#conda-channels" title="Permalink to this heading">¶</a></h2>
 <p>Conda channels are specified as a dictionary, with identifying strings as keys, and list of URL
 strings as values:</p>
 <div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="nt">&quot;conda_channels&quot;</span><span class="p">:</span> <span class="p">{</span>
-    <span class="nt">&quot;masters&quot;</span><span class="p">:</span> <span class="p">[</span>
-      <span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/masters&quot;</span>
-     <span class="p">],</span>
-    <span class="nt">&quot;main&quot;</span><span class="p">:</span> <span class="p">[</span>
-      <span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda&quot;</span>
-    <span class="p">]</span>
-  <span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;conda_channels&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;masters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/masters&quot;</span>
+<span class="w">     </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;main&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda&quot;</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">},</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -159,12 +158,16 @@ strings as values:</p>
 </ul>
 
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="scripts.html"
-                        title="previous chapter">Scripts</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="api.html"
-                        title="next chapter">API</a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="scripts.html"
+                          title="previous chapter">Scripts</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="api.html"
+                          title="next chapter">API</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -188,7 +191,7 @@ strings as values:</p>
     <a href="#">Back to Top</a></p>
   <p>
     &copy; Copyright 2020, Javier Gonzalez.<br/>
-    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 4.2.0. &nbsp;
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 6.1.3. &nbsp;
   </p>
 </footer>
   </body>

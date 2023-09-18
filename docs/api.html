@@ -1,19 +1,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>API &#8212; SkaRE3 Tools 1.0.10 documentation</title>
+    <title>API &#8212; SkaRE3 Tools 1.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
     <script type="text/javascript" src="_static/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -60,7 +59,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.0.10 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.1.0 documentation</a>
 	 &#187;
       </li>
       
@@ -75,15 +74,27 @@
           <div class="body" role="main">
             
   <section id="api">
-<h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<h1>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="github_api.html">Github REST</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="github_api.html#skare3_tools.github.github.init"><code class="docutils literal notranslate"><span class="pre">init</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="github_api.html#skare3_tools.github.github.GithubAPI"><code class="docutils literal notranslate"><span class="pre">GithubAPI</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="github_api.html#skare3_tools.github.github.Repository"><code class="docutils literal notranslate"><span class="pre">Repository</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="github_api.html#repository-endpoints">Repository Endpoints</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="github_api.html#github-graphql">Github GraphQL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="github_api.html#github-graphql">Github GraphQL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="github_api.html#skare3_tools.github.graphql.init"><code class="docutils literal notranslate"><span class="pre">init</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="github_api.html#skare3_tools.github.graphql.GithubAPI"><code class="docutils literal notranslate"><span class="pre">GithubAPI</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="packages_api.html">Packages</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="packages_api.html#skare3_tools.packages.get_package_list"><code class="docutils literal notranslate"><span class="pre">get_package_list</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="packages_api.html#skare3_tools.packages.get_repository_info"><code class="docutils literal notranslate"><span class="pre">get_repository_info</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="packages_api.html#skare3_tools.packages.get_repositories_info"><code class="docutils literal notranslate"><span class="pre">get_repositories_info</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="packages_api.html#skare3_tools.packages.get_conda_pkg_info"><code class="docutils literal notranslate"><span class="pre">get_conda_pkg_info</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="packages_api.html#skare3_tools.packages.get_conda_pkg_dependencies"><code class="docutils literal notranslate"><span class="pre">get_conda_pkg_dependencies</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="packages_api.html#caching">Caching</a></li>
 </ul>
 </li>
@@ -103,12 +114,16 @@
 </ul>
 
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="config.html"
-                        title="previous chapter">Configuration</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="github_api.html"
-                        title="next chapter">Github REST</a></p>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="config.html"
+                          title="previous chapter">Configuration</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="github_api.html"
+                          title="next chapter">Github REST</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -132,7 +147,7 @@
     <a href="#">Back to Top</a></p>
   <p>
     &copy; Copyright 2020, Javier Gonzalez.<br/>
-    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 4.2.0. &nbsp;
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 6.1.3. &nbsp;
   </p>
 </footer>
   </body>
