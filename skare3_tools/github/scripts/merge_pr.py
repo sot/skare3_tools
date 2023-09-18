@@ -46,7 +46,7 @@ def main():
     kwargs["state"] = "open"
     prs = repository.pull_requests(**kwargs)
 
-    if type(prs) is dict and not prs["response"]["ok"]:
+    if isinstance(prs, dict) and not prs["response"]["ok"]:
         print(f'Failed getting requested PR: {prs["response"]["reason"]}')
         sys.exit(1)
 
@@ -57,7 +57,7 @@ def main():
     # sanity checks
     sha = prs[0]["head"]["sha"]
     if args.sha and sha != args.sha:
-        print(f"Requested sha does not match that of the PR")
+        print("Requested sha does not match that of the PR")
         sys.exit(1)
 
     # do the merge
