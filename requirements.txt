@@ -6,3 +6,5 @@ pyyaml
 gitpython
 packaging
 numpy
+json5
+keyring
