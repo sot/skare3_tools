@@ -593,16 +593,26 @@ def _get_repository_info_v4(
             + "({release_tags})".format(release_tags=release_tags)
         )
 
-    rel_commits = get_all_nodes(
-        owner,
-        name,
-        "data/repository/ref/compare/commits",
-        _COMPARE_COMMITS_QUERY,
-        reverse=False,
-        base=releases[0]["tagName"],
-        head=default_branch,
-    )
-    rel_prs = _pr_commits(rel_commits, all_pull_requests, use_pr_titles=use_pr_titles)
+    if len(releases) == 0:
+        # if there are no releases, look for merge messages in all commits
+        rel_prs = _pr_commits(commits, all_pull_requests, use_pr_titles=use_pr_titles)
+    else:
+        # if there are releases, look for merge messages in the commits since the last release
+        rel_commits = get_all_nodes(
+            owner,
+            name,
+            "data/repository/ref/compare/commits",
+            _COMPARE_COMMITS_QUERY,
+            reverse=False,
+            base=releases[0]["tagName"],
+            head=default_branch,
+        )
+        rel_prs = _pr_commits(
+            rel_commits, all_pull_requests, use_pr_titles=use_pr_titles
+        )
+
+    # the first entry in release_info does not correspond to a release
+    # it's the list of PRs (and commits) waiting to be released.
     release_info = [
         {
             "release_tag": "",
