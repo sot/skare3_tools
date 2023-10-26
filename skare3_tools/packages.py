@@ -518,25 +518,29 @@ def _get_repository_info_v4(
 
     commits_path = "data/repository/defaultBranchRef/target/history"
     commits = data_v4[commits_path]["nodes"]
-    commits += get_all_nodes(
-        owner,
-        name,
-        commits_path,
-        _COMMIT_QUERY,
-        reverse=False,
-        at=data_v4[commits_path]["pageInfo"]["endCursor"],
-    )
+    if data_v4[commits_path]["pageInfo"]["endCursor"] is not None:
+        # append the rest of the commits only if there were commits to begin with
+        commits += get_all_nodes(
+            owner,
+            name,
+            commits_path,
+            _COMMIT_QUERY,
+            reverse=False,
+            at=data_v4[commits_path]["pageInfo"]["endCursor"],
+        )
 
     pull_requests_path = "data/repository/pullRequests"
     pull_requests = data_v4[pull_requests_path]["nodes"]
-    pull_requests += get_all_nodes(
-        owner,
-        name,
-        pull_requests_path,
-        _PR_QUERY,
-        reverse=True,
-        at=data_v4[pull_requests_path]["pageInfo"]["startCursor"],
-    )
+    if data_v4[pull_requests_path]["pageInfo"]["startCursor"] is not None:
+        # append the rest of the PRs only if there were commits to begin with
+        pull_requests += get_all_nodes(
+            owner,
+            name,
+            pull_requests_path,
+            _PR_QUERY,
+            reverse=True,
+            at=data_v4[pull_requests_path]["pageInfo"]["startCursor"],
+        )
 
     # from now, keep a list of the open pull requests on the main branch
     all_pull_requests = {pr["number"]: pr for pr in pull_requests}
