@@ -347,7 +347,7 @@ _COMPARE_COMMITS_QUERY = """
       compare(headRef: "{{ head }}") {
         aheadBy
         behindBy
-        commits(first: 100, after: "{{ after }}") {
+        commits(first: 100, after: "{{ cursor }}") {
           nodes {
             oid
             message
@@ -443,6 +443,9 @@ def get_all_nodes(
     if query_2 is None:
         query_2 = query
     while data[path]["pageInfo"][has_more]:
+        if at == data[path]["pageInfo"][cursor]:
+            raise RuntimeError('Cursor did not change and will cause an infinite loop')
+
         at = data[path]["pageInfo"][cursor]
         data = Dict(
             github.GITHUB_API_V4(
