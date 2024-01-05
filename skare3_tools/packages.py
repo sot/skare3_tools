@@ -309,6 +309,9 @@ _PR_QUERY = """
         number
         title
         url
+        mergeCommit {
+            oid
+        }
         commits(last: 100) {
           totalCount
           nodes {
@@ -468,25 +471,33 @@ def check_api_errors(data):
         raise Exception(msg)
 
 
-def _pr_commits(commits, all_pull_requests, use_pr_titles=True):
+def _pr_commits(commits, all_pull_requests):
     merges = []
+    pulls_v_hash = {
+        pr["mergeCommit"]["oid"]: pr
+        for pr in all_pull_requests.values()
+        if pr["mergeCommit"] is not None
+    }
     for commit in commits:
         match = re.match(
             r"Merge pull request #(?P<pr_number>.+) from (?P<branch>\S+)(\n\n(?P<title>.+))?",
             commit["message"],
         )
-        if match:
+        if commit["oid"] in pulls_v_hash:
+            merge = {
+                "pr_number": pulls_v_hash[commit["oid"]]["number"],
+                "title": pulls_v_hash[commit["oid"]]["title"],
+                "branch": pulls_v_hash[commit["oid"]]["headRefName"],
+                "author": pulls_v_hash[commit["oid"]]["author"]["name"],
+            }
+            merges.append(merge)
+        elif match:
+            # I don't think it will ever enter this branch
+            # this would be recognizable in the dashboard because the PR author is unknown
             merge = match.groupdict()
             merge["pr_number"] = int(merge["pr_number"])
+            merge["author"] = "Unknown"
             merges.append(merge)
-
-    for merge in merges:
-        merge["author"] = "Unknown"
-        if merge["pr_number"] in all_pull_requests:
-            merge["author"] = all_pull_requests[merge["pr_number"]]["author"]["name"]
-            if use_pr_titles or merge["title"] is None:
-                # some times PR titles are changed after merging. Use that instead of the commit
-                merge["title"] = all_pull_requests[merge["pr_number"]]["title"]
 
     return merges
 
@@ -494,7 +505,6 @@ def _pr_commits(commits, all_pull_requests, use_pr_titles=True):
 def _get_repository_info_v4(
     owner_repo,
     since=7,
-    use_pr_titles=True,
     include_unreleased_commits=False,
     include_commits=False,
 ):
@@ -598,7 +608,7 @@ def _get_repository_info_v4(
 
     if len(releases) == 0:
         # if there are no releases, look for merge messages in all commits
-        rel_prs = _pr_commits(commits, all_pull_requests, use_pr_titles=use_pr_titles)
+        rel_prs = _pr_commits(commits, all_pull_requests)
     else:
         # if there are releases, look for merge messages in the commits since the last release
         rel_commits = get_all_nodes(
@@ -610,9 +620,7 @@ def _get_repository_info_v4(
             base=releases[0]["tagName"],
             head=default_branch,
         )
-        rel_prs = _pr_commits(
-            rel_commits, all_pull_requests, use_pr_titles=use_pr_titles
-        )
+        rel_prs = _pr_commits(rel_commits, all_pull_requests)
 
     # the first entry in release_info does not correspond to a release
     # it's the list of PRs (and commits) waiting to be released.
@@ -636,9 +644,7 @@ def _get_repository_info_v4(
             base=base["tagName"],
             head=head["tagName"],
         )
-        rel_prs = _pr_commits(
-            rel_commits, all_pull_requests, use_pr_titles=use_pr_titles
-        )
+        rel_prs = _pr_commits(rel_commits, all_pull_requests)
         release = {
             "release_sha": head["tag_oid"],
             "release_commit_date": head["committed_date"],
@@ -830,7 +836,6 @@ def _get_release_commit(repository, release_name):
 def _get_repository_info_v3(
     owner_repo,
     since=7,
-    use_pr_titles=True,
     include_unreleased_commits=False,
     include_commits=False,
 ):
@@ -844,9 +849,6 @@ def _get_repository_info_v3(
     :param since: int or str
         the maximum number of releases to look back, or the release tag to look back to
         (not inclusive).
-    :param use_pr_titles: bool
-        Whether to use PR titles instead of the PR commit message.
-        This is so one can change PR titles after the fact to be more informative.
     :param include_unreleased_commits: bool
         whether to include commits and merges for repositories that have no release.
         This affects only top-level entries 'commits', 'merges', 'merge_info'.
@@ -893,9 +895,8 @@ def _get_repository_info_v3(
         {"release_tag": "", "release_tag_date": "", "commits": [], "merges": []}
     ]
 
-    if use_pr_titles:
-        all_pull_requests = repository.pull_requests(state="all")
-        all_pull_requests = {pr["number"]: pr for pr in all_pull_requests}
+    all_pull_requests = repository.pull_requests(state="all")
+    all_pull_requests = {pr["number"]: pr for pr in all_pull_requests}
     commits = repository.commits(
         sha=repository.info["default_branch"], since=date_since
     )
@@ -931,11 +932,8 @@ def _get_repository_info_v3(
         if match:
             merge = match.groupdict()
             merge["pr_number"] = int(merge["pr_number"])
-            if use_pr_titles:
-                if merge["pr_number"] in all_pull_requests:
-                    merge["title"] = all_pull_requests[merge["pr_number"]][
-                        "title"
-                    ].strip()
+            if merge["pr_number"] in all_pull_requests:
+                merge["title"] = all_pull_requests[merge["pr_number"]]["title"].strip()
             release_info[-1]["merges"].append(merge)
 
     if len(release_info) > 1:
@@ -1041,9 +1039,6 @@ def get_repository_info(owner_repo, version="v4", **kwargs):
     :param since: int or str
         the maximum number of releases to look back, or the release tag to look back to
         (not inclusive).
-    :param use_pr_titles: bool
-        Whether to use PR titles instead of the PR commit message.
-        This is so one can change PR titles after the fact to be more informative.
     :param include_unreleased_commits: bool
         whether to include commits and merges for repositories that have no release.
         This affects only top-level entries 'commits', 'merges', 'merge_info'.

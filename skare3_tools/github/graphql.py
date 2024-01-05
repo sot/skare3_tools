@@ -263,6 +263,9 @@ REPO_QUERY = """
         number
         title
         url
+        mergeCommit {
+            oid
+        }
         commits(last: 100) {
           totalCount
           nodes {
