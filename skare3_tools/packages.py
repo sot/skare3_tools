@@ -447,7 +447,7 @@ def get_all_nodes(
         query_2 = query
     while data[path]["pageInfo"][has_more]:
         if at == data[path]["pageInfo"][cursor]:
-            raise RuntimeError('Cursor did not change and will cause an infinite loop')
+            raise RuntimeError("Cursor did not change and will cause an infinite loop")
 
         at = data[path]["pageInfo"][cursor]
         data = Dict(
