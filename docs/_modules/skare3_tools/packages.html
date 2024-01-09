@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>skare3_tools.packages &#8212; SkaRE3 Tools 1.1.0 documentation</title>
+    <title>skare3_tools.packages &#8212; SkaRE3 Tools 1.2.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/bootstrap-astropy.css" />
     
@@ -45,7 +45,7 @@
     <h3>Navigation</h3>
     <ul>
       <li>
-	<a href="../../index.html">SkaRE3 Tools 1.1.0 documentation</a>
+	<a href="../../index.html">SkaRE3 Tools 1.2.0 documentation</a>
 	 &#187;
       </li>
       <li><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
@@ -372,6 +372,9 @@
 <span class="s2">        number</span>
 <span class="s2">        title</span>
 <span class="s2">        url</span>
+<span class="s2">        mergeCommit {</span>
+<span class="s2">            oid</span>
+<span class="s2">        }</span>
 <span class="s2">        commits(last: 100) {</span>
 <span class="s2">          totalCount</span>
 <span class="s2">          nodes {</span>
@@ -410,7 +413,7 @@
 <span class="s2">      compare(headRef: &quot;{{ head }}&quot;) {</span>
 <span class="s2">        aheadBy</span>
 <span class="s2">        behindBy</span>
-<span class="s2">        commits(first: 100, after: &quot;{{ after }}&quot;) {</span>
+<span class="s2">        commits(first: 100, after: &quot;{{ cursor }}&quot;) {</span>
 <span class="s2">          nodes {</span>
 <span class="s2">            oid</span>
 <span class="s2">            message</span>
@@ -506,6 +509,9 @@
     <span class="k">if</span> <span class="n">query_2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">query_2</span> <span class="o">=</span> <span class="n">query</span>
     <span class="k">while</span> <span class="n">data</span><span class="p">[</span><span class="n">path</span><span class="p">][</span><span class="s2">&quot;pageInfo&quot;</span><span class="p">][</span><span class="n">has_more</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">at</span> <span class="o">==</span> <span class="n">data</span><span class="p">[</span><span class="n">path</span><span class="p">][</span><span class="s2">&quot;pageInfo&quot;</span><span class="p">][</span><span class="n">cursor</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cursor did not change and will cause an infinite loop&quot;</span><span class="p">)</span>
+
         <span class="n">at</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">path</span><span class="p">][</span><span class="s2">&quot;pageInfo&quot;</span><span class="p">][</span><span class="n">cursor</span><span class="p">]</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">(</span>
             <span class="n">github</span><span class="o">.</span><span class="n">GITHUB_API_V4</span><span class="p">(</span>
@@ -528,25 +534,33 @@
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_pr_commits</span><span class="p">(</span><span class="n">commits</span><span class="p">,</span> <span class="n">all_pull_requests</span><span class="p">,</span> <span class="n">use_pr_titles</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_pr_commits</span><span class="p">(</span><span class="n">commits</span><span class="p">,</span> <span class="n">all_pull_requests</span><span class="p">):</span>
     <span class="n">merges</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">pulls_v_hash</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">pr</span><span class="p">[</span><span class="s2">&quot;mergeCommit&quot;</span><span class="p">][</span><span class="s2">&quot;oid&quot;</span><span class="p">]:</span> <span class="n">pr</span>
+        <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">all_pull_requests</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">pr</span><span class="p">[</span><span class="s2">&quot;mergeCommit&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">}</span>
     <span class="k">for</span> <span class="n">commit</span> <span class="ow">in</span> <span class="n">commits</span><span class="p">:</span>
         <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span>
             <span class="sa">r</span><span class="s2">&quot;Merge pull request #(?P&lt;pr_number&gt;.+) from (?P&lt;branch&gt;\S+)(\n\n(?P&lt;title&gt;.+))?&quot;</span><span class="p">,</span>
             <span class="n">commit</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">],</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">commit</span><span class="p">[</span><span class="s2">&quot;oid&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">pulls_v_hash</span><span class="p">:</span>
+            <span class="n">merge</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;pr_number&quot;</span><span class="p">:</span> <span class="n">pulls_v_hash</span><span class="p">[</span><span class="n">commit</span><span class="p">[</span><span class="s2">&quot;oid&quot;</span><span class="p">]][</span><span class="s2">&quot;number&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">pulls_v_hash</span><span class="p">[</span><span class="n">commit</span><span class="p">[</span><span class="s2">&quot;oid&quot;</span><span class="p">]][</span><span class="s2">&quot;title&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;branch&quot;</span><span class="p">:</span> <span class="n">pulls_v_hash</span><span class="p">[</span><span class="n">commit</span><span class="p">[</span><span class="s2">&quot;oid&quot;</span><span class="p">]][</span><span class="s2">&quot;headRefName&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="n">pulls_v_hash</span><span class="p">[</span><span class="n">commit</span><span class="p">[</span><span class="s2">&quot;oid&quot;</span><span class="p">]][</span><span class="s2">&quot;author&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+            <span class="p">}</span>
+            <span class="n">merges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">merge</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">match</span><span class="p">:</span>
+            <span class="c1"># I don&#39;t think it will ever enter this branch</span>
+            <span class="c1"># this would be recognizable in the dashboard because the PR author is unknown</span>
             <span class="n">merge</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groupdict</span><span class="p">()</span>
             <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">])</span>
+            <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Unknown&quot;</span>
             <span class="n">merges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">merge</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">merge</span> <span class="ow">in</span> <span class="n">merges</span><span class="p">:</span>
-        <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Unknown&quot;</span>
-        <span class="k">if</span> <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_pull_requests</span><span class="p">:</span>
-            <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_pull_requests</span><span class="p">[</span><span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]][</span><span class="s2">&quot;author&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">use_pr_titles</span> <span class="ow">or</span> <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># some times PR titles are changed after merging. Use that instead of the commit</span>
-                <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_pull_requests</span><span class="p">[</span><span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]][</span><span class="s2">&quot;title&quot;</span><span class="p">]</span>
 
     <span class="k">return</span> <span class="n">merges</span>
 
@@ -554,7 +568,6 @@
 <span class="k">def</span> <span class="nf">_get_repository_info_v4</span><span class="p">(</span>
     <span class="n">owner_repo</span><span class="p">,</span>
     <span class="n">since</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
-    <span class="n">use_pr_titles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">include_unreleased_commits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">include_commits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
@@ -581,25 +594,29 @@
 
     <span class="n">commits_path</span> <span class="o">=</span> <span class="s2">&quot;data/repository/defaultBranchRef/target/history&quot;</span>
     <span class="n">commits</span> <span class="o">=</span> <span class="n">data_v4</span><span class="p">[</span><span class="n">commits_path</span><span class="p">][</span><span class="s2">&quot;nodes&quot;</span><span class="p">]</span>
-    <span class="n">commits</span> <span class="o">+=</span> <span class="n">get_all_nodes</span><span class="p">(</span>
-        <span class="n">owner</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">,</span>
-        <span class="n">commits_path</span><span class="p">,</span>
-        <span class="n">_COMMIT_QUERY</span><span class="p">,</span>
-        <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">at</span><span class="o">=</span><span class="n">data_v4</span><span class="p">[</span><span class="n">commits_path</span><span class="p">][</span><span class="s2">&quot;pageInfo&quot;</span><span class="p">][</span><span class="s2">&quot;endCursor&quot;</span><span class="p">],</span>
-    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">data_v4</span><span class="p">[</span><span class="n">commits_path</span><span class="p">][</span><span class="s2">&quot;pageInfo&quot;</span><span class="p">][</span><span class="s2">&quot;endCursor&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># append the rest of the commits only if there were commits to begin with</span>
+        <span class="n">commits</span> <span class="o">+=</span> <span class="n">get_all_nodes</span><span class="p">(</span>
+            <span class="n">owner</span><span class="p">,</span>
+            <span class="n">name</span><span class="p">,</span>
+            <span class="n">commits_path</span><span class="p">,</span>
+            <span class="n">_COMMIT_QUERY</span><span class="p">,</span>
+            <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">at</span><span class="o">=</span><span class="n">data_v4</span><span class="p">[</span><span class="n">commits_path</span><span class="p">][</span><span class="s2">&quot;pageInfo&quot;</span><span class="p">][</span><span class="s2">&quot;endCursor&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
 
     <span class="n">pull_requests_path</span> <span class="o">=</span> <span class="s2">&quot;data/repository/pullRequests&quot;</span>
     <span class="n">pull_requests</span> <span class="o">=</span> <span class="n">data_v4</span><span class="p">[</span><span class="n">pull_requests_path</span><span class="p">][</span><span class="s2">&quot;nodes&quot;</span><span class="p">]</span>
-    <span class="n">pull_requests</span> <span class="o">+=</span> <span class="n">get_all_nodes</span><span class="p">(</span>
-        <span class="n">owner</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">,</span>
-        <span class="n">pull_requests_path</span><span class="p">,</span>
-        <span class="n">_PR_QUERY</span><span class="p">,</span>
-        <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">at</span><span class="o">=</span><span class="n">data_v4</span><span class="p">[</span><span class="n">pull_requests_path</span><span class="p">][</span><span class="s2">&quot;pageInfo&quot;</span><span class="p">][</span><span class="s2">&quot;startCursor&quot;</span><span class="p">],</span>
-    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">data_v4</span><span class="p">[</span><span class="n">pull_requests_path</span><span class="p">][</span><span class="s2">&quot;pageInfo&quot;</span><span class="p">][</span><span class="s2">&quot;startCursor&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># append the rest of the PRs only if there were commits to begin with</span>
+        <span class="n">pull_requests</span> <span class="o">+=</span> <span class="n">get_all_nodes</span><span class="p">(</span>
+            <span class="n">owner</span><span class="p">,</span>
+            <span class="n">name</span><span class="p">,</span>
+            <span class="n">pull_requests_path</span><span class="p">,</span>
+            <span class="n">_PR_QUERY</span><span class="p">,</span>
+            <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">at</span><span class="o">=</span><span class="n">data_v4</span><span class="p">[</span><span class="n">pull_requests_path</span><span class="p">][</span><span class="s2">&quot;pageInfo&quot;</span><span class="p">][</span><span class="s2">&quot;startCursor&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
 
     <span class="c1"># from now, keep a list of the open pull requests on the main branch</span>
     <span class="n">all_pull_requests</span> <span class="o">=</span> <span class="p">{</span><span class="n">pr</span><span class="p">[</span><span class="s2">&quot;number&quot;</span><span class="p">]:</span> <span class="n">pr</span> <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">pull_requests</span><span class="p">}</span>
@@ -652,16 +669,24 @@
             <span class="o">+</span> <span class="s2">&quot;(</span><span class="si">{release_tags}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">release_tags</span><span class="o">=</span><span class="n">release_tags</span><span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="n">rel_commits</span> <span class="o">=</span> <span class="n">get_all_nodes</span><span class="p">(</span>
-        <span class="n">owner</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">,</span>
-        <span class="s2">&quot;data/repository/ref/compare/commits&quot;</span><span class="p">,</span>
-        <span class="n">_COMPARE_COMMITS_QUERY</span><span class="p">,</span>
-        <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">base</span><span class="o">=</span><span class="n">releases</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;tagName&quot;</span><span class="p">],</span>
-        <span class="n">head</span><span class="o">=</span><span class="n">default_branch</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">rel_prs</span> <span class="o">=</span> <span class="n">_pr_commits</span><span class="p">(</span><span class="n">rel_commits</span><span class="p">,</span> <span class="n">all_pull_requests</span><span class="p">,</span> <span class="n">use_pr_titles</span><span class="o">=</span><span class="n">use_pr_titles</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">releases</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># if there are no releases, look for merge messages in all commits</span>
+        <span class="n">rel_prs</span> <span class="o">=</span> <span class="n">_pr_commits</span><span class="p">(</span><span class="n">commits</span><span class="p">,</span> <span class="n">all_pull_requests</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># if there are releases, look for merge messages in the commits since the last release</span>
+        <span class="n">rel_commits</span> <span class="o">=</span> <span class="n">get_all_nodes</span><span class="p">(</span>
+            <span class="n">owner</span><span class="p">,</span>
+            <span class="n">name</span><span class="p">,</span>
+            <span class="s2">&quot;data/repository/ref/compare/commits&quot;</span><span class="p">,</span>
+            <span class="n">_COMPARE_COMMITS_QUERY</span><span class="p">,</span>
+            <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">base</span><span class="o">=</span><span class="n">releases</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;tagName&quot;</span><span class="p">],</span>
+            <span class="n">head</span><span class="o">=</span><span class="n">default_branch</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">rel_prs</span> <span class="o">=</span> <span class="n">_pr_commits</span><span class="p">(</span><span class="n">rel_commits</span><span class="p">,</span> <span class="n">all_pull_requests</span><span class="p">)</span>
+
+    <span class="c1"># the first entry in release_info does not correspond to a release</span>
+    <span class="c1"># it&#39;s the list of PRs (and commits) waiting to be released.</span>
     <span class="n">release_info</span> <span class="o">=</span> <span class="p">[</span>
         <span class="p">{</span>
             <span class="s2">&quot;release_tag&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
@@ -682,9 +707,7 @@
             <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">[</span><span class="s2">&quot;tagName&quot;</span><span class="p">],</span>
             <span class="n">head</span><span class="o">=</span><span class="n">head</span><span class="p">[</span><span class="s2">&quot;tagName&quot;</span><span class="p">],</span>
         <span class="p">)</span>
-        <span class="n">rel_prs</span> <span class="o">=</span> <span class="n">_pr_commits</span><span class="p">(</span>
-            <span class="n">rel_commits</span><span class="p">,</span> <span class="n">all_pull_requests</span><span class="p">,</span> <span class="n">use_pr_titles</span><span class="o">=</span><span class="n">use_pr_titles</span>
-        <span class="p">)</span>
+        <span class="n">rel_prs</span> <span class="o">=</span> <span class="n">_pr_commits</span><span class="p">(</span><span class="n">rel_commits</span><span class="p">,</span> <span class="n">all_pull_requests</span><span class="p">)</span>
         <span class="n">release</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;release_sha&quot;</span><span class="p">:</span> <span class="n">head</span><span class="p">[</span><span class="s2">&quot;tag_oid&quot;</span><span class="p">],</span>
             <span class="s2">&quot;release_commit_date&quot;</span><span class="p">:</span> <span class="n">head</span><span class="p">[</span><span class="s2">&quot;committed_date&quot;</span><span class="p">],</span>
@@ -876,7 +899,6 @@
 <span class="k">def</span> <span class="nf">_get_repository_info_v3</span><span class="p">(</span>
     <span class="n">owner_repo</span><span class="p">,</span>
     <span class="n">since</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
-    <span class="n">use_pr_titles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">include_unreleased_commits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">include_commits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
@@ -890,9 +912,6 @@
 <span class="sd">    :param since: int or str</span>
 <span class="sd">        the maximum number of releases to look back, or the release tag to look back to</span>
 <span class="sd">        (not inclusive).</span>
-<span class="sd">    :param use_pr_titles: bool</span>
-<span class="sd">        Whether to use PR titles instead of the PR commit message.</span>
-<span class="sd">        This is so one can change PR titles after the fact to be more informative.</span>
 <span class="sd">    :param include_unreleased_commits: bool</span>
 <span class="sd">        whether to include commits and merges for repositories that have no release.</span>
 <span class="sd">        This affects only top-level entries &#39;commits&#39;, &#39;merges&#39;, &#39;merge_info&#39;.</span>
@@ -939,9 +958,8 @@
         <span class="p">{</span><span class="s2">&quot;release_tag&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;release_tag_date&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;commits&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;merges&quot;</span><span class="p">:</span> <span class="p">[]}</span>
     <span class="p">]</span>
 
-    <span class="k">if</span> <span class="n">use_pr_titles</span><span class="p">:</span>
-        <span class="n">all_pull_requests</span> <span class="o">=</span> <span class="n">repository</span><span class="o">.</span><span class="n">pull_requests</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
-        <span class="n">all_pull_requests</span> <span class="o">=</span> <span class="p">{</span><span class="n">pr</span><span class="p">[</span><span class="s2">&quot;number&quot;</span><span class="p">]:</span> <span class="n">pr</span> <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">all_pull_requests</span><span class="p">}</span>
+    <span class="n">all_pull_requests</span> <span class="o">=</span> <span class="n">repository</span><span class="o">.</span><span class="n">pull_requests</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+    <span class="n">all_pull_requests</span> <span class="o">=</span> <span class="p">{</span><span class="n">pr</span><span class="p">[</span><span class="s2">&quot;number&quot;</span><span class="p">]:</span> <span class="n">pr</span> <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">all_pull_requests</span><span class="p">}</span>
     <span class="n">commits</span> <span class="o">=</span> <span class="n">repository</span><span class="o">.</span><span class="n">commits</span><span class="p">(</span>
         <span class="n">sha</span><span class="o">=</span><span class="n">repository</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;default_branch&quot;</span><span class="p">],</span> <span class="n">since</span><span class="o">=</span><span class="n">date_since</span>
     <span class="p">)</span>
@@ -977,11 +995,8 @@
         <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
             <span class="n">merge</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groupdict</span><span class="p">()</span>
             <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">])</span>
-            <span class="k">if</span> <span class="n">use_pr_titles</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_pull_requests</span><span class="p">:</span>
-                    <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_pull_requests</span><span class="p">[</span><span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]][</span>
-                        <span class="s2">&quot;title&quot;</span>
-                    <span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_pull_requests</span><span class="p">:</span>
+                <span class="n">merge</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_pull_requests</span><span class="p">[</span><span class="n">merge</span><span class="p">[</span><span class="s2">&quot;pr_number&quot;</span><span class="p">]][</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
             <span class="n">release_info</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;merges&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">merge</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">release_info</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -1087,9 +1102,6 @@
 <span class="sd">    :param since: int or str</span>
 <span class="sd">        the maximum number of releases to look back, or the release tag to look back to</span>
 <span class="sd">        (not inclusive).</span>
-<span class="sd">    :param use_pr_titles: bool</span>
-<span class="sd">        Whether to use PR titles instead of the PR commit message.</span>
-<span class="sd">        This is so one can change PR titles after the fact to be more informative.</span>
 <span class="sd">    :param include_unreleased_commits: bool</span>
 <span class="sd">        whether to include commits and merges for repositories that have no release.</span>
 <span class="sd">        This affects only top-level entries &#39;commits&#39;, &#39;merges&#39;, &#39;merge_info&#39;.</span>
