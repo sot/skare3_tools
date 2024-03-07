@@ -233,6 +233,12 @@ def add(directory, stream, tags=(), properties={}):
     with open(INDEX_FILE, "w") as f:
         json.dump(test_result_index, f, indent=2)
 
+    # update the symbolic link pointing to the latest test in the stream
+    symlink = SKARE3_TEST_DATA / stream
+
+    symlink.unlink(missing_ok=True)
+    symlink.symlink_to(abs_destination)
+
 
 def _ignore_unreadable(src, names):
     # this is used in shutil.copytree to ignore files that are not readable due to permissions
