@@ -9,6 +9,7 @@ standard password to conda channels called CONDA_PASSWORD.
 The configuration is saved in JSON format, in the location:
 
 - specified by the SKARE3_TOOLS_DATA environmental variable,
+- or in the directory $SKA/data/skare3/skare3_data
 - or:
 
   - Linux/Mac OS: ~/.skare3
@@ -106,8 +107,11 @@ _DEFAULT_CONFIG = {
 def _app_data_dir_():
     local_app_data_dir = os.getenv("LOCALAPPDATA")
     home_dir = os.path.expanduser("~")
+    ska_data_dir = os.path.join(os.environ["SKA"], "data", "skare3", "skare3_data")
     if "SKARE3_TOOLS_DATA" in os.environ:
         app_data_dir = os.environ["SKARE3_TOOLS_DATA"]
+    elif os.path.exists(ska_data_dir):
+        app_data_dir = ska_data_dir
     elif local_app_data_dir:
         # this is the windows location
         app_data_dir = os.path.join(local_app_data_dir, "skare3")
