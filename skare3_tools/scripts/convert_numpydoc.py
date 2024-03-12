@@ -37,7 +37,7 @@ def get_function_docstrings(module_file: str) -> list[dict]:
         elif isinstance(node, ast.ClassDef):
             for method_node in node.body:
                 if isinstance(method_node, ast.FunctionDef):
-                    function_nodes.append(method_node)
+                    function_nodes.append(method_node)  # noqa: PERF401
 
     for node in function_nodes:
         function_name = node.name
@@ -183,8 +183,7 @@ def get_first_marker_index(lines: list, markers: list):
     for idx, line in enumerate(lines):
         if any(line.startswith(marker) for marker in markers):
             return idx
-    else:
-        return len(lines)
+    return len(lines)
 
 
 def get_marker_idxs(lines: list[str], markers_rest: list[str]):
@@ -264,7 +263,7 @@ def params_to_numpydoc(lines: list) -> list:
             # Multiline, so assume the first line is the type(s)
             lines_out.append(f"{name} : {desc}")
             for line in lines_param[1:]:
-                lines_out.append("    " + line.strip())
+                lines_out.append("    " + line.strip())  # noqa: PERF401
 
     return lines_out
 
@@ -316,7 +315,7 @@ def returns_to_numpydoc(lines: list) -> list:
 
     lines_out.append(return_type)
     for line in return_desc_lines:
-        lines_out.append("    " + line.strip())
+        lines_out.append("    " + line.strip())  # noqa: PERF401
 
     return lines_out
 

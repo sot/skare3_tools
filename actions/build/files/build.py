@@ -141,8 +141,8 @@ def main():
     if not tmp_dir.exists():
         tmp_dir.mkdir()
     with tempfile.TemporaryDirectory(dir=tmp_dir) as tmp_dir:
-        tmp_dir = pathlib.Path(tmp_dir)
-        skare3_path = tmp_dir / "skare3"
+        tmp_path = pathlib.Path(tmp_dir)
+        skare3_path = tmp_path / "skare3"
         print(f"skare3_path: {skare3_path}")
 
         # fetch skare3
