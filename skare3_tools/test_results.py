@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-This module includes a very primitive database of test
-results. It is assumed that test results are grouped in "test suites", which are just a group of
+A very primitive database of test results.
+
+It is assumed that test results are grouped in "test suites", which are just a group of
 tests run together.
 
 Tests are grouped in "streams" which can be viewed as the same set of tests performed repeatedly
@@ -26,13 +27,15 @@ And to retrieve all tests for a stream::
 import argparse
 import hashlib
 import json
+import logging
 import os
 import shutil
 import tempfile
-import logging
-
 from pathlib import Path
-from cxotime import CxoTime, units as u
+
+from cxotime import CxoTime
+from cxotime import units as u
+
 from skare3_tools.config import CONFIG
 
 
@@ -115,7 +118,7 @@ def remove_older_than(days):
             remove(uids=rm)
 
 
-def add(directory, stream, tags=(), properties={}):
+def add(directory, stream, tags=(), properties=None):
     """
     Add the test results from a given directory to the database.
 
@@ -126,6 +129,8 @@ def add(directory, stream, tags=(), properties={}):
         Other properties to store about this test suite.
     :return:
     """
+    if properties is None:
+        properties = {}
     directory = Path(directory)
     if not directory.exists():
         raise TestResultException(
@@ -204,7 +209,7 @@ def add(directory, stream, tags=(), properties={}):
     }
     result.update(
         {
-            k: sorted(set([ts["properties"][k] for ts in test_suites["test_suites"]]))
+            k: sorted({ts["properties"][k] for ts in test_suites["test_suites"]})
             for k in ["architecture", "hostname", "system", "platform"]
         }
     )
@@ -293,7 +298,7 @@ def streams():
     """
     with open(INDEX_FILE, "r") as f:
         test_result_index = json.load(f)
-    return set([tr["stream"] for tr in test_result_index])
+    return {tr["stream"] for tr in test_result_index}
 
 
 def parser():
@@ -322,7 +327,7 @@ def main():
     try:
         add(args.directory, stream=args.stream)
     except TestResultException as e:
-        LOGGER.error("Error:", e)
+        LOGGER.error(f"Error: {e}")
         sys.exit(1)
 
 

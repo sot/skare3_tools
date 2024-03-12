@@ -39,6 +39,8 @@ SECTIONS = ["run"]
 
 def _files_to_copy(package, platform, ska3_conda, to_channel, from_channels):
     """
+    Get the list of files that need to be copied.
+
     Returns None if no files need to be copied, and empty list if they need to be copied, but they
     are not in from_channels.
 
@@ -130,11 +132,11 @@ def promote(package, args, platforms=None):
         for section in SECTIONS:
             if section not in data["requirements"]:
                 continue
-            for requirement in data["requirements"][section]:
-                m = re.search(
-                    r"(?P<name>\S+)(\s+)?(==(\s+)?(?P<version>\S+))?", requirement
+            for requirement_str in data["requirements"][section]:
+                match = re.search(
+                    r"(?P<name>\S+)(\s+)?(==(\s+)?(?P<version>\S+))?", requirement_str
                 )
-                if m:
+                if match:
                     requirement = m.groupdict()
 
                     pkgs = _files_to_copy(
@@ -302,7 +304,7 @@ def parser():
 
 def main():
     with tempfile.TemporaryDirectory() as td:
-        td = pathlib.Path(td)
+        temp_path = pathlib.Path(td)
 
         args = parser().parse_args()
         logging.basicConfig(level=args.log_level.upper(), format="%(message)s")
@@ -313,7 +315,7 @@ def main():
         if args.from_channels is None:
             args.from_channels = FROM_CHANNELS
         if args.skare3 is None:
-            args.skare3 = td / "skare"
+            args.skare3 = temp_path / "skare"
         args.skare3 = pathlib.Path(args.skare3)
         if not args.ska3_conda.exists():
             logging.error(f'"{args.ska3_conda}" does not exist.')

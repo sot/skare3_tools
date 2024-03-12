@@ -11,7 +11,7 @@ def test_stream():
         tests["test_suites"] = {t["name"]: t for t in tests["test_suites"]}
 
     test_suite_names = sorted(
-        set(sum([[k for k in t["test_suites"].keys()] for t in test_runs], []))
+        set(sum([list(t["test_suites"].keys()) for t in test_runs], []))
     )
     test_suites = []
     column_names = [str(i) for i in range(len(test_runs))]

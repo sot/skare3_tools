@@ -1,4 +1,6 @@
 """
+Skare3-tools configuration.
+
 The configuration is automatically set with default values which specify the location of the skare3
 repository, the different conda channels used, the Github organizations who own the packages, and
 the directory where to store cached data. This happens the first time this module is imported.
@@ -113,6 +115,7 @@ def _app_data_dir_():
 
 def init(config=None, reset=False):
     """
+    Initialize config.
 
     :param config: dict.
         A dictionary with configuration entries (used to "update" the current config, not replace).
@@ -120,7 +123,7 @@ def init(config=None, reset=False):
         Flag to "reset" the configuration (from defaults).
     :return:
     """
-    global CONFIG
+    global CONFIG  # noqa: PLW0603
     app_data_dir = _app_data_dir_()
     if app_data_dir is None:
         raise Exception(

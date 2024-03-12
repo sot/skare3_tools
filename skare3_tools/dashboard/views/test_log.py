@@ -9,6 +9,8 @@ from skare3_tools import test_results as tr
 
 def html(text):
     """
+    Convert colorized text to html.
+
     This assumes an input from the terminal and replaces some standard characters so they are
     interpreted in html:
      - some ANSI escape codes (https://en.wikipedia.org/wiki/ANSI_escape_code#Colors)
@@ -61,7 +63,7 @@ def html(text):
     result = ""
     depth = 0
     i = 0
-    matches = [m for m in re.finditer(r"\x1b\[[0-9;]+m", text)]
+    matches = list(re.finditer(r"\x1b\[[0-9;]+m", text))
     for m in matches:
         s, e = m.span()
         c = text[s:e]
