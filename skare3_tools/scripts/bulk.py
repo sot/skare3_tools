@@ -2,6 +2,7 @@
 """
 Script to run the same command in a collection of subdirectories.
 """
+
 import argparse
 import subprocess
 

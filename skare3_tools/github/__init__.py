@@ -10,6 +10,7 @@ given token::
 
 .. _`authentication token`: https://docs.github.com/en/authentication
 """
+
 from . import github, graphql
 from .github import Organization, Repository  # noqa
 
