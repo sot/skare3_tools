@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import os
 import re
 
 from skare3_tools import config, dashboard
@@ -90,13 +89,13 @@ def test_log(path):
         return dashboard.get_template("error.html").render(
             title="404 Error", message="Run {run_id} not found".format(run_id=run_id)
         )
-    filename = os.path.join(
-        config.CONFIG["data_dir"],
-        "test_logs",
-        test_runs[0]["run_info"]["destination"],
-        filename,
+    filename = (
+        config.CONFIG["data_dir"]
+        / "test_logs"
+        / test_runs[0]["run_info"]["destination"]
+        / filename
     )
-    if not os.path.exists(filename) or not os.path.isfile(filename):
+    if not filename.exists() or not filename.is_file():
         return dashboard.get_template("error.html").render(
             title="404 Error", message="File {path} not found".format(path=path)
         )
