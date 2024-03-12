@@ -32,6 +32,7 @@ import logging
 import os
 import sys
 import time
+from pathlib import Path
 from urllib.parse import urlparse
 
 import yaml
@@ -163,7 +164,10 @@ def parser():
     parse = argparse.ArgumentParser(description=__doc__)
     parse.add_argument("repositories", nargs="+")
     parse.add_argument(
-        "--secrets", default="secrets.json", help="JSON file with all secrets"
+        "--secrets",
+        default="secrets.json",
+        help="JSON file with all secrets",
+        type=Path,
     )
     parse.add_argument("--user", required=True, help="Github user name")
     parse.add_argument(
@@ -190,7 +194,7 @@ def main():
         )
         the_parser.exit(2)
 
-    if not os.path.exists(args.secrets):
+    if not args.secrets.exists():
         logging.error(
             f"The secrets file {args.secrets} does not exist. "
             f"Run `{sys.argv[0]} -h` for help."
