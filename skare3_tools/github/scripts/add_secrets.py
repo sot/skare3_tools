@@ -25,7 +25,6 @@ A valid YAML file looks like this:
 
 """
 
-
 import argparse
 import getpass
 import json

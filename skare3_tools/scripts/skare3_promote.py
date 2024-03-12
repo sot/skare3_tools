@@ -11,6 +11,7 @@ a ska3- metapackage, this script reads the metapackage's meta.yaml requirements
 in skare3, finds the corresponding packages in the source channels, and copies/moves
 them to the target channel.
 """
+
 import argparse
 import logging
 import pathlib

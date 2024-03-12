@@ -89,6 +89,7 @@ from skare3_tools import github
 from skare3_tools.config import CONFIG
 from pathlib import Path
 
+
 class NetworkException(Exception):
     pass
 
@@ -167,8 +168,12 @@ def json_cache(name, directory="", ignore=None, expires=None, update_policy=None
                 update = update or update_policy(filename, result)
             if not dir_access_ok(filename):
                 if result is None:
-                    raise Exception(f"No write access to cache file {filename} and no cached value")
-                logging.getLogger("skare3").debug(f"No write access to cache file {filename}")
+                    raise Exception(
+                        f"No write access to cache file {filename} and no cached value"
+                    )
+                logging.getLogger("skare3").debug(
+                    f"No write access to cache file {filename}"
+                )
                 update = False
             if result is None or update:
                 result = func(*args, **kwargs)
