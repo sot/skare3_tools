@@ -33,7 +33,6 @@ import logging
 
 from pathlib import Path
 from cxotime import CxoTime, units as u
-from tqdm import tqdm
 from skare3_tools.config import CONFIG
 
 
@@ -73,14 +72,16 @@ def remove(uid=None, directory=None, uids=(), directories=()):
         if SKARE3_TEST_DATA not in directory.resolve().parents:
             LOGGER.warning(f"warning: {directory} not in SKARE3_DASH_DATA. Ignoring")
     directories = [
-        directory for directory in directories if SKARE3_TEST_DATA in directory.resolve().parents
+        directory
+        for directory in directories
+        if SKARE3_TEST_DATA in directory.resolve().parents
     ]
 
     # make a list of everything that will be removed
     rm = [
-        tr for tr in test_result_index
-        if tr["uid"] in uids
-        or SKARE3_TEST_DATA / tr["destination"] in directories
+        tr
+        for tr in test_result_index
+        if tr["uid"] in uids or SKARE3_TEST_DATA / tr["destination"] in directories
     ]
 
     for tr in rm:
@@ -93,7 +94,7 @@ def remove(uid=None, directory=None, uids=(), directories=()):
                 f"The directory {directory} is still there."
                 "This does not happen unless the directory is already not in the index,"
                 "in which case it is safe to remove it by hand."
-                )
+            )
 
     with open(INDEX_FILE, "w") as fh:
         json.dump(test_result_index, fh, indent=2)
@@ -212,16 +213,9 @@ def add(directory, stream, tags=(), properties={}):
     # copying to a temporary directory first, to make sure there are no surprises
     with tempfile.TemporaryDirectory() as tmpdirname:
         tmp_destination = Path(tmpdirname) / destination
-        shutil.copytree(
-            directory,
-            tmp_destination,
-            ignore=_ignore_unreadable
-        )
-        shutil.copy(
-            all_test_log,
-            tmp_destination / (all_test_log.name + '.orig')
-        )
-        with open(tmp_destination / all_test_log.name , "w") as f:
+        shutil.copytree(directory, tmp_destination, ignore=_ignore_unreadable)
+        shutil.copy(all_test_log, tmp_destination / (all_test_log.name + ".orig"))
+        with open(tmp_destination / all_test_log.name, "w") as f:
             json.dump(test_suites, f, indent=2)
 
         # after that succeeded, copy to the final destination (which does not exist yet)

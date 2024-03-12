@@ -92,7 +92,7 @@ def main():
 
     assert args.sha in release_shas, f"Release with sha {args.sha} was not found"
     assert args.tag in releases, f"Release with tag {args.tag} was not found"
-    assert releases[args.tag]["sha"] == args.sha, f"Inconsistent release sha and tag"
+    assert releases[args.tag]["sha"] == args.sha, "Inconsistent release sha and tag"
 
     # now find all merges between the previous release and the requested one
     # checking for commit messages matching the standard merge commit

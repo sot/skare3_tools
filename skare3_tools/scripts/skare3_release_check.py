@@ -85,8 +85,8 @@ def main():
     version_info = re.match(fmt, tag_name)
     if not version_info:
         logging.warning(
-            f"Tag name must conform to PEP-440 format"
-            f" (https://www.python.org/dev/peps/pep-0440)"
+            "Tag name must conform to PEP-440 format"
+            " (https://www.python.org/dev/peps/pep-0440)"
         )
         sys.exit(2)
     version_info = version_info.groupdict()

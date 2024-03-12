@@ -9,6 +9,7 @@ containing a dictionary of versions indexed by package names (which can be creat
 
 This script requires CONDA_PASSWORD to be defined.
 """
+
 import argparse
 import collections
 import json

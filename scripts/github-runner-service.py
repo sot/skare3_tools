@@ -19,7 +19,7 @@ def get_pid(runner):
         logging.debug(f"read pid file. pid={pid}")
 
     if pid is not None:
-        a = subprocess.run(["ps", "-A"], capture_output=True)
+        a = subprocess.run(["ps", "-A"], capture_output=True, check=False)
         ps = [
             line
             for line in a.stdout.decode().split("\n")
@@ -69,7 +69,7 @@ def stop(runner, pid=None):
         pid = get_pid(runner)
     if pid is not None:
         logging.info(f"killing process {pid} of {runner}")
-        subprocess.run(["kill", pid])
+        subprocess.run(["kill", pid], check=False)
 
 
 def main():
