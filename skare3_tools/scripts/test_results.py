@@ -16,10 +16,12 @@ def test_results(directory):
         for line in f:
             if re.match(r"\*\*\*\s+Package\s+Script\s+Status\s+\*\*\*", line):
                 break
-        results = []
-        for line in f:
-            if re.search("fail", line.lower()) or re.search("pass", line.lower()):
-                results.append(line.split()[1:-1])
+        results = [
+            line.split()[1:-1]
+            for line in f
+            if re.search("fail", line.lower()) or re.search("pass", line.lower())
+        ]
+
         result_dict = {k[0]: {"tests": {}} for k in results}
         for k in results:
             try:

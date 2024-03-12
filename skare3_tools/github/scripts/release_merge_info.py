@@ -11,9 +11,10 @@ come from the same branch.
 import argparse
 import re
 import sys
-import numpy as np
 
+import numpy as np
 from packaging.version import Version
+
 from skare3_tools import github, packages
 
 

@@ -47,7 +47,7 @@ def go(url, allow_timeout=True, ok=None, verbose=False, max_tries=5):
 
     for i in range(max_tries + 1):
         if i > max_tries:
-            raise Exception()
+            raise Exception(f"Failed to get {url} in {max_tries} tries")
         try:
             _driver_.get(url)
             time.sleep(2)
@@ -69,14 +69,14 @@ def go(url, allow_timeout=True, ok=None, verbose=False, max_tries=5):
 def init():
     from selenium import webdriver
 
-    global _driver_
+    # this script is not ideal anyway, and I don't want ruff to bother me.
+    global _driver_  # noqa: PLW0603
     _driver_ = webdriver.Chrome("chromedriver")
     _driver_.implicitly_wait(20)
     _driver_.set_page_load_timeout(20)
 
 
 def login(username, password=None):
-    global _driver_
     if _driver_ is None:
         init()
 
@@ -177,7 +177,8 @@ def parser():
 
 
 def main():
-    global _driver_
+    # this script is not ideal anyway, and I don't want ruff to bother me.
+    global _driver_  # noqa: PLW0603
     the_parser = parser()
     args = the_parser.parse_args()
 
