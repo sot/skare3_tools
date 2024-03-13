@@ -134,7 +134,8 @@ def main():
             version_info["label"] = (
                 f'+{version_info["label"]}' if version_info["label"] else ""
             )
-            args.ska3_overwrite_version = f'{version_info["release"]}{version_info["label"]}:{version_info["version"]}'  # noqa
+            args.ska3_overwrite_version = \
+                f'{version_info["release"]}{version_info["label"]}:{version_info["version"]}'
 
     print("skare3 build args:", args)
     print("skare3 build unknown args:", unknown_args)

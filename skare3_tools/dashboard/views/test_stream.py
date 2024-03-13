@@ -41,7 +41,7 @@ def test_stream():
                         else "skipped"
                     ),
                 )
-                for n, t in zip(column_names, test_runs)
+                for n, t in zip(column_names, test_runs, strict=True)
             ]
             test_cases.append(row)
         test_suites.append({"name": ts_name, "test_cases": test_cases})
