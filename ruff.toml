@@ -12,8 +12,8 @@ lint.extend-ignore = [
   # "B905", # `zip()` without an explicit `strict=` parameter
   # "PLC1901", # compare-to-empty-string
   # "PLR0911", # Too many returns
-  # "PLR0912", # Too many branches
-  # "PLR0915", # Too many statements
+  "PLR0912", # Too many branches
+  "PLR0915", # Too many statements
   # "PGH004", # Use specific rule codes when using `noqa`
   # "C401", # Unnecessary generator (rewrite as a `set` comprehension)
   # "C402", # Unnecessary generator (rewrite as a dict comprehension)
