@@ -660,7 +660,7 @@ def _get_repository_info_v4(
         }
     ]
 
-    for base, head in zip(releases[1:], releases[:-1]):
+    for base, head in zip(releases[1:], releases[:-1], strict=True):
         rel_commits = get_all_nodes(
             owner,
             name,
@@ -903,7 +903,7 @@ def _get_repository_info_v3(
     release_commits = [repository.commits(ref=c["sha"]) for c in release_commits]
     release_dates = {
         r["tag_name"]: c["commit"]["committer"]["date"]
-        for r, c in zip(releases, release_commits)
+        for r, c in zip(releases, release_commits, strict=True)
     }
 
     date_since = None
@@ -942,7 +942,7 @@ def _get_repository_info_v3(
                 "merges": [],
             }
             for release in [
-                r for r, c in zip(releases, release_commits) if c["sha"] == sha
+                r for r, c in zip(releases, release_commits, strict=True) if c["sha"] == sha
             ]
         ]
         release_info += releases_at_commit

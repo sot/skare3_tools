@@ -183,7 +183,7 @@ def main():
     args = the_parser.parse_args()
 
     try:
-        import selenium  # noqa
+        import selenium  # noqa: F401
     except ModuleNotFoundError:
         logging.error(
             f"The script requires the selenium module. Run `{sys.argv[0]} -h` for help."

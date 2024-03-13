@@ -245,7 +245,7 @@ def params_to_numpydoc(lines: list) -> list:
         "----------",
     ]
 
-    for idx0, idx1 in zip(idxs[:-1], idxs[1:]):
+    for idx0, idx1 in zip(idxs[:-1], idxs[1:], strict=True):
         lines_param = lines[idx0:idx1]
         line_param = lines_param[0]
         match = re.match(r":param \s+ (\w+) \s* : \s* (.*)", line_param, re.VERBOSE)
@@ -290,7 +290,7 @@ def returns_to_numpydoc(lines: list) -> list:
     return_type = None
     return_desc_lines = []
 
-    for idx0, idx1, marker in zip(idxs[:-1], idxs[1:], markers):
+    for idx0, idx1, marker in zip(idxs[:-1], idxs[1:], markers, strict=True):
         if marker == ":rtype:":
             return_type = " ".join(lines[idx0:idx1])
             return_type = return_type[len(marker) :].strip()
