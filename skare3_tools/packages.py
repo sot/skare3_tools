@@ -942,7 +942,9 @@ def _get_repository_info_v3(
                 "merges": [],
             }
             for release in [
-                r for r, c in zip(releases, release_commits, strict=True) if c["sha"] == sha
+                r
+                for r, c in zip(releases, release_commits, strict=True)
+                if c["sha"] == sha
             ]
         ]
         release_info += releases_at_commit
