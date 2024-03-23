@@ -93,6 +93,19 @@ class NetworkException(Exception):
     pass
 
 
+def dir_access_ok(path):
+    """
+    Returns true if the given path has write access or can be created.
+    """
+    path = Path(path).resolve()
+    if os.path.exists(path):
+        return os.access(path, os.W_OK)
+    # if path does not exist, climb up the hierarchy to see if it can be created
+    if path.parent != path:
+        return dir_access_ok(path.parent)
+    return False
+
+
 def json_cache(name, directory="", ignore=None, expires=None, update_policy=None):
     r"""
     Decorator to cache function results in json format.
@@ -128,15 +141,6 @@ def json_cache(name, directory="", ignore=None, expires=None, update_policy=None
     def decorator_cache(func, ignore_args=ignore, expiration=expires, name=name):
         signature = inspect.signature(func)
         name += "::"
-
-        def dir_access_ok(path):
-            path = Path(path).resolve()
-            if os.path.exists(path):
-                return os.access(path, os.W_OK)
-            if path.parent != path:
-                return dir_access_ok(path.parent)
-            return False
-
 
         @wraps(func)
         def wrapper(*args, update=False, **kwargs):
@@ -1031,10 +1035,16 @@ def repository_info_is_outdated(_, pkg_info):
     """
     Cache update policy that returns True if the Github repository has been updated or pushed into.
 
+    If the calling user has not write access to the cache directory, this function returns False,
+    unless SKARE3_REPO_INFO_UPDATE is set to "True".
+
     :param _:
     :param pkg_info: dict. As returned from :func:`~skare3_tools.packages.get_repository_info`.
     :return:
     """
+    update = os.environ.get("SKARE3_REPO_INFO_UPDATE", "").lower() in ["true", "1"]
+    if not dir_access_ok(CONFIG["data_dir"]) and not update:
+        return False
     result = github.GITHUB_API_V4(_LAST_UPDATED_QUERY.render(**pkg_info))
     result = result["data"]["repository"]
     outdated = (
