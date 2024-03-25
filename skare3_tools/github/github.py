@@ -1,5 +1,7 @@
 """
-This is a thin wrapper for `Github's REST API`_ (V3). It is intended to be easy to extend.
+A thin wrapper for `Github's REST API`_ (V3).
+
+It is intended to be easy to extend.
 It does not impose much structure on top of what is shown in their online documentation,
 and it should be easy to see the correspondence between both.
 
@@ -382,7 +384,7 @@ class _EndpointGroup:
         while True:
             kwargs["params"]["page"] = page
             r = self._get(url, **kwargs)
-            if type(r) is not list:
+            if not isinstance(r, list):
                 _logger.warning("_get_list_generator received a %s: %s", type(r), r)
                 break
             if len(r) == 0:
@@ -406,7 +408,7 @@ class _EndpointGroup:
         :param kwargs:
         :return:
         """
-        return [entry for entry in self._get_list_generator(*args, **kwargs)]
+        return list(self._get_list_generator(*args, **kwargs))
 
 
 class Repository:
@@ -449,12 +451,14 @@ class Repository:
 
 class Releases(_EndpointGroup):
     """
-    Endpoints that have to do with repository releases
+    Endpoints that have to do with repository releases.
+
     (`releases API docs <https://developer.github.com/v3/repos/releases>`_)
     """
 
     def __call__(self, latest=False, tag_name=None, release_id=None):
         """
+        Get release.
 
         :param latest:
         :param tag_name:
@@ -478,6 +482,8 @@ class Releases(_EndpointGroup):
 
     def create(self, **kwargs):
         """
+        Create a Release.
+
         :param tag_name: str. Required. The name of the tag.
         :param target_commitish: str.
             Specifies the commitish value that determines where the Git tag is created from.
@@ -504,6 +510,8 @@ class Releases(_EndpointGroup):
 
     def edit(self, release_id, **kwargs):
         """
+        Edit a Release.
+
         :param release_id: str
         :param tag_name: str
             The name of the tag.
@@ -541,7 +549,8 @@ class Releases(_EndpointGroup):
 
 class Tags(_EndpointGroup):
     """
-    Endpoints that have to do with repository tags
+    Endpoints that have to do with repository tags.
+
     (`tags API docs <https://developer.github.com/v3/git/tags>`_)
     """
 
@@ -557,6 +566,8 @@ class Tags(_EndpointGroup):
 
     def create(self, **kwargs):
         """
+        Create tag.
+
         :param tag: str. Required.
             The tag's name. This is typically a version (e.g., "v0.0.1").
         :param message: str. Required.
@@ -586,12 +597,15 @@ class Tags(_EndpointGroup):
 
 class Commits(_EndpointGroup):
     """
-    Endpoints that have to do with repository commits
+    Endpoints that have to do with repository commits.
+
     (`commit API docs <https://developer.github.com/v3/repos/commits>`_)
     """
 
     def __call__(self, ref=None, **kwargs):
         """
+        Get commits.
+
         :param ref: str
         :param sha: str
             SHA or branch to start listing commits from.
@@ -624,12 +638,15 @@ class Commits(_EndpointGroup):
 
 class Branches(_EndpointGroup):
     """
-    Endpoints that have to do with repository branches
+    Endpoints that have to do with repository branches.
+
     (`branches API docs <https://developer.github.com/v3/repos/branches>`_)
     """
 
     def __call__(self, branch=None, **kwargs):
         """
+        Get branches.
+
         :param branch:
         :param protected: bool
             Setting to true returns only protected branches.
@@ -655,7 +672,8 @@ class Branches(_EndpointGroup):
 
 class Issues(_EndpointGroup):
     """
-    Endpoints that have to do with repository issues
+    Endpoints that have to do with repository issues.
+
     (`issues API docs <https://developer.github.com/v3/issues>`_)
     """
 
@@ -706,6 +724,8 @@ class Issues(_EndpointGroup):
 
     def create(self, **kwargs):
         """
+        Create issue.
+
         :param title: str Required. The title of the issue.
         :param body: str The contents of the issue.
         :param milestone: int
@@ -730,6 +750,8 @@ class Issues(_EndpointGroup):
 
     def edit(self, issue_number, **kwargs):
         """
+        Edit issue.
+
         :param issue_number:
         :param title: str
             The title of the issue.
@@ -780,13 +802,13 @@ class Issues(_EndpointGroup):
 
 
 class Compare(_EndpointGroup):
-    """Compare two commits
+    """Compare two commits.
 
     (`compare API docs </repos/{owner}/{repo}/compare/{basehead}>`)
     """
 
     def __call__(self, base, head, **kwargs):
-        """ """
+        """Compare two commits."""
         required = []
         json = {k: kwargs[k] for k in required}
         kwargs = {k: v for k, v in kwargs.items() if k not in json}
@@ -799,12 +821,15 @@ class Compare(_EndpointGroup):
 
 class PullRequests(_EndpointGroup):
     """
-    Endpoints that have to do with pull requests
+    Endpoints that have to do with pull requests.
+
     (`pull requests API docs <https://developer.github.com/v3/pulls>`_)
     """
 
     def __call__(self, pull_number=None, **kwargs):
         """
+        Get pull request.
+
         :param pull_number: str (optional)
             Default: all pulls
         :param state: str
@@ -856,6 +881,8 @@ class PullRequests(_EndpointGroup):
 
     def create(self, **kwargs):
         """
+        Create pull request.
+
         :param title: str Required.
             The title of the new pull request.
         :param head: str Required.
@@ -886,6 +913,8 @@ class PullRequests(_EndpointGroup):
 
     def edit(self, pull_number, **kwargs):
         """
+        Edit pull request.
+
         :param pull_number:
         :param title: str
             The title of the pull request.
@@ -942,7 +971,7 @@ class PullRequests(_EndpointGroup):
 
     def status(self, pull_number, **kwargs):
         """
-        Get if a pull request has been merged
+        Get if a pull request has been merged.
 
         :param pull_number: str
         """
@@ -956,7 +985,7 @@ class PullRequests(_EndpointGroup):
 
     def merge(self, pull_number, **kwargs):
         """
-        Merge a pull request
+        Merge a pull request.
 
         :param pull_number:
         :param commit_title: str
@@ -983,7 +1012,8 @@ class PullRequests(_EndpointGroup):
 
 class Merge(_EndpointGroup):
     """
-    Single endpoint for merges
+    Single endpoint for merges.
+
     (`merges API docs <https://developer.github.com/v3/repos/merging/>`_)
 
     Note: this is for branches. Merging pull requests is done with the pull requests API
@@ -991,7 +1021,7 @@ class Merge(_EndpointGroup):
 
     def __call__(self, **kwargs):
         """
-        Merge a branch
+        Merge a branch.
 
         :param base: str
             The name of the base branch that the head will be merged into.
@@ -1012,11 +1042,13 @@ class Merge(_EndpointGroup):
 
 class Workflows(_EndpointGroup):
     """
-    Endpoints that have to do with workflows
+    Endpoints that have to do with workflows.
+
     (`Workflows docs <https://developer.github.com/v3/actions/workflows>`_)
     """
 
     def __call__(self, workflow_id=None, **kwargs):
+        """Get workflow."""
         required = []
         optional = []
         json = {k: kwargs[k] for k in required}
@@ -1034,7 +1066,8 @@ class Workflows(_EndpointGroup):
 
 class Artifacts(_EndpointGroup):
     """
-    Endpoints that have to do with artifacts
+    Endpoints that have to do with artifacts.
+
     (`Artifacts docs <https://developer.github.com/v3/actions/artifacts>`_)
     """
 
@@ -1080,7 +1113,8 @@ class Artifacts(_EndpointGroup):
 
 class Jobs(_EndpointGroup):
     """
-    Endpoints that have to do with workflow jobs
+    Endpoints that have to do with workflow jobs.
+
     (`Workflow-jobs docs <https://developer.github.com/v3/actions/workflow-jobs>`_)
     """
 
@@ -1105,12 +1139,15 @@ class Jobs(_EndpointGroup):
 
 class Runs(_EndpointGroup):
     """
-    Endpoints that have to do with workflow runs
+    Endpoints that have to do with workflow runs.
+
     (`Workflow-runs docs <https://developer.github.com/v3/actions/workflow-runs>`_)
     """
 
     def __call__(self, workflow_id=None, run_id=None, **kwargs):
         """
+        Get workflow run.
+
         :param workflow_id:
         :param run_id:
         :param actor: str
@@ -1176,7 +1213,8 @@ class Runs(_EndpointGroup):
 
 class Checks(_EndpointGroup):
     """
-    Endpoints that have to do with repository checks
+    Endpoints that have to do with repository checks.
+
     (`checks API docs <https://developer.github.com/v3/checks>`_)
     """
 
@@ -1192,31 +1230,35 @@ class Checks(_EndpointGroup):
 
 class DispatchEvent(_EndpointGroup):
     """
-    Create a repository dispatch event
+    Create a repository dispatch event.
     """
 
-    def __call__(self, event_type, client_payload={}):
+    def __call__(self, event_type, client_payload=None):
         """
-        Create a repository dispatch event
+        Create a repository dispatch event.
 
         :param event_type: str
             A custom webhook event name.
         :param client_payload: dict
             JSON payload with extra information about the webhook event.
         """
+        if client_payload is None:
+            client_payload = {}
         params = {"event_type": event_type, "client_payload": client_payload}
         return self._post("/repos/:owner/:repo/dispatches", json=params)
 
 
 class Contents(_EndpointGroup):
     """
-    Create and edit repository content
+    Create and edit repository content.
+
     (`contents API docs  <https://developer.github.com/v3/repos/contents/>`_)
     """
 
     def __call__(self, path="", decode=True, **kwargs):
         """
         Gets the contents of a file or directory in a repository.
+
         If path is omitted, it returns all the contents of the repository.
 
         :param path: str
@@ -1241,7 +1283,7 @@ class Contents(_EndpointGroup):
 
     def edit(self, path, encode=True, **kwargs):
         """
-        Create or update file contents
+        Create or update file contents.
 
         :param message:	str	Required.
             The commit message.

@@ -11,9 +11,10 @@ come from the same branch.
 import argparse
 import re
 import sys
-import numpy as np
 
+import numpy as np
 from packaging.version import Version
+
 from skare3_tools import github, packages
 
 
@@ -92,7 +93,7 @@ def main():
 
     assert args.sha in release_shas, f"Release with sha {args.sha} was not found"
     assert args.tag in releases, f"Release with tag {args.tag} was not found"
-    assert releases[args.tag]["sha"] == args.sha, f"Inconsistent release sha and tag"
+    assert releases[args.tag]["sha"] == args.sha, "Inconsistent release sha and tag"
 
     # now find all merges between the previous release and the requested one
     # checking for commit messages matching the standard merge commit

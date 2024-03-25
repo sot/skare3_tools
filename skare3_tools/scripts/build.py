@@ -13,6 +13,7 @@ This script differs in a few ways from the standard build:
 NOTE: Argument order seems to matter. Any argument unknown to this script is passed to ska_builder.
 It seems that unknown arguments must be consecutive, and known arguments must be consecutive.
 """
+
 import argparse
 import os
 import pathlib
@@ -133,7 +134,10 @@ def main():
             version_info["label"] = (
                 f'+{version_info["label"]}' if version_info["label"] else ""
             )
-            args.ska3_overwrite_version = f'{version_info["release"]}{version_info["label"]}:{version_info["version"]}'  # noqa
+            args.ska3_overwrite_version = (
+                f'{version_info["release"]}{version_info["label"]}'
+                f':{version_info["version"]}'
+            )
 
     print("skare3 build args:", args)
     print("skare3 build unknown args:", unknown_args)
@@ -174,8 +178,8 @@ def main():
     if not tmp_dir.exists():
         tmp_dir.mkdir()
     with tempfile.TemporaryDirectory(dir=tmp_dir) as tmp_dir:
-        tmp_dir = pathlib.Path(tmp_dir)
-        skare3_path = tmp_dir / "skare3"
+        tmp_path = pathlib.Path(tmp_dir)
+        skare3_path = tmp_path / "skare3"
         print(f"skare3_path: {skare3_path}")
 
         # fetch skare3

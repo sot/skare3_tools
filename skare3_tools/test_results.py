@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-This module includes a very primitive database of test
-results. It is assumed that test results are grouped in "test suites", which are just a group of
+A very primitive database of test results.
+
+It is assumed that test results are grouped in "test suites", which are just a group of
 tests run together.
 
 Tests are grouped in "streams" which can be viewed as the same set of tests performed repeatedly
@@ -26,14 +27,15 @@ And to retrieve all tests for a stream::
 import argparse
 import hashlib
 import json
+import logging
 import os
 import shutil
 import tempfile
-import logging
-
 from pathlib import Path
-from cxotime import CxoTime, units as u
-from tqdm import tqdm
+
+from cxotime import CxoTime
+from cxotime import units as u
+
 from skare3_tools.config import CONFIG
 
 
@@ -73,14 +75,16 @@ def remove(uid=None, directory=None, uids=(), directories=()):
         if SKARE3_TEST_DATA not in directory.resolve().parents:
             LOGGER.warning(f"warning: {directory} not in SKARE3_DASH_DATA. Ignoring")
     directories = [
-        directory for directory in directories if SKARE3_TEST_DATA in directory.resolve().parents
+        directory
+        for directory in directories
+        if SKARE3_TEST_DATA in directory.resolve().parents
     ]
 
     # make a list of everything that will be removed
     rm = [
-        tr for tr in test_result_index
-        if tr["uid"] in uids
-        or SKARE3_TEST_DATA / tr["destination"] in directories
+        tr
+        for tr in test_result_index
+        if tr["uid"] in uids or SKARE3_TEST_DATA / tr["destination"] in directories
     ]
 
     for tr in rm:
@@ -93,7 +97,7 @@ def remove(uid=None, directory=None, uids=(), directories=()):
                 f"The directory {directory} is still there."
                 "This does not happen unless the directory is already not in the index,"
                 "in which case it is safe to remove it by hand."
-                )
+            )
 
     with open(INDEX_FILE, "w") as fh:
         json.dump(test_result_index, fh, indent=2)
@@ -114,7 +118,7 @@ def remove_older_than(days):
             remove(uids=rm)
 
 
-def add(directory, stream, tags=(), properties={}):
+def add(directory, stream, tags=(), properties=None):
     """
     Add the test results from a given directory to the database.
 
@@ -125,6 +129,8 @@ def add(directory, stream, tags=(), properties={}):
         Other properties to store about this test suite.
     :return:
     """
+    if properties is None:
+        properties = {}
     directory = Path(directory)
     if not directory.exists():
         raise TestResultException(
@@ -203,7 +209,7 @@ def add(directory, stream, tags=(), properties={}):
     }
     result.update(
         {
-            k: sorted(set([ts["properties"][k] for ts in test_suites["test_suites"]]))
+            k: sorted({ts["properties"][k] for ts in test_suites["test_suites"]})
             for k in ["architecture", "hostname", "system", "platform"]
         }
     )
@@ -212,16 +218,9 @@ def add(directory, stream, tags=(), properties={}):
     # copying to a temporary directory first, to make sure there are no surprises
     with tempfile.TemporaryDirectory() as tmpdirname:
         tmp_destination = Path(tmpdirname) / destination
-        shutil.copytree(
-            directory,
-            tmp_destination,
-            ignore=_ignore_unreadable
-        )
-        shutil.copy(
-            all_test_log,
-            tmp_destination / (all_test_log.name + '.orig')
-        )
-        with open(tmp_destination / all_test_log.name , "w") as f:
+        shutil.copytree(directory, tmp_destination, ignore=_ignore_unreadable)
+        shutil.copy(all_test_log, tmp_destination / (all_test_log.name + ".orig"))
+        with open(tmp_destination / all_test_log.name, "w") as f:
             json.dump(test_suites, f, indent=2)
 
         # after that succeeded, copy to the final destination (which does not exist yet)
@@ -299,7 +298,7 @@ def streams():
     """
     with open(INDEX_FILE, "r") as f:
         test_result_index = json.load(f)
-    return set([tr["stream"] for tr in test_result_index])
+    return {tr["stream"] for tr in test_result_index}
 
 
 def parser():
@@ -328,7 +327,7 @@ def main():
     try:
         add(args.directory, stream=args.stream)
     except TestResultException as e:
-        LOGGER.error("Error:", e)
+        LOGGER.error(f"Error: {e}")
         sys.exit(1)
 
 
