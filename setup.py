@@ -25,6 +25,8 @@ entry_points = {
         "skare3-merge-pr=skare3_tools.github.scripts.merge_pr:main",
         "skare3-release-merge-info=skare3_tools.github.scripts.release_merge_info:main",
         "skare3-milestone-issues=skare3_tools.github.scripts.milestone_issues:main",
+        "skare3-clone-git-repos=skare3_tools.scripts.clone_git_repos:main",
+        "skare3-fix-namespace-packages=skare3_tools.scripts.fix_namespace_packages:main",
     ]
 }
 
