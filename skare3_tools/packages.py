@@ -1036,13 +1036,13 @@ def repository_info_is_outdated(_, pkg_info):
     Cache update policy that returns True if the Github repository has been updated or pushed into.
 
     If the calling user has not write access to the cache directory, this function returns False,
-    unless SKARE3_REPO_INFO_UPDATE is set to "True".
+    unless SKARE3_REPO_INFO_LATEST is set to "True".
 
     :param _:
     :param pkg_info: dict. As returned from :func:`~skare3_tools.packages.get_repository_info`.
     :return:
     """
-    update = os.environ.get("SKARE3_REPO_INFO_UPDATE", "").lower() in ["true", "1"]
+    update = os.environ.get("SKARE3_REPO_INFO_LATEST", "").lower() in ["true", "1"]
     if not dir_access_ok(CONFIG["data_dir"]) and not update:
         return False
     result = github.GITHUB_API_V4(_LAST_UPDATED_QUERY.render(**pkg_info))
