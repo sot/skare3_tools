@@ -28,26 +28,90 @@ import hashlib
 import json
 import os
 import shutil
+import tempfile
+import logging
+
+from pathlib import Path
+from cxotime import CxoTime, units as u
+from tqdm import tqdm
+from skare3_tools.config import CONFIG
 
 
 class TestResultException(Exception):
     pass
 
 
-from skare3_tools.config import CONFIG
+SKARE3_TEST_DATA = Path(CONFIG["data_dir"]).absolute() / "test_logs"
+INDEX_FILE = SKARE3_TEST_DATA / "index.json"
 
-SKARE3_DASH_DATA = CONFIG["data_dir"]
+if not SKARE3_TEST_DATA.exists():
+    SKARE3_TEST_DATA.mkdir(parents=True)
 
-if not os.path.exists(SKARE3_DASH_DATA):
-    os.makedirs(os.path.join(SKARE3_DASH_DATA, "test_logs"))
-
-INDEX_FILE = os.path.join(SKARE3_DASH_DATA, "test_logs", "index.json")
-if not os.path.exists(os.path.dirname(INDEX_FILE)):
-    os.makedirs(os.path.dirname(INDEX_FILE))
-if not os.path.exists(INDEX_FILE):
+if not INDEX_FILE.exists():
     with open(INDEX_FILE, "w") as f:
         f.write("[]")
     del f
+
+
+LOGGER = logging.getLogger("skare3_tools")
+
+
+def remove(uid=None, directory=None, uids=(), directories=()):
+    with open(INDEX_FILE, "r") as fh:
+        test_result_index = json.load(fh)
+
+    uids = list(uids)
+    if uid and uid not in uids:
+        uids += [uid]
+
+    directories = [SKARE3_TEST_DATA / directory for directory in directories]
+    if directory and directory not in directories:
+        directories += [SKARE3_TEST_DATA / directory]
+
+    # make sure all directories are absolute and within the data tree
+    for directory in directories:
+        if SKARE3_TEST_DATA not in directory.resolve().parents:
+            LOGGER.warning(f"warning: {directory} not in SKARE3_DASH_DATA. Ignoring")
+    directories = [
+        directory for directory in directories if SKARE3_TEST_DATA in directory.resolve().parents
+    ]
+
+    # make a list of everything that will be removed
+    rm = [
+        tr for tr in test_result_index
+        if tr["uid"] in uids
+        or SKARE3_TEST_DATA / tr["destination"] in directories
+    ]
+
+    for tr in rm:
+        test_result_index.remove(tr)
+        shutil.rmtree(SKARE3_TEST_DATA / tr["destination"])
+
+    for directory in directories:
+        if directory.exists():
+            LOGGER.warning(
+                f"The directory {directory} is still there."
+                "This does not happen unless the directory is already not in the index,"
+                "in which case it is safe to remove it by hand."
+                )
+
+    with open(INDEX_FILE, "w") as fh:
+        json.dump(test_result_index, fh, indent=2)
+
+
+def remove_older_than(days):
+    with open(INDEX_FILE, "r") as fh:
+        test_result_index = json.load(fh)
+
+    for tr in test_result_index:
+        all_test_log = SKARE3_TEST_DATA / tr["destination"] / "all_tests.json"
+        with open(all_test_log) as fh:
+            test_suites = json.load(fh)
+            date = CxoTime(test_suites["run_info"]["date"])
+            rm = []
+            if date < CxoTime() - days * u.day:
+                rm.append(tr["uid"])
+            remove(uids=rm)
 
 
 def add(directory, stream, tags=(), properties={}):
@@ -61,13 +125,14 @@ def add(directory, stream, tags=(), properties={}):
         Other properties to store about this test suite.
     :return:
     """
-    if not os.path.exists(directory):
+    directory = Path(directory)
+    if not directory.exists():
         raise TestResultException(
             'Directory "{directory}" does not exist'.format(directory=directory)
         )
 
-    all_test_log = os.path.join(directory, "all_tests.json")
-    if not os.path.exists(all_test_log):
+    all_test_log = directory / "all_tests.json"
+    if not all_test_log.exists():
         raise TestResultException(
             "Not importing: all_tests.json not found in {directory}".format(
                 directory=directory
@@ -83,14 +148,18 @@ def add(directory, stream, tags=(), properties={}):
     if uid in [r["uid"] for r in test_result_index]:
         raise TestResultException("These test results already exist")
 
-    all_test_log = os.path.join(directory, "all_tests.json")
+    all_test_log = directory / "all_tests.json"
     with open(all_test_log) as f:
         test_suites = json.load(f)
 
     date = test_suites["run_info"]["date"]
     destination = "{stream}_{date}_{uid}".format(stream=stream, date=date, uid=uid)
-    abs_destination = os.path.join(SKARE3_DASH_DATA, "test_logs", destination)
+    abs_destination = SKARE3_TEST_DATA / destination
+    if abs_destination.exists():
+        raise Exception(f"Destination already exists: {abs_destination}")
 
+    # architecture, system, hostname and platform are stored as lists in the testr output file
+    # and this "fixes that", at the expense of changing the format.
     test_suites["run_info"]["system"] = " ".join(test_suites["run_info"]["system"])
     test_suites["run_info"]["architecture"] = " ".join(
         test_suites["run_info"]["architecture"]
@@ -140,17 +209,45 @@ def add(directory, stream, tags=(), properties={}):
     )
     test_result_index.append(result)
 
-    shutil.copytree(directory, abs_destination)
+    # copying to a temporary directory first, to make sure there are no surprises
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        tmp_destination = Path(tmpdirname) / destination
+        shutil.copytree(
+            directory,
+            tmp_destination,
+            ignore=_ignore_unreadable
+        )
+        shutil.copy(
+            all_test_log,
+            tmp_destination / (all_test_log.name + '.orig')
+        )
+        with open(tmp_destination / all_test_log.name , "w") as f:
+            json.dump(test_suites, f, indent=2)
+
+        # after that succeeded, copy to the final destination (which does not exist yet)
+        shutil.copytree(
+            tmp_destination,
+            abs_destination,
+        )
+
     with open(INDEX_FILE, "w") as f:
         json.dump(test_result_index, f, indent=2)
 
-    with open(os.path.join(abs_destination, os.path.basename(all_test_log)), "w") as f:
-        json.dump(test_suites, f, indent=2)
+    # update the symbolic link pointing to the latest test in the stream
+    symlink = SKARE3_TEST_DATA / stream
+
+    symlink.unlink(missing_ok=True)
+    symlink.symlink_to(abs_destination)
+
+
+def _ignore_unreadable(src, names):
+    # this is used in shutil.copytree to ignore files that are not readable due to permissions
+    return [name for name in names if not os.access(os.path.join(src, name), os.R_OK)]
 
 
 def get(stream=None, architecture=None, tag=None, system=None):
     """
-    Get the all test results for the given stream, architecture, tag and system.
+    Get all the test results for the given stream, architecture, tag and system sorted by date.
 
     :param stream: str
     :param architecture: str
@@ -171,9 +268,7 @@ def get(stream=None, architecture=None, tag=None, system=None):
         ):
             continue
         directory = tr["destination"]
-        all_test_log = os.path.join(
-            SKARE3_DASH_DATA, "test_logs", directory, "all_tests.json"
-        )
+        all_test_log = SKARE3_TEST_DATA / directory / "all_tests.json"
         with open(all_test_log) as f:
             test_suites = json.load(f)
             if "run_info" not in test_suites:
@@ -196,6 +291,15 @@ def get_latest(stream=None, architecture=None, tag=None, system=None):
     test_results = get(stream=stream, architecture=architecture, tag=tag, system=system)
     test_results = test_results[-1] if len(test_results) else {}
     return test_results
+
+
+def streams():
+    """
+    Get available streams.
+    """
+    with open(INDEX_FILE, "r") as f:
+        test_result_index = json.load(f)
+    return set([tr["stream"] for tr in test_result_index])
 
 
 def parser():
@@ -224,7 +328,7 @@ def main():
     try:
         add(args.directory, stream=args.stream)
     except TestResultException as e:
-        print("Error:", e)
+        LOGGER.error("Error:", e)
         sys.exit(1)
 
 
