@@ -124,7 +124,9 @@ def init(config=None, reset=False):
     app_data_dir = _app_data_dir_()
     if app_data_dir is None:
         raise Exception(
-            "Could not figure out where to place skare3_tools configuration"
+            "Could not figure out the location of the skare3_tools configuration.\n"
+            "Either create the $SKA/data/skare3/skare3_data directory\n"
+            "or set the SKARE3_TOOLS_DATA environmental variable."
         )
     config_file = os.path.join(app_data_dir, "config.json")
     exists = os.path.exists(config_file)
