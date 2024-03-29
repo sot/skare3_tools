@@ -72,6 +72,7 @@ strings as values:
 
 import json
 import os
+from pathlib import Path
 
 # this is just a default config. This gets saved in a file which can be modified later on.
 # If the file exists, this will be ignored unless explicitly resetting.
@@ -91,7 +92,7 @@ _DEFAULT_CONFIG = {
         ],
     },
     "organizations": ["sot", "acisops"],
-    "data_dir": "",
+    "data_dir": None,
 }
 
 
@@ -103,10 +104,10 @@ _DEFAULT_CONFIG = {
 
 
 def _app_data_dir_():
-    ska_data_dir = os.path.join(os.environ["SKA"], "data", "skare3", "skare3_data")
+    ska_data_dir = Path(os.environ["SKA"]) / "data" / "skare3" / "skare3_data"
     if "SKARE3_TOOLS_DATA" in os.environ:
         app_data_dir = os.environ["SKARE3_TOOLS_DATA"]
-    elif os.path.exists(ska_data_dir):
+    elif ska_data_dir.exists():
         app_data_dir = ska_data_dir
     else:
         app_data_dir = None
@@ -131,8 +132,8 @@ def init(config=None, reset=False):
             "Either create the $SKA/data/skare3/skare3_data directory\n"
             "or set the SKARE3_TOOLS_DATA environmental variable."
         )
-    config_file = os.path.join(app_data_dir, "config.json")
-    exists = os.path.exists(config_file)
+    config_file = app_data_dir / "config.json"
+    exists = config_file.exists()
     if exists and not reset:
         with open(config_file) as f:
             CONFIG = json.load(f)
@@ -143,9 +144,8 @@ def init(config=None, reset=False):
         if reset:
             CONFIG = _DEFAULT_CONFIG.copy()
         if "data_dir" not in CONFIG or not CONFIG["data_dir"]:
-            CONFIG["data_dir"] = os.path.join(app_data_dir, "data")
-        if not os.path.exists(CONFIG["data_dir"]):
-            os.makedirs(CONFIG["data_dir"])
+            CONFIG["data_dir"] = app_data_dir.resolve() / "data"
+        CONFIG["data_dir"].mkdir(parents=True, exist_ok=True)
         with open(config_file, "w") as f:
             json.dump(CONFIG, f, indent=2)
 
