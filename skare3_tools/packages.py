@@ -79,15 +79,16 @@ import re
 import subprocess
 import sys
 import urllib
+from pathlib import Path
 
 import jinja2
 import requests
 import yaml
+from packaging.version import InvalidVersion, Version
 
-from packaging.version import Version, InvalidVersion
 from skare3_tools import github
 from skare3_tools.config import CONFIG
-from pathlib import Path
+
 
 class NetworkException(Exception):
     pass
@@ -167,8 +168,12 @@ def json_cache(name, directory="", ignore=None, expires=None, update_policy=None
                 update = update or update_policy(filename, result)
             if not dir_access_ok(filename):
                 if result is None:
-                    raise Exception(f"No write access to cache file {filename} and no cached value")
-                logging.getLogger("skare3").debug(f"No write access to cache file {filename}")
+                    raise Exception(
+                        f"No write access to cache file {filename} and no cached value"
+                    )
+                logging.getLogger("skare3").debug(
+                    f"No write access to cache file {filename}"
+                )
                 update = False
             if result is None or update:
                 result = func(*args, **kwargs)
@@ -183,11 +188,13 @@ def json_cache(name, directory="", ignore=None, expires=None, update_policy=None
             files = os.path.join(directory, "{name}*.json".format(name=name))
             files = glob.glob(files)
             if files:
-                subprocess.run(["rm"] + files)
+                subprocess.run(["rm"] + files, check=False)
 
-        setattr(wrapper, "clear_cache", clear_cache)
+        wrapper.clear_cache = clear_cache
 
-        def rm_cache_entry(*args, s=inspect.signature(func), **kwargs):
+        sig = inspect.signature(func)
+
+        def rm_cache_entry(*args, s=sig, **kwargs):
             s_args = s.bind(*args, **kwargs).arguments
             arg_str = "-".join(
                 [
@@ -202,7 +209,7 @@ def json_cache(name, directory="", ignore=None, expires=None, update_policy=None
             if os.path.exists(filename):
                 os.remove(filename)
 
-        setattr(wrapper, "rm_cache_entry", rm_cache_entry)
+        wrapper.rm_cache_entry = rm_cache_entry
         return wrapper
 
     return decorator_cache
@@ -219,6 +226,7 @@ def _ensure_skare3_local_repo(update=True):
             cwd=CONFIG["data_dir"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            check=False,
         )
     elif update:
         _ = subprocess.run(
@@ -226,6 +234,7 @@ def _ensure_skare3_local_repo(update=True):
             cwd=repo_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            check=False,
         )
     assert os.path.exists(repo_dir)
 
@@ -254,15 +263,14 @@ def _conda_package_list(update=True):
                 re.match(r"git@github.com:(?P<org>[^/]+)/(?P<repo>\S+)$", home),
                 re.match(r"https?://github.com/(?P<org>[^/]+)/(?P<repo>[^/]+)/?", home),
             ]
-            m = {}
-            for m in matches:
-                if m:
-                    m = m.groupdict()
+            for match in matches:
+                if match:
+                    org_repo = match.groupdict()
+                    pkg_info["owner"] = org_repo["org"]
+                    pkg_info["repository"] = "{org}/{repo}".format(**org_repo)
+                    pkg_info["home"] = info["about"]["home"]
                     break
-            if m:
-                pkg_info["owner"] = m["org"]
-                pkg_info["repository"] = "{org}/{repo}".format(**m)
-                pkg_info["home"] = info["about"]["home"]
+
         # else:
         #    pkg_info['home'] = ''
         # print(f, pkg_info['repository'])
@@ -485,7 +493,7 @@ def check_api_errors(data):
         try:
             msg = "\n".join([e["message"] for e in data["errors"]])
         except Exception:
-            raise Exception(str(data["errors"]))
+            raise Exception(str(data["errors"])) from None
         raise Exception(msg)
 
 
@@ -535,7 +543,7 @@ def _get_repository_info_v4(
         try:
             msg = "\n".join([e["message"] for e in data_v4["errors"]])
         except Exception:
-            raise Exception(str(data_v4["errors"]))
+            raise Exception(str(data_v4["errors"])) from None
         raise Exception(msg)
 
     branches = [
@@ -611,7 +619,7 @@ def _get_repository_info_v4(
     releases = sorted(releases, key=lambda r: Version(r["tagName"]), reverse=True)
 
     release_tags = [r["tagName"] for r in releases]
-    if type(since) is int:
+    if isinstance(since, int):
         # keeping the last "since" releases, plus the current main branch
         releases = releases[: since + 1]
     elif since in release_tags:
@@ -652,7 +660,7 @@ def _get_repository_info_v4(
         }
     ]
 
-    for base, head in zip(releases[1:], releases[:-1]):
+    for base, head in zip(releases[1:], releases[:-1], strict=True):
         rel_commits = get_all_nodes(
             owner,
             name,
@@ -735,14 +743,14 @@ def get_conda_pkg_info(conda_package, conda_channel=None):
         url of the channel
     :return: dict
     """
-    if sys.version_info.major == 3 and sys.version_info.minor >= 7:
+    if sys.version_info == 3 >= (3, 7):
         kwargs = {"capture_output": True}
     else:
         kwargs = {"stdout": subprocess.PIPE}
     cmd = ["conda", "search", conda_package, "--override-channels", "--json"]
     if conda_channel is None:
         conda_channels = CONFIG["conda_channels"]["main"]
-    elif type(conda_channel) is list:
+    elif isinstance(conda_channel, list):
         conda_channels = conda_channel
     elif conda_channel in CONFIG["conda_channels"]:
         conda_channels = CONFIG["conda_channels"][conda_channel]
@@ -774,10 +782,11 @@ def get_conda_pkg_info(conda_package, conda_channel=None):
 
     if unreachable:
         msg = "The following conda channels are not reachable:\n -"
-        msg += " -".join([c for c in unreachable])
+        msg += " -".join(unreachable)
         raise NetworkException(msg)
 
-    p = subprocess.run(cmd, **kwargs)
+    check = kwargs.pop("check", True)
+    p = subprocess.run(cmd, check=check, **kwargs)
     out = json.loads(p.stdout.decode())
     if (
         "error" in out
@@ -838,7 +847,10 @@ def get_conda_pkg_dependencies(conda_package, conda_channel=None):
 
 def _get_release_commit(repository, release_name):
     """
-    Quaternion releases 3.4.1 and 3.5.1 give different results
+    Get release commit.
+
+    Quaternion releases 3.4.1 and 3.5.1 give different results.
+
     :param repository:
     :param release_name:
     :return:
@@ -891,11 +903,11 @@ def _get_repository_info_v3(
     release_commits = [repository.commits(ref=c["sha"]) for c in release_commits]
     release_dates = {
         r["tag_name"]: c["commit"]["committer"]["date"]
-        for r, c in zip(releases, release_commits)
+        for r, c in zip(releases, release_commits, strict=True)
     }
 
     date_since = None
-    if type(since) is int:
+    if isinstance(since, int):
         # only the latest 'since' releases (at most) will be included in summary
         if len(releases) > since:
             date_since = sorted(release_dates.values(), reverse=True)[since]
@@ -930,7 +942,9 @@ def _get_repository_info_v3(
                 "merges": [],
             }
             for release in [
-                r for r, c in zip(releases, release_commits) if c["sha"] == sha
+                r
+                for r, c in zip(releases, release_commits, strict=True)
+                if c["sha"] == sha
             ]
         ]
         release_info += releases_at_commit

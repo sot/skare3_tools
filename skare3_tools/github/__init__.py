@@ -10,8 +10,9 @@ given token::
 
 .. _`authentication token`: https://docs.github.com/en/authentication
 """
+
 from . import github, graphql
-from .github import Organization, Repository  # noqa
+from .github import Organization, Repository  # noqa: F401
 
 GITHUB_API_V3 = github.GITHUB_API
 GITHUB_API_V4 = graphql.GITHUB_API

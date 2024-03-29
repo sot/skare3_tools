@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Check the environment and conda configuration files to determine which packages to build, if any.
+
 It also does a sanity check, checking consistency between release tag and branch. It is assumed that
 the 'target' version (the version after all tests pass) is the name of the branch where the release
 is made. This script checks the meta information of all ska3-* packages to see which ones have
@@ -85,8 +86,8 @@ def main():
     version_info = re.match(fmt, tag_name)
     if not version_info:
         logging.warning(
-            f"Tag name must conform to PEP-440 format"
-            f" (https://www.python.org/dev/peps/pep-0440)"
+            "Tag name must conform to PEP-440 format"
+            " (https://www.python.org/dev/peps/pep-0440)"
         )
         sys.exit(2)
     version_info = version_info.groupdict()

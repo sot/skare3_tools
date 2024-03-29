@@ -9,6 +9,7 @@ containing a dictionary of versions indexed by package names (which can be creat
 
 This script requires CONDA_PASSWORD to be defined.
 """
+
 import argparse
 import collections
 import json
@@ -30,10 +31,13 @@ class CondaException(Exception):
         self.info = info
 
 
-def repository_change_summary(pkgs_repo_info, initial_versions={}, final_versions={}):
+def repository_change_summary(
+    pkgs_repo_info, initial_versions=None, final_versions=None
+):
     """
-    Assemble a list of all PR merges that occurred between initial_version and final_version,
-    according to the information contained in pkgs_repo_info.
+    List all merges that occurred between initial_version and final_version.
+
+    The list is assembled from the information in pkgs_repo_info.
 
     The initial_versions and final_versions arguments are dicts with package names and versions,
     like:
@@ -58,6 +62,11 @@ def repository_change_summary(pkgs_repo_info, initial_versions={}, final_version
         Dictionary of the form {name: version}
     :return: dict
     """
+    if initial_versions is None:
+        initial_versions = {}
+    if final_versions is None:
+        final_versions = {}
+
     pkg_name_map = packages.get_package_list()
     package_to_repo = {
         n["package"]: n["repository"]
@@ -394,7 +403,9 @@ def process_args(args):
         [],
     )
     p = subprocess.run(
-        ["conda", "search", "--json"] + channel + ["ska3-"], stdout=subprocess.PIPE
+        ["conda", "search", "--json"] + channel + ["ska3-"],
+        stdout=subprocess.PIPE,
+        check=False,
     )
     info = json.loads(p.stdout.decode())
     if "error" in info:
@@ -430,7 +441,7 @@ def process_args(args):
                 continue
             initial_version = release_versions[-1]
 
-        def check_version(version):
+        def check_version(version, name=name):
             known_versions = [str(s) for s in versions[name]]
             if version not in known_versions:
                 known_versions_str = "- " + "\n- ".join(known_versions)

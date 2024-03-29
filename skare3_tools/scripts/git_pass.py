@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
 Utility script to provide username/password when authenticating git.
+
 This script reads the GIT_USERNAME and GIT_PASSWORD environmental variables
 and returns the corresponding value when requested.
 
