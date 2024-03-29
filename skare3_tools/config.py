@@ -9,10 +9,7 @@ standard password to conda channels called CONDA_PASSWORD.
 The configuration is saved in JSON format, in the location:
 
 - specified by the SKARE3_TOOLS_DATA environmental variable,
-- or:
-
-  - Linux/Mac OS: ~/.skare3
-  - windows: %LOCALAPPDATA%\\skare3
+- or in the directory $SKA/data/skare3/skare3_data
 
 The default looks like this:
 
@@ -104,16 +101,11 @@ _DEFAULT_CONFIG = {
 
 
 def _app_data_dir_():
-    local_app_data_dir = os.getenv("LOCALAPPDATA")
-    home_dir = os.path.expanduser("~")
+    ska_data_dir = os.path.join(os.environ["SKA"], "data", "skare3", "skare3_data")
     if "SKARE3_TOOLS_DATA" in os.environ:
         app_data_dir = os.environ["SKARE3_TOOLS_DATA"]
-    elif local_app_data_dir:
-        # this is the windows location
-        app_data_dir = os.path.join(local_app_data_dir, "skare3")
-    elif os.path.exists(home_dir) and os.access(home_dir, os.W_OK):
-        # can use this in linux and Mac OS
-        app_data_dir = os.path.join(home_dir, ".skare3")
+    elif os.path.exists(ska_data_dir):
+        app_data_dir = ska_data_dir
     else:
         app_data_dir = None
     return app_data_dir
@@ -132,7 +124,9 @@ def init(config=None, reset=False):
     app_data_dir = _app_data_dir_()
     if app_data_dir is None:
         raise Exception(
-            "Could not figure out where to place skare3_tools configuration"
+            "Could not figure out the location of the skare3_tools configuration.\n"
+            "Either create the $SKA/data/skare3/skare3_data directory\n"
+            "or set the SKARE3_TOOLS_DATA environmental variable."
         )
     config_file = os.path.join(app_data_dir, "config.json")
     exists = os.path.exists(config_file)

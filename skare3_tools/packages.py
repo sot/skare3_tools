@@ -87,10 +87,23 @@ import yaml
 from packaging.version import Version, InvalidVersion
 from skare3_tools import github
 from skare3_tools.config import CONFIG
-
+from pathlib import Path
 
 class NetworkException(Exception):
     pass
+
+
+def dir_access_ok(path):
+    """
+    Returns true if the given path has write access or can be created.
+    """
+    path = Path(path).resolve()
+    if os.path.exists(path):
+        return os.access(path, os.W_OK)
+    # if path does not exist, climb up the hierarchy to see if it can be created
+    if path.parent != path:
+        return dir_access_ok(path.parent)
+    return False
 
 
 def json_cache(name, directory="", ignore=None, expires=None, update_policy=None):
@@ -152,6 +165,11 @@ def json_cache(name, directory="", ignore=None, expires=None, update_policy=None
                     result = json.load(file)
             if update_policy is not None and result is not None:
                 update = update or update_policy(filename, result)
+            if not dir_access_ok(filename):
+                if result is None:
+                    raise Exception(f"No write access to cache file {filename} and no cached value")
+                logging.getLogger("skare3").debug(f"No write access to cache file {filename}")
+                update = False
             if result is None or update:
                 result = func(*args, **kwargs)
                 directory_out = os.path.dirname(filename)
@@ -1017,10 +1035,16 @@ def repository_info_is_outdated(_, pkg_info):
     """
     Cache update policy that returns True if the Github repository has been updated or pushed into.
 
+    If the calling user has not write access to the cache directory, this function returns False,
+    unless SKARE3_REPO_INFO_LATEST is set to "True".
+
     :param _:
     :param pkg_info: dict. As returned from :func:`~skare3_tools.packages.get_repository_info`.
     :return:
     """
+    update = os.environ.get("SKARE3_REPO_INFO_LATEST", "").lower() in ["true", "1"]
+    if not dir_access_ok(CONFIG["data_dir"]) and not update:
+        return False
     result = github.GITHUB_API_V4(_LAST_UPDATED_QUERY.render(**pkg_info))
     result = result["data"]["repository"]
     outdated = (
