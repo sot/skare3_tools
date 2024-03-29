@@ -112,7 +112,11 @@ def _app_data_dir_():
         app_data_dir = os.environ["SKARE3_TOOLS_DATA"]
     elif (
         "SKA" in os.environ
-        and (ska_data_dir := os.path.join(os.environ["SKA"], "data", "skare3", "skare3_data"))
+        and (
+            ska_data_dir := os.path.join(
+                os.environ["SKA"], "data", "skare3", "skare3_data"
+            )
+        )
         and os.path.exists(ska_data_dir)
     ):
         app_data_dir = ska_data_dir
