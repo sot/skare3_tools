@@ -108,7 +108,7 @@ def update_repo(repos_dir, name, url):
             print("Cloning", name)
             retcode = subprocess.call(["git", "clone", url])
             if retcode:
-                raise Exception()
+                raise Exception
 
 
 def get_org_repos(org="sot", token=None):
@@ -131,16 +131,15 @@ def main(argv=None):
 
     if args.repo_names:
         repos = [get_fake_repo(name, org=args.org) for name in args.repo_names]
-    else:
-        if args.all_packages:
-            if args.github_token_file is None:
-                token = os.environ["GITHUB_TOKEN"]
-            else:
-                token = args.github_token_file.read_text().strip()
-            repos_org = get_org_repos(org=args.org, token=token)
-            repos = repos_org
+    elif args.all_packages:
+        if args.github_token_file is None:
+            token = os.environ["GITHUB_TOKEN"]
         else:
-            repos = [get_fake_repo(name, org=args.org) for name in get_ska3_pkgs()]
+            token = args.github_token_file.read_text().strip()
+        repos_org = get_org_repos(org=args.org, token=token)
+        repos = repos_org
+    else:
+        repos = [get_fake_repo(name, org=args.org) for name in get_ska3_pkgs()]
 
     for repo in repos:
         url = repo["clone_url"]

@@ -207,7 +207,7 @@ def make_branch(dir_name: Path, opt: argparse.Namespace):
         run_check(["git", "switch", "-c", opt.branch_name])
 
 
-def commit_changes(dir_name: Path, opt: argparse.Namespace):
+def commit_changes(dir_name: Path, _: argparse.Namespace):
     with ska_file.chdir(dir_name):
         run_check(["git", "commit", "-a", "-m", "Flatten namespace packages"])
 
@@ -240,26 +240,26 @@ def main():
         if not opt.summary_only:
             print(f"Processing {dir_name}")
 
-        dir_name = Path(dir_name)
+        dir_path = Path(dir_name)
 
         if opt.make_branch or opt.make_pr:
-            make_branch(dir_name, opt)
+            make_branch(dir_path, opt)
 
-        fixes_needed = flatten_namespace_pkgs(dir_name, opt)
+        fixes_needed = flatten_namespace_pkgs(dir_path, opt)
 
         if opt.make_branch:
-            commit_changes(dir_name, opt)
+            commit_changes(dir_path, opt)
             if opt.make_pr:
-                make_pr(dir_name, opt)
+                make_pr(dir_path, opt)
 
         if opt.summary_only and fixes_needed > 0:
             # Any project with pyproject.toml or ruff.toml is using ruff or isort
             imports_sorted = any(
-                (dir_name / config).exists()
+                (dir_path / config).exists()
                 for config in ["ruff.toml", "pyproject.toml"]
             )
             sort_imports_str = " (use --sort-imports)" if imports_sorted else ""
-            print(f"{dir_name}: {fixes_needed}{sort_imports_str}")
+            print(f"{dir_path}: {fixes_needed}{sort_imports_str}")
 
 
 if __name__ == "__main__":
