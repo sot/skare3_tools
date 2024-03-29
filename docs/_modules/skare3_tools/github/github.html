@@ -1,17 +1,16 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>skare3_tools.github.github &#8212; SkaRE3 Tools 1.2.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/bootstrap-astropy.css" />
+    <title>skare3_tools.github.github &#8212; SkaRE3 Tools 1.4.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-    <script src="../../../_static/doctools.js"></script>
-    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/documentation_options.js?v=9172181d"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script type="text/javascript" src="../../../_static/sidebar.js"></script>
     <script type="text/javascript" src="../../../_static/copybutton.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -45,7 +44,7 @@
     <h3>Navigation</h3>
     <ul>
       <li>
-	<a href="../../../index.html">SkaRE3 Tools 1.2.0 documentation</a>
+	<a href="../../../index.html">SkaRE3 Tools 1.4.0 documentation</a>
 	 &#187;
       </li>
       <li><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
@@ -62,7 +61,9 @@
             
   <h1>Source code for skare3_tools.github.github</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">This is a thin wrapper for `Github&#39;s REST API`_ (V3). It is intended to be easy to extend.</span>
+<span class="sd">A thin wrapper for `Github&#39;s REST API`_ (V3).</span>
+
+<span class="sd">It is intended to be easy to extend.</span>
 <span class="sd">It does not impose much structure on top of what is shown in their online documentation,</span>
 <span class="sd">and it should be easy to see the correspondence between both.</span>
 
@@ -168,7 +169,9 @@
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;github&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="init"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.init">[docs]</a><span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="init">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.init">[docs]</a>
+<span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initialize the API.</span>
 
@@ -180,6 +183,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">GITHUB_API</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">force</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">GITHUB_API</span></div>
+
 
 
 <span class="k">def</span> <span class="nf">_get_user_password</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
@@ -205,7 +209,9 @@
     <span class="k">return</span> <span class="n">user</span><span class="p">,</span> <span class="n">password</span>
 
 
-<div class="viewcode-block" id="GithubAPI"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI">[docs]</a><span class="k">class</span> <span class="nc">GithubAPI</span><span class="p">:</span>
+<div class="viewcode-block" id="GithubAPI">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI">[docs]</a>
+<span class="k">class</span> <span class="nc">GithubAPI</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Main class that encapsulates Github&#39;s REST API.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -227,7 +233,9 @@
     <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span>
 
-<div class="viewcode-block" id="GithubAPI.init"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.init">[docs]</a>    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="GithubAPI.init">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.init">[docs]</a>
+    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the Github API.</span>
 
@@ -300,6 +308,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">raise</span></div>
 
+
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
@@ -363,33 +372,46 @@
             <span class="k">return</span> <span class="n">result</span>
         <span class="k">return</span> <span class="n">r</span>
 
-<div class="viewcode-block" id="GithubAPI.get"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="GithubAPI.get">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.get">[docs]</a>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform http request using GET method.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">r</span></div>
 
-<div class="viewcode-block" id="GithubAPI.post"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.post">[docs]</a>    <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GithubAPI.post">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.post">[docs]</a>
+    <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform http request using POST method</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;post&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">r</span></div>
 
-<div class="viewcode-block" id="GithubAPI.put"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.put">[docs]</a>    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GithubAPI.put">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.put">[docs]</a>
+    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform http request using PUT method</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;put&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">r</span></div>
 
-<div class="viewcode-block" id="GithubAPI.patch"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.patch">[docs]</a>    <span class="k">def</span> <span class="nf">patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GithubAPI.patch">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.GithubAPI.patch">[docs]</a>
+    <span class="k">def</span> <span class="nf">patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform http request using PATCH method</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;patch&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">r</span></div></div>
+        <span class="k">return</span> <span class="n">r</span></div>
+</div>
+
 
 
 <span class="k">class</span> <span class="nc">_EndpointGroup</span><span class="p">:</span>
@@ -445,7 +467,7 @@
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">][</span><span class="s2">&quot;page&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">page</span>
             <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                 <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;_get_list_generator received a </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="n">r</span><span class="p">)</span>
                 <span class="k">break</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -469,10 +491,12 @@
 <span class="sd">        :param kwargs:</span>
 <span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">entry</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list_generator</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_list_generator</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
 
 
-<div class="viewcode-block" id="Repository"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Repository">[docs]</a><span class="k">class</span> <span class="nc">Repository</span><span class="p">:</span>
+<div class="viewcode-block" id="Repository">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Repository">[docs]</a>
+<span class="k">class</span> <span class="nc">Repository</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Switchboard for all repository-related endpoints.</span>
 
@@ -510,14 +534,21 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">jobs</span> <span class="o">=</span> <span class="n">Jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Releases"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Releases">[docs]</a><span class="k">class</span> <span class="nc">Releases</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Releases">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Releases">[docs]</a>
+<span class="k">class</span> <span class="nc">Releases</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Endpoints that have to do with repository releases</span>
+<span class="sd">    Endpoints that have to do with repository releases.</span>
+
 <span class="sd">    (`releases API docs &lt;https://developer.github.com/v3/repos/releases&gt;`_)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Releases.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Releases.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latest</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">release_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Releases.__call__">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Releases.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latest</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">release_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get release.</span>
 
 <span class="sd">        :param latest:</span>
 <span class="sd">        :param tag_name:</span>
@@ -539,8 +570,13 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s2">&quot;repos/:owner/:repo/releases&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Releases.create"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Releases.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Releases.create">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Releases.create">[docs]</a>
+    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a Release.</span>
+
 <span class="sd">        :param tag_name: str. Required. The name of the tag.</span>
 <span class="sd">        :param target_commitish: str.</span>
 <span class="sd">            Specifies the commitish value that determines where the Git tag is created from.</span>
@@ -565,8 +601,13 @@
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">(</span><span class="s2">&quot;repos/:owner/:repo/releases&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Releases.edit"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Releases.edit">[docs]</a>    <span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">release_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Releases.edit">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Releases.edit">[docs]</a>
+    <span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">release_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Edit a Release.</span>
+
 <span class="sd">        :param release_id: str</span>
 <span class="sd">        :param tag_name: str</span>
 <span class="sd">            The name of the tag.</span>
@@ -596,19 +637,26 @@
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">release_id</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delete</span><span class="p">(</span>
             <span class="s2">&quot;repos/:owner/:repo/releases/:release_id&quot;</span><span class="p">,</span> <span class="n">release_id</span><span class="o">=</span><span class="n">release_id</span>
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Tags"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Tags">[docs]</a><span class="k">class</span> <span class="nc">Tags</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Tags">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Tags">[docs]</a>
+<span class="k">class</span> <span class="nc">Tags</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Endpoints that have to do with repository tags</span>
+<span class="sd">    Endpoints that have to do with repository tags.</span>
+
 <span class="sd">    (`tags API docs &lt;https://developer.github.com/v3/git/tags&gt;`_)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Tags.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Tags.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tag_sha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Tags.__call__">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Tags.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tag_sha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">sum</span><span class="p">([</span><span class="nb">bool</span><span class="p">(</span><span class="n">tag_sha</span><span class="p">),</span> <span class="nb">bool</span><span class="p">(</span><span class="n">name</span><span class="p">)])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;only one of tag_sha, name can be specified&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">tag_sha</span><span class="p">:</span>
@@ -618,8 +666,13 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s2">&quot;repos/:owner/:repo/tags&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Tags.create"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Tags.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Tags.create">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Tags.create">[docs]</a>
+    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create tag.</span>
+
 <span class="sd">        :param tag: str. Required.</span>
 <span class="sd">            The tag&#39;s name. This is typically a version (e.g., &quot;v0.0.1&quot;).</span>
 <span class="sd">        :param message: str. Required.</span>
@@ -644,17 +697,26 @@
         <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
         <span class="n">json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optional</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">})</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">(</span><span class="s2">&quot;repos/:owner/:repo/git/tags&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">(</span><span class="s2">&quot;repos/:owner/:repo/git/tags&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="Commits"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Commits">[docs]</a><span class="k">class</span> <span class="nc">Commits</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Commits">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Commits">[docs]</a>
+<span class="k">class</span> <span class="nc">Commits</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Endpoints that have to do with repository commits</span>
+<span class="sd">    Endpoints that have to do with repository commits.</span>
+
 <span class="sd">    (`commit API docs &lt;https://developer.github.com/v3/repos/commits&gt;`_)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Commits.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Commits.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Commits.__call__">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Commits.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get commits.</span>
+
 <span class="sd">        :param ref: str</span>
 <span class="sd">        :param sha: str</span>
 <span class="sd">            SHA or branch to start listing commits from.</span>
@@ -682,17 +744,26 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span>
                 <span class="s2">&quot;repos/:owner/:repo/commits/:ref&quot;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s2">&quot;repos/:owner/:repo/commits&quot;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s2">&quot;repos/:owner/:repo/commits&quot;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="Branches"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Branches">[docs]</a><span class="k">class</span> <span class="nc">Branches</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Branches">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Branches">[docs]</a>
+<span class="k">class</span> <span class="nc">Branches</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Endpoints that have to do with repository branches</span>
+<span class="sd">    Endpoints that have to do with repository branches.</span>
+
 <span class="sd">    (`branches API docs &lt;https://developer.github.com/v3/repos/branches&gt;`_)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Branches.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Branches.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">branch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Branches.__call__">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Branches.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">branch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get branches.</span>
+
 <span class="sd">        :param branch:</span>
 <span class="sd">        :param protected: bool</span>
 <span class="sd">            Setting to true returns only protected branches.</span>
@@ -713,16 +784,23 @@
                 <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s2">&quot;repos/:owner/:repo/branches&quot;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s2">&quot;repos/:owner/:repo/branches&quot;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="Issues"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Issues">[docs]</a><span class="k">class</span> <span class="nc">Issues</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Issues">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Issues">[docs]</a>
+<span class="k">class</span> <span class="nc">Issues</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Endpoints that have to do with repository issues</span>
+<span class="sd">    Endpoints that have to do with repository issues.</span>
+
 <span class="sd">    (`issues API docs &lt;https://developer.github.com/v3/issues&gt;`_)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Issues.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Issues.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Issues.__call__">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Issues.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List issues.</span>
 
@@ -767,8 +845,13 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s2">&quot;repos/:owner/:repo/issues&quot;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Issues.create"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Issues.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Issues.create">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Issues.create">[docs]</a>
+    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create issue.</span>
+
 <span class="sd">        :param title: str Required. The title of the issue.</span>
 <span class="sd">        :param body: str The contents of the issue.</span>
 <span class="sd">        :param milestone: int</span>
@@ -791,8 +874,13 @@
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">(</span><span class="s2">&quot;repos/:owner/:repo/issues&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Issues.edit"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Issues.edit">[docs]</a>    <span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Issues.edit">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Issues.edit">[docs]</a>
+    <span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issue_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Edit issue.</span>
+
 <span class="sd">        :param issue_number:</span>
 <span class="sd">        :param title: str</span>
 <span class="sd">            The title of the issue.</span>
@@ -839,17 +927,19 @@
             <span class="n">issue_number</span><span class="o">=</span><span class="n">issue_number</span><span class="p">,</span>
             <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+</div>
+
 
 
 <span class="k">class</span> <span class="nc">Compare</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compare two commits</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compare two commits.</span>
 
 <span class="sd">    (`compare API docs &lt;/repos/{owner}/{repo}/compare/{basehead}&gt;`)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compare two commits.&quot;&quot;&quot;</span>
         <span class="n">required</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
@@ -860,14 +950,21 @@
         <span class="p">)</span>
 
 
-<div class="viewcode-block" id="PullRequests"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests">[docs]</a><span class="k">class</span> <span class="nc">PullRequests</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+<div class="viewcode-block" id="PullRequests">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests">[docs]</a>
+<span class="k">class</span> <span class="nc">PullRequests</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Endpoints that have to do with pull requests</span>
+<span class="sd">    Endpoints that have to do with pull requests.</span>
+
 <span class="sd">    (`pull requests API docs &lt;https://developer.github.com/v3/pulls&gt;`_)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="PullRequests.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="PullRequests.__call__">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get pull request.</span>
+
 <span class="sd">        :param pull_number: str (optional)</span>
 <span class="sd">            Default: all pulls</span>
 <span class="sd">        :param state: str</span>
@@ -917,8 +1014,13 @@
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s2">&quot;/repos/:owner/:repo/pulls&quot;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PullRequests.create"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="PullRequests.create">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.create">[docs]</a>
+    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create pull request.</span>
+
 <span class="sd">        :param title: str Required.</span>
 <span class="sd">            The title of the new pull request.</span>
 <span class="sd">        :param head: str Required.</span>
@@ -947,8 +1049,13 @@
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">(</span><span class="s2">&quot;/repos/:owner/:repo/pulls&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PullRequests.edit"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.edit">[docs]</a>    <span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="PullRequests.edit">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.edit">[docs]</a>
+    <span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Edit pull request.</span>
+
 <span class="sd">        :param pull_number:</span>
 <span class="sd">        :param title: str</span>
 <span class="sd">            The title of the pull request.</span>
@@ -975,7 +1082,10 @@
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="PullRequests.commits"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.commits">[docs]</a>    <span class="k">def</span> <span class="nf">commits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="PullRequests.commits">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.commits">[docs]</a>
+    <span class="k">def</span> <span class="nf">commits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Lists a maximum of 250 commits for a pull request.</span>
 
@@ -989,7 +1099,10 @@
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="PullRequests.files"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.files">[docs]</a>    <span class="k">def</span> <span class="nf">files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="PullRequests.files">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.files">[docs]</a>
+    <span class="k">def</span> <span class="nf">files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Lists a maximum of 250 commits for a pull request.</span>
 
@@ -1003,9 +1116,12 @@
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="PullRequests.status"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.status">[docs]</a>    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="PullRequests.status">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.status">[docs]</a>
+    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get if a pull request has been merged</span>
+<span class="sd">        Get if a pull request has been merged.</span>
 
 <span class="sd">        :param pull_number: str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1017,9 +1133,12 @@
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="PullRequests.merge"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="PullRequests.merge">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.PullRequests.merge">[docs]</a>
+    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Merge a pull request</span>
+<span class="sd">        Merge a pull request.</span>
 
 <span class="sd">        :param pull_number:</span>
 <span class="sd">        :param commit_title: str</span>
@@ -1041,12 +1160,15 @@
             <span class="n">pull_number</span><span class="o">=</span><span class="n">pull_number</span><span class="p">,</span>
             <span class="n">params</span><span class="o">=</span><span class="n">json</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+</div>
+
 
 
 <span class="k">class</span> <span class="nc">Merge</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Single endpoint for merges</span>
+<span class="sd">    Single endpoint for merges.</span>
+
 <span class="sd">    (`merges API docs &lt;https://developer.github.com/v3/repos/merging/&gt;`_)</span>
 
 <span class="sd">    Note: this is for branches. Merging pull requests is done with the pull requests API</span>
@@ -1054,7 +1176,7 @@
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Merge a branch</span>
+<span class="sd">        Merge a branch.</span>
 
 <span class="sd">        :param base: str</span>
 <span class="sd">            The name of the base branch that the head will be merged into.</span>
@@ -1075,11 +1197,13 @@
 
 <span class="k">class</span> <span class="nc">Workflows</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Endpoints that have to do with workflows</span>
+<span class="sd">    Endpoints that have to do with workflows.</span>
+
 <span class="sd">    (`Workflows docs &lt;https://developer.github.com/v3/actions/workflows&gt;`_)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">workflow_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get workflow.&quot;&quot;&quot;</span>
         <span class="n">required</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">optional</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">json</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">required</span><span class="p">}</span>
@@ -1097,7 +1221,8 @@
 
 <span class="k">class</span> <span class="nc">Artifacts</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Endpoints that have to do with artifacts</span>
+<span class="sd">    Endpoints that have to do with artifacts.</span>
+
 <span class="sd">    (`Artifacts docs &lt;https://developer.github.com/v3/actions/artifacts&gt;`_)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -1143,7 +1268,8 @@
 
 <span class="k">class</span> <span class="nc">Jobs</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Endpoints that have to do with workflow jobs</span>
+<span class="sd">    Endpoints that have to do with workflow jobs.</span>
+
 <span class="sd">    (`Workflow-jobs docs &lt;https://developer.github.com/v3/actions/workflow-jobs&gt;`_)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -1168,12 +1294,15 @@
 
 <span class="k">class</span> <span class="nc">Runs</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Endpoints that have to do with workflow runs</span>
+<span class="sd">    Endpoints that have to do with workflow runs.</span>
+
 <span class="sd">    (`Workflow-runs docs &lt;https://developer.github.com/v3/actions/workflow-runs&gt;`_)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">workflow_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get workflow run.</span>
+
 <span class="sd">        :param workflow_id:</span>
 <span class="sd">        :param run_id:</span>
 <span class="sd">        :param actor: str</span>
@@ -1237,49 +1366,70 @@
         <span class="p">)</span>
 
 
-<div class="viewcode-block" id="Checks"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Checks">[docs]</a><span class="k">class</span> <span class="nc">Checks</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+<div class="viewcode-block" id="Checks">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Checks">[docs]</a>
+<span class="k">class</span> <span class="nc">Checks</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Endpoints that have to do with repository checks</span>
+<span class="sd">    Endpoints that have to do with repository checks.</span>
+
 <span class="sd">    (`checks API docs &lt;https://developer.github.com/v3/checks&gt;`_)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Checks.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Checks.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref</span><span class="p">):</span>
+<div class="viewcode-block" id="Checks.__call__">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Checks.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref</span><span class="p">):</span>
         <span class="c1"># accept headers are custom because this endpoint is</span>
         <span class="c1"># on preview for developers and can change any time</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span>
             <span class="s2">&quot;repos/:owner/:repo/commits/:ref/check-runs&quot;</span><span class="p">,</span>
             <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="s2">&quot;application/vnd.github.antiope-preview+json&quot;</span><span class="p">},</span>
             <span class="n">ref</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="DispatchEvent"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.DispatchEvent">[docs]</a><span class="k">class</span> <span class="nc">DispatchEvent</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DispatchEvent">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.DispatchEvent">[docs]</a>
+<span class="k">class</span> <span class="nc">DispatchEvent</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Create a repository dispatch event</span>
+<span class="sd">    Create a repository dispatch event.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="DispatchEvent.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.DispatchEvent.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="n">client_payload</span><span class="o">=</span><span class="p">{}):</span>
+<div class="viewcode-block" id="DispatchEvent.__call__">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.DispatchEvent.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="n">client_payload</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a repository dispatch event</span>
+<span class="sd">        Create a repository dispatch event.</span>
 
 <span class="sd">        :param event_type: str</span>
 <span class="sd">            A custom webhook event name.</span>
 <span class="sd">        :param client_payload: dict</span>
 <span class="sd">            JSON payload with extra information about the webhook event.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">client_payload</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">client_payload</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;event_type&quot;</span><span class="p">:</span> <span class="n">event_type</span><span class="p">,</span> <span class="s2">&quot;client_payload&quot;</span><span class="p">:</span> <span class="n">client_payload</span><span class="p">}</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">(</span><span class="s2">&quot;/repos/:owner/:repo/dispatches&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">(</span><span class="s2">&quot;/repos/:owner/:repo/dispatches&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="Contents"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Contents">[docs]</a><span class="k">class</span> <span class="nc">Contents</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Contents">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Contents">[docs]</a>
+<span class="k">class</span> <span class="nc">Contents</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Create and edit repository content</span>
+<span class="sd">    Create and edit repository content.</span>
+
 <span class="sd">    (`contents API docs  &lt;https://developer.github.com/v3/repos/contents/&gt;`_)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Contents.__call__"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Contents.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">decode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Contents.__call__">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Contents.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">decode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Gets the contents of a file or directory in a repository.</span>
+
 <span class="sd">        If path is omitted, it returns all the contents of the repository.</span>
 
 <span class="sd">        :param path: str</span>
@@ -1302,9 +1452,12 @@
             <span class="n">c</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">c</span></div>
 
-<div class="viewcode-block" id="Contents.edit"><a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Contents.edit">[docs]</a>    <span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">encode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Contents.edit">
+<a class="viewcode-back" href="../../../github_api.html#skare3_tools.github.github.Contents.edit">[docs]</a>
+    <span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">encode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create or update file contents</span>
+<span class="sd">        Create or update file contents.</span>
 
 <span class="sd">        :param message:	str	Required.</span>
 <span class="sd">            The commit message.</span>
@@ -1344,7 +1497,9 @@
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">json</span><span class="p">}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_put</span><span class="p">(</span>
             <span class="s2">&quot;/repos/:owner/:repo/contents/:path&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">json</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+</div>
+
 
 
 <span class="k">class</span> <span class="nc">Repositories</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
@@ -1385,7 +1540,7 @@
     <a href="#">Back to Top</a></p>
   <p>
     &copy; Copyright 2020, Javier Gonzalez.<br/>
-    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 6.1.3. &nbsp;
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 7.2.6. &nbsp;
   </p>
 </footer>
   </body>

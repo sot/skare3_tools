@@ -1,18 +1,17 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Scripts &#8212; SkaRE3 Tools 1.2.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css" />
+    <title>Scripts &#8212; SkaRE3 Tools 1.4.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=9172181d"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
     <script type="text/javascript" src="_static/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -59,7 +58,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.2.0 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.4.0 documentation</a>
 	 &#187;
       </li>
       
@@ -74,24 +73,24 @@
           <div class="body" role="main">
             
   <section id="scripts">
-<h1>Scripts<a class="headerlink" href="#scripts" title="Permalink to this heading">¶</a></h1>
+<h1>Scripts<a class="headerlink" href="#scripts" title="Link to this heading">¶</a></h1>
 <section id="skare3-bulk">
-<span id="id1"></span><h2><a class="reference internal" href="#skare3-bulk"><span class="std std-ref">skare3-bulk</span></a><a class="headerlink" href="#skare3-bulk" title="Permalink to this heading">¶</a></h2>
+<span id="id1"></span><h2><a class="reference internal" href="#skare3-bulk"><span class="std std-ref">skare3-bulk</span></a><a class="headerlink" href="#skare3-bulk" title="Link to this heading">¶</a></h2>
 <p><p>Script to run the same command in a collection of subdirectories.</p>
 </p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">bulk</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">repositories</span> <span class="n">REPOSITORIES</span><span class="p">]</span> <span class="n">cmd</span> <span class="p">[</span><span class="n">cmd</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="Positional Arguments">
-<h3>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this heading">¶</a></h3>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>cmd</kbd></dt>
 <dd><p>The command to run</p>
 </dd>
 </dl>
 </section>
-<section id="options">
-<h3>options<a class="headerlink" href="#options" title="Permalink to this heading">¶</a></h3>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--repositories</kbd></dt>
 <dd><p>the name of the subdirectories</p>
@@ -101,7 +100,7 @@
 </section>
 </section>
 <section id="skare3-build">
-<span id="id2"></span><h2><a class="reference internal" href="#skare3-build"><span class="std std-ref">skare3-build</span></a><a class="headerlink" href="#skare3-build" title="Permalink to this heading">¶</a></h2>
+<span id="id2"></span><h2><a class="reference internal" href="#skare3-build"><span class="std std-ref">skare3-build</span></a><a class="headerlink" href="#skare3-build" title="Link to this heading">¶</a></h2>
 <p><p>Script to wrap the standard skare3 building script.</p>
 <p>This script differs in a few ways from the standard build:</p>
 <ul class="simple">
@@ -120,16 +119,16 @@ It seems that unknown arguments must be consecutive, and known arguments must be
                     <span class="n">package</span>
 </pre></div>
 </div>
-<section id="Positional Arguments">
-<h3>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this heading">¶</a></h3>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>package</kbd></dt>
 <dd><p>The repository name in format {owner}/{name}</p>
 </dd>
 </dl>
 </section>
-<section id="options">
-<h3>options<a class="headerlink" href="#options" title="Permalink to this heading">¶</a></h3>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--ska3-overwrite-version</kbd></dt>
 <dd><p>the version of the resulting conda package</p>
@@ -145,9 +144,9 @@ It seems that unknown arguments must be consecutive, and known arguments must be
 </section>
 </section>
 <section id="skare3-release-check">
-<span id="id3"></span><h2><a class="reference internal" href="#skare3-release-check"><span class="std std-ref">skare3-release-check</span></a><a class="headerlink" href="#skare3-release-check" title="Permalink to this heading">¶</a></h2>
-<p><p>Check the environment and conda configuration files to determine which packages to build, if any.
-It also does a sanity check, checking consistency between release tag and branch. It is assumed that
+<span id="id3"></span><h2><a class="reference internal" href="#skare3-release-check"><span class="std std-ref">skare3-release-check</span></a><a class="headerlink" href="#skare3-release-check" title="Link to this heading">¶</a></h2>
+<p><p>Check the environment and conda configuration files to determine which packages to build, if any.</p>
+<p>It also does a sanity check, checking consistency between release tag and branch. It is assumed that
 the ‘target’ version (the version after all tests pass) is the name of the branch where the release
 is made. This script checks the meta information of all ska3-* packages to see which ones have
 version equal to the target version and adds those to a list of packages to build.</p>
@@ -168,8 +167,8 @@ If not, the local copy of the skare3 repo must be in the tag branch.</p></li>
                             <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">check</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="options">
-<h3>options<a class="headerlink" href="#options" title="Permalink to this heading">¶</a></h3>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--version</kbd></dt>
 <dd><p>Target version to build</p>
@@ -193,7 +192,7 @@ If not, the local copy of the skare3 repo must be in the tag branch.</p></li>
 </section>
 </section>
 <section id="skare3-changes-summary">
-<span id="id4"></span><h2><a class="reference internal" href="#skare3-changes-summary"><span class="std std-ref">skare3-changes-summary</span></a><a class="headerlink" href="#skare3-changes-summary" title="Permalink to this heading">¶</a></h2>
+<span id="id4"></span><h2><a class="reference internal" href="#skare3-changes-summary"><span class="std std-ref">skare3-changes-summary</span></a><a class="headerlink" href="#skare3-changes-summary" title="Link to this heading">¶</a></h2>
 <p><p>Produce a list of changes for meta-packages between versions.</p>
 <p>The sets of versions can be specified in a few ways: 1. one string of flight, matlab, last_tag,
 2. one string that must correspond to a package in conda-info file 3. the name of a json file
@@ -207,8 +206,8 @@ containing a dictionary of versions indexed by package names (which can be creat
                               <span class="p">[</span><span class="o">--</span><span class="n">conda</span><span class="o">-</span><span class="n">channel</span> <span class="n">CONDA_CHANNEL</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="options">
-<h3>options<a class="headerlink" href="#options" title="Permalink to this heading">¶</a></h3>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--initial-version</kbd></dt>
 <dd><p>A string id. The default is the last non-prerelease version.</p>
@@ -231,7 +230,7 @@ containing a dictionary of versions indexed by package names (which can be creat
 </section>
 </section>
 <section id="skare3-promote">
-<span id="id5"></span><h2><a class="reference internal" href="#skare3-promote"><span class="std std-ref">skare3-promote</span></a><a class="headerlink" href="#skare3-promote" title="Permalink to this heading">¶</a></h2>
+<span id="id5"></span><h2><a class="reference internal" href="#skare3-promote"><span class="std std-ref">skare3-promote</span></a><a class="headerlink" href="#skare3-promote" title="Link to this heading">¶</a></h2>
 <p><p>Promote ska3 meta-packages or packages from a list of channels to one target channel.</p>
 <p>”Promotion” usually means copying conda package files from the source
 channels to the target channel. The channels are expected to be within
@@ -244,15 +243,15 @@ them to the target channel.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">promote</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ska3</span><span class="o">-</span><span class="n">conda</span> <span class="n">SKA3_CONDA</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="kn">from</span> <span class="nn">FROM_CHANNEL</span> <span class="p">[</span><span class="o">--</span><span class="kn">from</span> <span class="nn">FROM_CHANNEL</span> <span class="o">...</span><span class="p">]</span> <span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">to</span> <span class="n">TO_CHANNEL</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">move</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">skare3</span><span class="o">-</span><span class="n">local</span><span class="o">-</span><span class="n">copy</span> <span class="n">SKARE3</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">log</span><span class="o">-</span><span class="n">level</span> <span class="p">{</span><span class="n">error</span><span class="p">,</span><span class="n">warning</span><span class="p">,</span><span class="n">info</span><span class="p">,</span><span class="n">debug</span><span class="p">}]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">package</span> <span class="n">name</span><span class="o">&gt;==&lt;</span><span class="n">version</span><span class="o">&gt;</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">package</span> <span class="n">name</span><span class="o">&gt;==&lt;</span><span class="n">version</span><span class="o">&gt;</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="Positional Arguments">
-<h3>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this heading">¶</a></h3>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>&lt;package name&gt;==&lt;version&gt;</kbd></dt>
 <dd></dd>
 </dl>
 </section>
-<section id="options">
-<h3>options<a class="headerlink" href="#options" title="Permalink to this heading">¶</a></h3>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--ska3-conda</kbd></dt>
 <dd><p>ska3-conda directory containing source and target channels (defaults to the standard location)</p>
@@ -287,9 +286,9 @@ them to the target channel.</p>
 </section>
 </section>
 <section id="skare3-git-pass">
-<span id="id6"></span><h2><a class="reference internal" href="#skare3-git-pass"><span class="std std-ref">skare3-git-pass</span></a><a class="headerlink" href="#skare3-git-pass" title="Permalink to this heading">¶</a></h2>
-<p><p>Utility script to provide username/password when authenticating git.
-This script reads the GIT_USERNAME and GIT_PASSWORD environmental variables
+<span id="id6"></span><h2><a class="reference internal" href="#skare3-git-pass"><span class="std std-ref">skare3-git-pass</span></a><a class="headerlink" href="#skare3-git-pass" title="Link to this heading">¶</a></h2>
+<p><p>Utility script to provide username/password when authenticating git.</p>
+<p>This script reads the GIT_USERNAME and GIT_PASSWORD environmental variables
 and returns the corresponding value when requested.</p>
 <p>If one sets the GIT_ASKPASS environmental variable to point to this script, and sets GIT_USERNAME
 and GIT_PASSWORD, git takes care of the rest.</p>
@@ -297,8 +296,8 @@ and GIT_PASSWORD, git takes care of the rest.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">git</span><span class="o">-</span><span class="k">pass</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">{</span><span class="n">username</span><span class="p">,</span><span class="n">password</span><span class="p">}</span>
 </pre></div>
 </div>
-<section id="Positional Arguments">
-<h3>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this heading">¶</a></h3>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>what</kbd></dt>
 <dd><p>Possible choices: username, password</p>
@@ -319,30 +318,30 @@ and GIT_PASSWORD, git takes care of the rest.</p>
 <ul>
 <li><a class="reference internal" href="#">Scripts</a><ul>
 <li><a class="reference internal" href="#skare3-bulk"><span class="xref std std-ref">skare3-bulk</span></a><ul>
-<li><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
-<li><a class="reference internal" href="#options">options</a></li>
+<li><a class="reference internal" href="#positional-arguments">Positional Arguments</a></li>
+<li><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#skare3-build"><span class="xref std std-ref">skare3-build</span></a><ul>
-<li><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
-<li><a class="reference internal" href="#options">options</a></li>
+<li><a class="reference internal" href="#positional-arguments">Positional Arguments</a></li>
+<li><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#skare3-release-check"><span class="xref std std-ref">skare3-release-check</span></a><ul>
-<li><a class="reference internal" href="#options">options</a></li>
+<li><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#skare3-changes-summary"><span class="xref std std-ref">skare3-changes-summary</span></a><ul>
-<li><a class="reference internal" href="#options">options</a></li>
+<li><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#skare3-promote"><span class="xref std std-ref">skare3-promote</span></a><ul>
-<li><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
-<li><a class="reference internal" href="#options">options</a></li>
+<li><a class="reference internal" href="#positional-arguments">Positional Arguments</a></li>
+<li><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#skare3-git-pass"><span class="xref std std-ref">skare3-git-pass</span></a><ul>
-<li><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
+<li><a class="reference internal" href="#positional-arguments">Positional Arguments</a></li>
 </ul>
 </li>
 </ul>
@@ -383,7 +382,7 @@ and GIT_PASSWORD, git takes care of the rest.</p>
     <a href="#">Back to Top</a></p>
   <p>
     &copy; Copyright 2020, Javier Gonzalez.<br/>
-    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 6.1.3. &nbsp;
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 7.2.6. &nbsp;
   </p>
 </footer>
   </body>

@@ -1,18 +1,17 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Dashboard &#8212; SkaRE3 Tools 1.2.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css" />
+    <title>Dashboard &#8212; SkaRE3 Tools 1.4.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=9172181d"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
     <script type="text/javascript" src="_static/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -59,7 +58,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.2.0 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.4.0 documentation</a>
 	 &#187;
       </li>
       
@@ -74,11 +73,11 @@
           <div class="body" role="main">
             
   <section id="module-skare3_tools.dashboard">
-<span id="dashboard"></span><h1>Dashboard<a class="headerlink" href="#module-skare3_tools.dashboard" title="Permalink to this heading">¶</a></h1>
-<p>Tools to display package information on web pages.
-Most implementation is in the <a class="reference internal" href="#module-skare3_tools.dashboard.views" title="skare3_tools.dashboard.views"><code class="xref py py-mod docutils literal notranslate"><span class="pre">views</span></code></a> submodule.</p>
+<span id="dashboard"></span><h1>Dashboard<a class="headerlink" href="#module-skare3_tools.dashboard" title="Link to this heading">¶</a></h1>
+<p>Tools to display package information on web pages.</p>
+<p>Most implementation is in the <a class="reference internal" href="#module-skare3_tools.dashboard.views" title="skare3_tools.dashboard.views"><code class="xref py py-mod docutils literal notranslate"><span class="pre">views</span></code></a> submodule.</p>
 <section id="module-skare3_tools.dashboard.views">
-<span id="views"></span><h2>Views<a class="headerlink" href="#module-skare3_tools.dashboard.views" title="Permalink to this heading">¶</a></h2>
+<span id="views"></span><h2>Views<a class="headerlink" href="#module-skare3_tools.dashboard.views" title="Link to this heading">¶</a></h2>
 <p>Current views:</p>
 <ul class="simple">
 <li><p>dashboard. Shows all packages, with conda and github information.
@@ -92,16 +91,16 @@ Only available on web server.</p></li>
 </ul>
 </section>
 <section id="scripts">
-<h2>Scripts<a class="headerlink" href="#scripts" title="Permalink to this heading">¶</a></h2>
+<h2>Scripts<a class="headerlink" href="#scripts" title="Link to this heading">¶</a></h2>
 <section id="skare3-dashboard">
-<span id="id1"></span><h3><a class="reference internal" href="#skare3-dashboard"><span class="std std-ref">skare3-dashboard</span></a><a class="headerlink" href="#skare3-dashboard" title="Permalink to this heading">¶</a></h3>
+<span id="id1"></span><h3><a class="reference internal" href="#skare3-dashboard"><span class="std std-ref">skare3-dashboard</span></a><a class="headerlink" href="#skare3-dashboard" title="Link to this heading">¶</a></h3>
 <p><p>Produce a single html page with package information</p>
 </p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">dashboard</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">FILENAME</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="options">
-<h4>options<a class="headerlink" href="#options" title="Permalink to this heading">¶</a></h4>
+<section id="named-arguments">
+<h4>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>-o</kbd></dt>
 <dd><p>Output file (default: index.html)</p>
@@ -111,15 +110,15 @@ Only available on web server.</p></li>
 </section>
 </section>
 <section id="skare3-test-dashboard">
-<span id="id2"></span><h3><a class="reference internal" href="#skare3-test-dashboard"><span class="std std-ref">skare3-test-dashboard</span></a><a class="headerlink" href="#skare3-test-dashboard" title="Permalink to this heading">¶</a></h3>
+<span id="id2"></span><h3><a class="reference internal" href="#skare3-test-dashboard"><span class="std std-ref">skare3-test-dashboard</span></a><a class="headerlink" href="#skare3-test-dashboard" title="Link to this heading">¶</a></h3>
 <p><p>Produce a single html page with a test result report</p>
 </p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">test</span><span class="o">-</span><span class="n">dashboard</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="n">FILE_IN</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">FILE_OUT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">b</span><span class="p">]</span>
                              <span class="p">[</span><span class="o">--</span><span class="n">log</span><span class="o">-</span><span class="nb">dir</span> <span class="n">LOG_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">static</span><span class="o">-</span><span class="nb">dir</span> <span class="n">STATIC_DIR</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="options">
-<h4>options<a class="headerlink" href="#options" title="Permalink to this heading">¶</a></h4>
+<section id="named-arguments">
+<h4>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>-i</kbd></dt>
 <dd><p>Directory or JSON file containing all test results. If it is a directory, then it must have a file named all_tests.json.</p>
@@ -156,11 +155,11 @@ Only available on web server.</p></li>
 <li><a class="reference internal" href="#module-skare3_tools.dashboard.views">Views</a></li>
 <li><a class="reference internal" href="#scripts">Scripts</a><ul>
 <li><a class="reference internal" href="#skare3-dashboard"><span class="xref std std-ref">skare3-dashboard</span></a><ul>
-<li><a class="reference internal" href="#options">options</a></li>
+<li><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#skare3-test-dashboard"><span class="xref std std-ref">skare3-test-dashboard</span></a><ul>
-<li><a class="reference internal" href="#options">options</a></li>
+<li><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 </ul>
@@ -203,7 +202,7 @@ Only available on web server.</p></li>
     <a href="#">Back to Top</a></p>
   <p>
     &copy; Copyright 2020, Javier Gonzalez.<br/>
-    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 6.1.3. &nbsp;
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 7.2.6. &nbsp;
   </p>
 </footer>
   </body>
