@@ -167,21 +167,18 @@ def json_cache(name, directory="", ignore=None, expires=None, update_policy=None
             if update_policy is not None and result is not None:
                 update = update or update_policy(filename, result)
             if not dir_access_ok(filename):
-                if result is None:
-                    raise Exception(
-                        f"No write access to cache file {filename} and no cached value"
-                    )
                 logging.getLogger("skare3").debug(
                     f"No write access to cache file {filename}"
                 )
                 update = False
             if result is None or update:
                 result = func(*args, **kwargs)
-                directory_out = os.path.dirname(filename)
-                if not os.path.exists(directory_out):
-                    os.makedirs(directory_out)
-                with open(filename, "w") as file:
-                    json.dump(result, file)
+                if update:
+                    directory_out = os.path.dirname(filename)
+                    if not os.path.exists(directory_out):
+                        os.makedirs(directory_out)
+                    with open(filename, "w") as file:
+                        json.dump(result, file)
             return result
 
         def clear_cache():
