@@ -785,8 +785,7 @@ def get_conda_pkg_info(conda_package, conda_channel=None):
         msg += " -".join(unreachable)
         raise NetworkException(msg)
 
-    check = kwargs.pop("check", True)
-    p = subprocess.run(cmd, check=check, **kwargs)
+    p = subprocess.run(cmd, check=False, **kwargs)
     out = json.loads(p.stdout.decode())
     if (
         "error" in out
