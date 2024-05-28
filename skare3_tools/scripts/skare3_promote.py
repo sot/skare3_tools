@@ -30,9 +30,10 @@ SKA3_CONDA = "/proj/sot/ska/www/ASPECT_ICXC/ska3-conda"
 TO_CHANNEL = "flight"
 FROM_CHANNELS = ["test", "masters"]
 PLATFORM_OPTIONS = {
-    "linux-64": {"linux": True, "linux64": True},
-    "osx-64": {"osx": True, "osx64": True},
-    "win-64": {"win": True, "win64": True},
+    "linux-64": {"linux": True, "linux64": True, "arm64": False},
+    "osx-64": {"osx": True, "osx64": True, "arm64": False},
+    "osx-arm64": {"osx": True, "osx64": True, "arm64": True},
+    "win-64": {"win": True, "win64": True, "arm64": False},
 }
 SECTIONS = ["run"]
 
@@ -122,7 +123,6 @@ def promote(package, args, platforms=None):
                 f" not found for platform {platform}."
             )
             continue
-
         if pkgs is not None:
             package_names += [package["name"]]
             pkg_files += pkgs
@@ -137,7 +137,7 @@ def promote(package, args, platforms=None):
                     r"(?P<name>\S+)(\s+)?(==(\s+)?(?P<version>\S+))?", requirement_str
                 )
                 if match:
-                    requirement = m.groupdict()
+                    requirement = match.groupdict()
 
                     pkgs = _files_to_copy(
                         requirement,
@@ -146,6 +146,7 @@ def promote(package, args, platforms=None):
                         args.to_channel,
                         args.from_channels,
                     )
+
                     if pkgs is not None:
                         if requirement["name"] not in package_names:
                             package_names.append(requirement["name"])
@@ -178,11 +179,12 @@ def promote(package, args, platforms=None):
         "| {noarch:24s} {noarch-src:7s} "
         "| {linux-64:24s} {linux-64-src:7s} "
         "| {osx-64:24s} {osx-64-src:7s} "
+        "| {osx-arm64:24s} {osx-arm64-src:7s} "
         "| {win-64:24s} {win-64-src:7s} |"
     )
-    div = {"package": "", "noarch": "", "linux-64": "", "osx-64": "", "win-64": ""}
+    div = {"package": "", "noarch": "", "linux-64": "", "osx-64": "", "osx-arm64": "", "win-64": ""}
     div.update(
-        {k: "" for k in ["noarch-src", "linux-64-src", "osx-64-src", "win-64-src"]}
+        {k: "" for k in ["noarch-src", "linux-64-src", "osx-64-src", "osx-arm64-src", "win-64-src"]}
     )
     div = row.format(**div).replace(" ", "-").replace("|", "+")
     header = {
@@ -190,10 +192,11 @@ def promote(package, args, platforms=None):
         "noarch": "noarch",
         "linux-64": "linux-64",
         "osx-64": "osx-64",
+        "osx-arm64": "osx-arm64",
         "win-64": "win-64",
     }
     header.update(
-        {k: "" for k in ["noarch-src", "linux-64-src", "osx-64-src", "win-64-src"]}
+        {k: "" for k in ["noarch-src", "linux-64-src", "osx-64-src", "osx-arm64-src", "win-64-src"]}
     )
     header = row.format(**header)
     logging.info(div)
@@ -206,10 +209,12 @@ def promote(package, args, platforms=None):
                 "noarch",
                 "linux-64",
                 "osx-64",
+                "osx-arm64",
                 "win-64",
                 "noarch-src",
                 "linux-64-src",
                 "osx-64-src",
+                "osx-arm64-src",
                 "win-64-src",
             ]
         }
