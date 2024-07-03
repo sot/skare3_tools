@@ -80,7 +80,7 @@ def main():
     ]  # versions can be git refs like refs/tags/V2
     # regular expression (mostly) matching PEP-0440 version format
     fmt = (
-        r"(?P<final_version>((?P<epoch>[0-9]+)!)?(?P<release>[0-9]+(.[0-9]+(.[0-9]+)?)?))"
+        r"(?P<final_version>((?P<epoch>[0-9]+)!)?(?P<release>[0-9]+(\.[0-9]+(\.[0-9]+)?)?))"
         r"((a|b|rc)(?P<rc>[0-9]+))?(\+(?P<label>[a-zA-Z]+))?$"
     )
     version_info = re.match(fmt, tag_name)

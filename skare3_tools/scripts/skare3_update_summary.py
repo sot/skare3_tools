@@ -27,7 +27,16 @@ class ArgumentException(Exception):
 
 class CondaException(Exception):
     def __init__(self, info):
-        super().__init__(info["message"])
+        if "message" in info:
+            msg = info["message"]
+        elif "error" in info:
+            msg = info["error"]
+            trace = [line for line in info.get("traceback", []).split("\n") if line]
+            msg += "\n"
+            msg += trace[-1]
+        else:
+            msg = "Unknown error"
+        super().__init__(msg)
         self.info = info
 
 
