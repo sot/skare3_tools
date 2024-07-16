@@ -182,9 +182,25 @@ def promote(package, args, platforms=None):
         "| {osx-arm64:24s} {osx-arm64-src:7s} "
         "| {win-64:24s} {win-64-src:7s} |"
     )
-    div = {"package": "", "noarch": "", "linux-64": "", "osx-64": "", "osx-arm64": "", "win-64": ""}
+    div = {
+        "package": "",
+        "noarch": "",
+        "linux-64": "",
+        "osx-64": "",
+        "osx-arm64": "",
+        "win-64": "",
+    }
     div.update(
-        {k: "" for k in ["noarch-src", "linux-64-src", "osx-64-src", "osx-arm64-src", "win-64-src"]}
+        {
+            k: ""
+            for k in [
+                "noarch-src",
+                "linux-64-src",
+                "osx-64-src",
+                "osx-arm64-src",
+                "win-64-src",
+            ]
+        }
     )
     div = row.format(**div).replace(" ", "-").replace("|", "+")
     header = {
@@ -196,7 +212,16 @@ def promote(package, args, platforms=None):
         "win-64": "win-64",
     }
     header.update(
-        {k: "" for k in ["noarch-src", "linux-64-src", "osx-64-src", "osx-arm64-src", "win-64-src"]}
+        {
+            k: ""
+            for k in [
+                "noarch-src",
+                "linux-64-src",
+                "osx-64-src",
+                "osx-arm64-src",
+                "win-64-src",
+            ]
+        }
     )
     header = row.format(**header)
     logging.info(div)
