@@ -247,11 +247,14 @@ def _conda_package_list(update=True):
         macro += "{% macro pin_compatible(arg) %}{% endmacro %}\n"
         try:
             info = yaml.load(
-                jinja2.Template(macro + open(f).read()).render(environ={}), Loader=yaml.FullLoader
+                jinja2.Template(macro + open(f).read()).render(environ={}),
+                Loader=yaml.FullLoader,
             )
         except jinja2.TemplateError as err:
             parent = os.path.split(os.path.split(f)[-2])[-1]
-            logging.getLogger("skare3").error(f"Failed to parse recipe for {parent}: {err}")
+            logging.getLogger("skare3").error(
+                f"Failed to parse recipe for {parent}: {err}"
+            )
             continue
 
         pkg_info = {
