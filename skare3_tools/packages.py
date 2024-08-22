@@ -99,7 +99,7 @@ def dir_access_ok(path):
     Returns true if the given path has write access or can be created.
     """
     path = Path(path).resolve()
-    if os.path.exists(path):
+    if path.exists():
         return os.access(path, os.W_OK)
     # if path does not exist, climb up the hierarchy to see if it can be created
     if path.parent != path:
@@ -133,7 +133,7 @@ def json_cache(name, directory="", ignore=None, expires=None, update_policy=None
     import inspect
     from functools import wraps
 
-    directory = os.path.normpath(os.path.join(CONFIG["data_dir"], directory))
+    directory = CONFIG["data_dir"] / directory
     if not ignore:
         ignore = []
     if expires:
@@ -156,12 +156,12 @@ def json_cache(name, directory="", ignore=None, expires=None, update_policy=None
             filename = "{name}{arg_str}.json".format(name=name, arg_str=arg_str)
             # in an ideal world, filename would be completely sanitized... this world is not ideal.
             filename = filename.replace(os.sep, "-")
-            filename = os.path.join(directory, filename)
-            if expiration is not None and os.path.exists(filename):
-                m_time = datetime.datetime.fromtimestamp(os.path.getmtime(filename))
+            filename = directory / filename
+            if expiration is not None and filename.exists():
+                m_time = datetime.datetime.fromtimestamp(filename.stat().st_mtime)
                 update = update or (datetime.datetime.now() - m_time > expiration)
             result = None
-            if os.path.exists(filename):
+            if filename.exists():
                 with open(filename) as file:
                     result = json.load(file)
             if update_policy is not None and result is not None:
@@ -174,16 +174,15 @@ def json_cache(name, directory="", ignore=None, expires=None, update_policy=None
             if result is None or update:
                 result = func(*args, **kwargs)
                 if update:
-                    directory_out = os.path.dirname(filename)
-                    if not os.path.exists(directory_out):
-                        os.makedirs(directory_out)
+                    filename.parent.mkdir(parents=True, exists_ok=True)
                     with open(filename, "w") as file:
                         json.dump(result, file)
+                with open(filename, "w") as file:
+                    json.dump(result, file)
             return result
 
         def clear_cache():
-            files = os.path.join(directory, "{name}*.json".format(name=name))
-            files = glob.glob(files)
+            files = list(directory.glob(f"{name}*.json"))
             if files:
                 subprocess.run(["rm"] + files, check=False)
 
@@ -200,10 +199,8 @@ def json_cache(name, directory="", ignore=None, expires=None, update_policy=None
                     if a not in ignore_args
                 ]
             )
-            filename = os.path.join(
-                directory, "{name}{arg_str}.json".format(name=name, arg_str=arg_str)
-            )
-            if os.path.exists(filename):
+            filename = directory / f"{name}{arg_str}.json"
+            if filename.exists():
                 os.remove(filename)
 
         wrapper.rm_cache_entry = rm_cache_entry
@@ -213,11 +210,9 @@ def json_cache(name, directory="", ignore=None, expires=None, update_policy=None
 
 
 def _ensure_skare3_local_repo(update=True):
-    repo_dir = os.path.join(CONFIG["data_dir"], "skare3")
-    parent = os.path.dirname(repo_dir)
-    if not os.path.exists(parent):
-        os.makedirs(parent)
-    if not os.path.exists(repo_dir):
+    repo_dir = CONFIG["data_dir"] / "skare3"
+    repo_dir.parent.mkdir(parents=True, exist_ok=True)
+    if not repo_dir.exists():
         _ = subprocess.run(
             ["git", "clone", "https://github.com/sot/skare3", repo_dir],
             cwd=CONFIG["data_dir"],
@@ -233,14 +228,12 @@ def _ensure_skare3_local_repo(update=True):
             stderr=subprocess.PIPE,
             check=False,
         )
-    assert os.path.exists(repo_dir)
+    assert repo_dir.exists()
 
 
 def _conda_package_list(update=True):
     _ensure_skare3_local_repo(update)
-    all_meta = glob.glob(
-        os.path.join(CONFIG["data_dir"], "skare3", "pkg_defs", "*", "meta.yaml")
-    )
+    all_meta = glob.glob(CONFIG["data_dir"] / "skare3" / "pkg_defs" / "*" / "meta.yaml")
     all_info = []
     for f in all_meta:
         macro = "{% macro compiler(arg) %}{% endmacro %}\n"
@@ -258,7 +251,7 @@ def _conda_package_list(update=True):
             continue
 
         pkg_info = {
-            "name": os.path.basename(os.path.dirname(f)),
+            "name": f.parent.name,
             "package": info["package"]["name"],
             "repository": None,
             "owner": None,
