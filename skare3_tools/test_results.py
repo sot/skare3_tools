@@ -66,18 +66,16 @@ def remove(uid=None, directory=None, uids=(), directories=()):
     if uid and uid not in uids:
         uids += [uid]
 
-    directories = [SKARE3_TEST_DATA / directory for directory in directories]
+    directories = [SKARE3_TEST_DATA / drctry for drctry in directories]
     if directory and directory not in directories:
         directories += [SKARE3_TEST_DATA / directory]
 
     # make sure all directories are absolute and within the data tree
-    for directory in directories:
-        if SKARE3_TEST_DATA not in directory.resolve().parents:
-            LOGGER.warning(f"warning: {directory} not in SKARE3_DASH_DATA. Ignoring")
+    for drctry in directories:
+        if SKARE3_TEST_DATA not in drctry.resolve().parents:
+            LOGGER.warning(f"warning: {drctry} not in SKARE3_DASH_DATA. Ignoring")
     directories = [
-        directory
-        for directory in directories
-        if SKARE3_TEST_DATA in directory.resolve().parents
+        drctry for drctry in directories if SKARE3_TEST_DATA in drctry.resolve().parents
     ]
 
     # make a list of everything that will be removed
@@ -91,10 +89,10 @@ def remove(uid=None, directory=None, uids=(), directories=()):
         test_result_index.remove(tr)
         shutil.rmtree(SKARE3_TEST_DATA / tr["destination"])
 
-    for directory in directories:
-        if directory.exists():
+    for drctry in directories:
+        if drctry.exists():
             LOGGER.warning(
-                f"The directory {directory} is still there."
+                f"The directory {drctry} is still there."
                 "This does not happen unless the directory is already not in the index,"
                 "in which case it is safe to remove it by hand."
             )
