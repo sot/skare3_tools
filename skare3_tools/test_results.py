@@ -71,11 +71,11 @@ def remove(uid=None, directory=None, uids=(), directories=()):
         directories += [SKARE3_TEST_DATA / directory]
 
     # make sure all directories are absolute and within the data tree
-    for direct in directories:
-        if SKARE3_TEST_DATA not in direct.resolve().parents:
-            LOGGER.warning(f"warning: {direct} not in SKARE3_DASH_DATA. Ignoring")
+    for drctry in directories:
+        if SKARE3_TEST_DATA not in drctry.resolve().parents:
+            LOGGER.warning(f"warning: {drctry} not in SKARE3_DASH_DATA. Ignoring")
     directories = [
-        direct for direct in directories if SKARE3_TEST_DATA in direct.resolve().parents
+        drctry for drctry in directories if SKARE3_TEST_DATA in drctry.resolve().parents
     ]
 
     # make a list of everything that will be removed
@@ -89,10 +89,10 @@ def remove(uid=None, directory=None, uids=(), directories=()):
         test_result_index.remove(tr)
         shutil.rmtree(SKARE3_TEST_DATA / tr["destination"])
 
-    for direct in directories:
-        if direct.exists():
+    for drctry in directories:
+        if drctry.exists():
             LOGGER.warning(
-                f"The directory {direct} is still there."
+                f"The directory {drctry} is still there."
                 "This does not happen unless the directory is already not in the index,"
                 "in which case it is safe to remove it by hand."
             )
