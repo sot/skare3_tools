@@ -246,7 +246,19 @@ def main():
         files = " ".join([str(f) for f in files])
 
         print(f"Built files: {files}")
-        print(f"::set-output name=files::{files}")
+
+        # this output defines variables 'files'
+        if "GITHUB_OUTPUT" in os.environ:
+            mode = "r+" if os.path.exists(os.environ["GITHUB_OUTPUT"]) else "w"
+            with open(os.environ["GITHUB_OUTPUT"], mode) as fh:
+                fh.write(f"files={files}\n")
+
+        # this output will show up in the workflow summary
+        if "GITHUB_STEP_SUMMARY" in os.environ:
+            mode = "r+" if os.path.exists(os.environ["GITHUB_STEP_SUMMARY"]) else "w"
+            with open(os.environ["GITHUB_STEP_SUMMARY"], mode) as fh:
+                for filename in files:
+                    fh.write(f"- {filename}")
 
 
 if __name__ == "__main__":
