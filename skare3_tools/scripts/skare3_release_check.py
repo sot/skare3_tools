@@ -206,7 +206,10 @@ def main():
             version_pkg = str(data["package"]["version"])
             if version_str == version_pkg:
                 packages.append(data["package"]["name"])
-            try:
+            elif (
+                version_str != version_float
+                and version_float == version_pkg
+            ):
                 # versions like 2024.10 are "tricky" because if you interpret them as floats
                 # you get a different value. A typical error in meta.yaml is to write
                 #    version: 2024.10
@@ -214,17 +217,9 @@ def main():
                 #    version: "2024.10"
                 # causing the version to be interpreted as 2024.1
                 # and because this does not match the target version, the package is not built.
-                if (
-                    version_str != version_pkg
-                    and version_str != version_float
-                    and version_float == version_pkg
-                ):
-                    # however, we can't know for sure that this is an error
-                    # (e.g. ska3-core 2024.1 and ska3-flight 2024.10 is possible)
-                    possible_error.append(data["package"]["name"])
-            except Exception:
-                # we do nothing if the version can't be interpreted as a float
-                pass
+                # however, we can't know for sure that this is an error
+                # (e.g. ska3-core 2024.1 and ska3-flight 2024.10 is possible)
+                possible_error.append(data["package"]["name"])
 
     if possible_error:
         msg = (
