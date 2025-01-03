@@ -22,6 +22,7 @@ This script makes the following checks:
 import argparse
 import glob
 import logging
+import jinja2
 import os
 import re
 import sys
@@ -56,6 +57,14 @@ def parser():
     return parse
 
 
+def log(msg, level=logging.ERROR):
+    logging.log(level, msg)
+    if level > logging.INFO and "GITHUB_STEP_SUMMARY" in os.environ:
+        mode = "r+" if os.path.exists(os.environ["GITHUB_STEP_SUMMARY"]) else "w"
+        with open(os.environ["GITHUB_STEP_SUMMARY"], mode) as fh:
+            fh.write(f"{msg}\n")
+
+
 def main():
     arg_parser = parser()
     args = arg_parser.parse_args()
@@ -65,11 +74,11 @@ def main():
     try:
         git_repo = git.Repo(args.skare3_path)
     except git.NoSuchPathError:
-        logging.error(
+        log(
             f'--skare3-path points to non-existent directory "{args.skare3_path}".'
         )
     except git.InvalidGitRepositoryError:
-        logging.error(
+        log(
             f'--skare3-path points to an invalid git repo "{args.skare3_path}".'
         )
     if git_repo is None:
@@ -85,7 +94,7 @@ def main():
     )
     version_info = re.match(fmt, tag_name)
     if not version_info:
-        logging.warning(
+        log(
             "Tag name must conform to PEP-440 format"
             " (https://www.python.org/dev/peps/pep-0440)"
         )
@@ -96,7 +105,7 @@ def main():
     if version_info["label"]:
         allowed_names += [f'{version_info["final_version"]}+{version_info["label"]}']
 
-    logging.info(f"Sanity check for release {tag_name}")
+    log(f"Sanity check for release {tag_name}", level=logging.INFO)
 
     github.init(token=args.token)
     repository = github.Repository(args.repository)
@@ -171,62 +180,114 @@ def main():
         except Exception as e:
             exc_type = sys.exc_info()[0].__name__
             fail.append(f"Unexpected error ({exc_type}): {e}")
-        for f in fail:
-            logging.warning(f)
+
         if fail:
+            log("## Errors")
+            for fh in fail:
+                log(f"- {fh}")
             sys.exit(3)
 
     # at this point, branch_name must be set, and it is taken to be the target version
-    logging.info(f"Target version {tag_name}")
+    log(f"Target version {tag_name}", level=logging.INFO)
+
     # checking package versions
     # whenever a version equals `branch_name`, replace it by the full version.
     files = glob.glob(os.path.join(args.skare3_path, "pkg_defs", "ska3-*", "meta.yaml"))
     packages = []
     possible_error = []
+    version_str = str(version_info["final_version"])
+    try:
+        version_float = str(float(version_info["final_version"]))
+    except Exception:
+        version_float = None
     for filename in files:
-        with open(filename) as f:
-            data = yaml.load(f, Loader=yaml.SafeLoader)
-            if str(version_info["final_version"]) == str(data["package"]["version"]):
+        with open(filename) as fh:
+            data = yaml.load(fh, Loader=yaml.SafeLoader)
+            version_pkg = str(data["package"]["version"])
+            if version_str == version_pkg:
                 packages.append(data["package"]["name"])
             try:
-                if str(float(version_info["final_version"])) == str(
-                    data["package"]["version"]
+                # versions like 2024.10 are "tricky" because if you interpret them as floats
+                # you get a different value. A typical error in meta.yaml is to write
+                #    version: 2024.10
+                # instead of
+                #    version: "2024.10"
+                # causing the version to be interpreted as 2024.1
+                # and because this does not match the target version, the package is not built.
+                if (
+                    version_str != version_pkg
+                    and version_str != version_float
+                    and version_float == version_pkg
                 ):
+                    # however, we can't know for sure that this is an error
+                    # (e.g. ska3-core 2024.1 and ska3-flight 2024.10 is possible)
                     possible_error.append(data["package"]["name"])
             except Exception:
+                # we do nothing if the version can't be interpreted as a float
                 pass
 
     if possible_error:
-        float_version = float(version_info["final_version"])
-        logging.warning(
-            f"The following package(s) have a version matching {float_version}:"
+        msg = (
+            f"The following package(s) have a version that does not match {version_str}, "
+            f"but it matches {version_float} (which is {version_str} interpreted as a float). "
+            "They will not be built."
         )
+        log(f"{msg}\n", level=logging.WARNING)
         for pkg in possible_error:
-            logging.warning(f" - {pkg}")
-        logging.warning(
-            "This can happen if YAML interprets version"
-            f' {version_info["final_version"]} as a float.'
-        )
-        logging.warning("They will not be built.")
+            log(f"- {pkg}", level=logging.WARNING)
 
     if not packages:
         logging.warning("No packages to build. Something must be wrong.")
         sys.exit(4)
 
-    packages = " ".join(packages)
+    packages_str = " ".join(packages)
+    prerelease = release["prerelease"]
+    overwrite_flag = f"--skare3-overwrite-version {version_info['final_version']}:{tag_name}\n"
 
-    print(f'prerelease: {release["prerelease"]}')
-    print(f"packages: {packages}")
-    print(
-        f'overwrite_flag: --skare3-overwrite-version {version_info["final_version"]}:{tag_name}'
+    log(f"prerelease: {prerelease}", level=logging.INFO)
+    log(f"packages: {packages_str}", level=logging.INFO)
+    log(
+        f"overwrite_flag: --skare3-overwrite-version {version_info['final_version']}:{tag_name}",
+        level=logging.INFO
     )
-    # this kind of output defines variables 'prerelease' and 'packages' within the workflow.
-    print(f'::set-output name=prerelease::{release["prerelease"]}')
-    print(f"::set-output name=packages::{packages}")
-    print(
-        "::set-output name=overwrite_flag::"
-        f'--skare3-overwrite-version {version_info["final_version"]}:{tag_name}'
-    )
+
+    # this output defines variables 'prerelease', 'packages', and 'overwrite_flag'
+    if "GITHUB_OUTPUT" in os.environ:
+        mode = "r+" if os.path.exists(os.environ["GITHUB_OUTPUT"]) else "w"
+        with open(os.environ["GITHUB_OUTPUT"], mode) as fh:
+            fh.write(f"prerelease={prerelease}\n")
+            fh.write(f"packages={packages_str}\n")
+            fh.write(f"overwrite_flag={overwrite_flag}\n")
+
+    # this output will show up in the workflow summary
+    if "GITHUB_STEP_SUMMARY" in os.environ:
+        template = jinja2.Template(SUMMARY_STRING)
+        msg = template.render(
+            tag_name=tag_name,
+            branch_name=branch_name,
+            packages=packages,
+            prerelease=prerelease,
+            overwrite_flag=overwrite_flag,
+        )
+        mode = "r+" if os.path.exists(os.environ["GITHUB_STEP_SUMMARY"]) else "w"
+        with open(os.environ["GITHUB_STEP_SUMMARY"], mode) as fh:
+            fh.write(msg)
+
+
+SUMMARY_STRING = """
+# Release {{ tag_name }}
+
+## Packages to build:
+
+{%for package in packages -%}
+- {{ package }}
+{%endfor %}
+## Arguments:
+
+- `prerelease`: {{ prerelease }}
+- `overwrite_flag`: {{ overwrite_flag }}
+
+"""
 
 
 if __name__ == "__main__":
