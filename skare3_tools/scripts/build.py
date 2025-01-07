@@ -243,22 +243,23 @@ def main():
             + list(build_dir.glob("noarch/*tar.bz2*"))
             + list(build_dir.glob("win-64/*tar.bz2*"))
         )
-        files = " ".join([str(f) for f in files])
+        files_str = " ".join([str(f) for f in files])
 
-        print(f"Built files: {files}")
+        print(f"Built files: {files_str}")
 
         # this output defines variables 'files'
         if "GITHUB_OUTPUT" in os.environ:
             mode = "r+" if os.path.exists(os.environ["GITHUB_OUTPUT"]) else "w"
             with open(os.environ["GITHUB_OUTPUT"], mode) as fh:
-                fh.write(f"files={files}\n")
+                fh.write(f"files={files_str}\n")
 
         # this output will show up in the workflow summary
         if "GITHUB_STEP_SUMMARY" in os.environ:
             mode = "r+" if os.path.exists(os.environ["GITHUB_STEP_SUMMARY"]) else "w"
             with open(os.environ["GITHUB_STEP_SUMMARY"], mode) as fh:
+                fh.write(f"## Built files\n")
                 for filename in files:
-                    fh.write(f"- {filename}")
+                    fh.write(f"- {filename}\n")
 
 
 if __name__ == "__main__":
