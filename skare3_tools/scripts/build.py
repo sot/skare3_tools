@@ -257,7 +257,7 @@ def main():
         if "GITHUB_STEP_SUMMARY" in os.environ:
             mode = "r+" if os.path.exists(os.environ["GITHUB_STEP_SUMMARY"]) else "w"
             with open(os.environ["GITHUB_STEP_SUMMARY"], mode) as fh:
-                fh.write(f"## Built files\n")
+                fh.write(f"## Files\n")
                 for filename in files:
                     fh.write(f"- {filename}\n")
 
