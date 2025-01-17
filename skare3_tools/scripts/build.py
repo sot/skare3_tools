@@ -243,6 +243,13 @@ def main():
             + list(build_dir.glob("noarch/*tar.bz2*"))
             + list(build_dir.glob("win-64/*tar.bz2*"))
         )
+        files += (
+            list(build_dir.glob("linux-64/*conda*"))
+            + list(build_dir.glob("osx-64/*conda*"))
+            + list(build_dir.glob("osx-arm64/*conda*"))
+            + list(build_dir.glob("noarch/*conda*"))
+            + list(build_dir.glob("win-64/*conda*"))
+        )
         files_str = " ".join([str(f) for f in files])
 
         print(f"Built files: {files_str}")
