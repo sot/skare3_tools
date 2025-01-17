@@ -184,6 +184,9 @@ def main():
                 for filename in d_from.glob("*.bz2"):
                     filename2 = d_to / filename.name
                     filename.replace(filename2)
+                for filename in d_from.glob("*.conda"):
+                    filename2 = d_to / filename.name
+                    filename.replace(filename2)
         print("SKARE3 done")
         for f in build_dir.glob("*/*json*"):
             f.unlink()
@@ -196,6 +199,14 @@ def main():
             + list(build_dir.glob("noarch/*tar.bz2*"))
             + list(build_dir.glob("win-64/*tar.bz2*"))
         )
+        files += (
+            list(build_dir.glob("linux-64/*conda*"))
+            + list(build_dir.glob("osx-64/*conda*"))
+            + list(build_dir.glob("osx-arm64/*conda*"))
+            + list(build_dir.glob("noarch/*conda*"))
+            + list(build_dir.glob("win-64/*conda*"))
+        )
+
         files = " ".join([str(f) for f in files])
 
         print(f"Built files: {files}")

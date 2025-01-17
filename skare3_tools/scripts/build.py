@@ -231,6 +231,9 @@ def main():
                 for filename in d_from.glob("*.bz2"):
                     filename2 = d_to / filename.name
                     filename.replace(filename2)
+                for filename in d_from.glob("*.conda"):
+                    filename2 = d_to / filename.name
+                    filename.replace(filename2)
         print("SKARE3 done")
         for f in build_dir.glob("*/*json*"):
             f.unlink()
