@@ -590,12 +590,23 @@ def _get_repository_info_v4(
 
     # from now, keep a list of the open pull requests on the main branch
     all_pull_requests = {pr["number"]: pr for pr in pull_requests}
-    pull_requests = [
-        pr
-        for pr in pull_requests
-        if pr["state"] not in ["CLOSED", "MERGED"]
-        and pr["baseRefName"] == default_branch
+
+    outstanding_pulls = [
+        pr for pr in pull_requests if pr["state"] not in ["CLOSED", "MERGED"]
     ]
+
+    pull_requests = []
+    while extra_pr := [
+        pr
+        for pr in outstanding_pulls
+        if pr["number"] not in [p["number"] for p in pull_requests]
+        and (
+            pr["baseRefName"] == default_branch
+            or pr["baseRefName"] in [p["headRefName"] for p in pull_requests]
+        )
+    ]:
+        pull_requests += extra_pr
+
     pull_requests = [
         {
             "number": pr["number"],
