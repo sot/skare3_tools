@@ -33,7 +33,7 @@ def main():
     )
 
     if not pr["response"]["ok"]:
-        print(f'Failed to create pull request: {pr["response"]}')
+        print(f"Failed to create pull request: {pr['response']}")
         sys.exit(1)
     print(f"created pull request {pr['number']} at {pr['html_url']}")
 
