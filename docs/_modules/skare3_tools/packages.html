@@ -4,13 +4,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>skare3_tools.packages &#8212; SkaRE3 Tools 1.5.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <title>skare3_tools.packages &#8212; SkaRE3 Tools 1.7.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="../../_static/documentation_options.js?v=e0a75244"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/documentation_options.js?v=030dc6f6"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="../../_static/sidebar.js"></script>
     <script type="text/javascript" src="../../_static/copybutton.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -44,7 +44,7 @@
     <h3>Navigation</h3>
     <ul>
       <li>
-	<a href="../../index.html">SkaRE3 Tools 1.5.0 documentation</a>
+	<a href="../../index.html">SkaRE3 Tools 1.7.0 documentation</a>
 	 &#187;
       </li>
       <li><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
@@ -131,32 +131,32 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">argparse</span>
-<span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">import</span> <span class="nn">glob</span>
-<span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">subprocess</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">urllib</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">urllib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">jinja2</span>
-<span class="kn">import</span> <span class="nn">requests</span>
-<span class="kn">import</span> <span class="nn">yaml</span>
-<span class="kn">from</span> <span class="nn">packaging.version</span> <span class="kn">import</span> <span class="n">InvalidVersion</span><span class="p">,</span> <span class="n">Version</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jinja2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">packaging.version</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvalidVersion</span><span class="p">,</span> <span class="n">Version</span>
 
-<span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">github</span>
-<span class="kn">from</span> <span class="nn">skare3_tools.config</span> <span class="kn">import</span> <span class="n">CONFIG</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">github</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CONFIG</span>
 
 
-<span class="k">class</span> <span class="nc">NetworkException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NetworkException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="k">pass</span>
 
 
-<span class="k">def</span> <span class="nf">dir_access_ok</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">dir_access_ok</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns true if the given path has write access or can be created.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -171,7 +171,7 @@
 
 <div class="viewcode-block" id="json_cache">
 <a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.json_cache">[docs]</a>
-<span class="k">def</span> <span class="nf">json_cache</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">expires</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">update_policy</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">json_cache</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">expires</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">update_policy</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Decorator to cache function results in json format.</span>
 
@@ -194,8 +194,8 @@
 <span class="sd">        should be updated.</span>
 <span class="sd">    :return:</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">inspect</span>
-    <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
 
     <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;data_dir&quot;</span><span class="p">],</span> <span class="n">directory</span><span class="p">))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore</span><span class="p">:</span>
@@ -203,12 +203,12 @@
     <span class="k">if</span> <span class="n">expires</span><span class="p">:</span>
         <span class="n">expires</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="o">**</span><span class="n">expires</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">decorator_cache</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">ignore_args</span><span class="o">=</span><span class="n">ignore</span><span class="p">,</span> <span class="n">expiration</span><span class="o">=</span><span class="n">expires</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">decorator_cache</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">ignore_args</span><span class="o">=</span><span class="n">ignore</span><span class="p">,</span> <span class="n">expiration</span><span class="o">=</span><span class="n">expires</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">):</span>
         <span class="n">signature</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
         <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;::&quot;</span>
 
         <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
             <span class="n">s_args</span> <span class="o">=</span> <span class="n">signature</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">arguments</span>
             <span class="n">arg_str</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                 <span class="p">[</span>
@@ -245,7 +245,7 @@
                         <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">result</span>
 
-        <span class="k">def</span> <span class="nf">clear_cache</span><span class="p">():</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">clear_cache</span><span class="p">():</span>
             <span class="n">files</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">*.json&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">))</span>
             <span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">files</span><span class="p">:</span>
@@ -255,7 +255,7 @@
 
         <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">rm_cache_entry</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">sig</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">rm_cache_entry</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">sig</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
             <span class="n">s_args</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">arguments</span>
             <span class="n">arg_str</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                 <span class="p">[</span>
@@ -277,7 +277,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_ensure_skare3_local_repo</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_ensure_skare3_local_repo</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="n">repo_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;data_dir&quot;</span><span class="p">],</span> <span class="s2">&quot;skare3&quot;</span><span class="p">)</span>
     <span class="n">parent</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">repo_dir</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">parent</span><span class="p">):</span>
@@ -301,7 +301,7 @@
     <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">repo_dir</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_conda_package_list</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_conda_package_list</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="n">_ensure_skare3_local_repo</span><span class="p">(</span><span class="n">update</span><span class="p">)</span>
     <span class="n">all_meta</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span>
         <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;data_dir&quot;</span><span class="p">],</span> <span class="s2">&quot;skare3&quot;</span><span class="p">,</span> <span class="s2">&quot;pkg_defs&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;meta.yaml&quot;</span><span class="p">)</span>
@@ -309,9 +309,19 @@
     <span class="n">all_info</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">all_meta</span><span class="p">:</span>
         <span class="n">macro</span> <span class="o">=</span> <span class="s2">&quot;{% macro compiler(arg) %}{</span><span class="si">% e</span><span class="s2">ndmacro %}</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">info</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
-            <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">macro</span> <span class="o">+</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">render</span><span class="p">(),</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span>
-        <span class="p">)</span>
+        <span class="n">macro</span> <span class="o">+=</span> <span class="s2">&quot;{% macro pin_compatible(arg) %}{</span><span class="si">% e</span><span class="s2">ndmacro %}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+                <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">macro</span> <span class="o">+</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">environ</span><span class="o">=</span><span class="p">{}),</span>
+                <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">TemplateError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">f</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">])[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;skare3&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to parse recipe for </span><span class="si">{</span><span class="n">parent</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+
         <span class="n">pkg_info</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">f</span><span class="p">)),</span>
             <span class="s2">&quot;package&quot;</span><span class="p">:</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;package&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
@@ -343,7 +353,7 @@
 <div class="viewcode-block" id="get_package_list">
 <a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_package_list">[docs]</a>
 <span class="nd">@json_cache</span><span class="p">(</span><span class="s2">&quot;pkg_name_map&quot;</span><span class="p">,</span> <span class="n">expires</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;days&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
-<span class="k">def</span> <span class="nf">get_package_list</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_package_list</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return a list of dictionaries, one per package.</span>
 
@@ -373,7 +383,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_get_tag_target</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_tag_target</span><span class="p">(</span><span class="n">tag</span><span class="p">):</span>
     <span class="k">if</span> <span class="s2">&quot;target&quot;</span> <span class="ow">in</span> <span class="n">tag</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_get_tag_target</span><span class="p">(</span><span class="n">tag</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
@@ -500,25 +510,25 @@
 <span class="s2">&quot;&quot;&quot;</span>
 
 
-<span class="k">class</span> <span class="nc">Dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_node</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_node</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Dict</span><span class="o">.</span><span class="n">_node</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
         <span class="k">return</span> <span class="n">root</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">node</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">node</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Dict</span><span class="o">.</span><span class="n">_node</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">get_all_nodes</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_all_nodes</span><span class="p">(</span>
     <span class="n">owner</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">query_2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">):</span>
     <span class="k">if</span> <span class="n">reverse</span><span class="p">:</span>
@@ -553,16 +563,16 @@
     <span class="k">return</span> <span class="n">commits</span>
 
 
-<span class="k">def</span> <span class="nf">check_api_errors</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_api_errors</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
     <span class="k">if</span> <span class="s2">&quot;errors&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">e</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]])</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]))</span> <span class="kn">from</span> <span class="kc">None</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]))</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_pr_commits</span><span class="p">(</span><span class="n">commits</span><span class="p">,</span> <span class="n">all_pull_requests</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_pr_commits</span><span class="p">(</span><span class="n">commits</span><span class="p">,</span> <span class="n">all_pull_requests</span><span class="p">):</span>
     <span class="n">merges</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">pulls_v_hash</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">pr</span><span class="p">[</span><span class="s2">&quot;mergeCommit&quot;</span><span class="p">][</span><span class="s2">&quot;oid&quot;</span><span class="p">]:</span> <span class="n">pr</span>
@@ -593,7 +603,7 @@
     <span class="k">return</span> <span class="n">merges</span>
 
 
-<span class="k">def</span> <span class="nf">_get_repository_info_v4</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_repository_info_v4</span><span class="p">(</span>
     <span class="n">owner_repo</span><span class="p">,</span>
     <span class="n">since</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
     <span class="n">include_unreleased_commits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -608,7 +618,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">e</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">data_v4</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]])</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">data_v4</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]))</span> <span class="kn">from</span> <span class="kc">None</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">data_v4</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]))</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">branches</span> <span class="o">=</span> <span class="p">[</span>
@@ -800,7 +810,7 @@
 
 <div class="viewcode-block" id="get_conda_pkg_info">
 <a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_conda_pkg_info">[docs]</a>
-<span class="k">def</span> <span class="nf">get_conda_pkg_info</span><span class="p">(</span><span class="n">conda_package</span><span class="p">,</span> <span class="n">conda_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_conda_pkg_info</span><span class="p">(</span><span class="n">conda_package</span><span class="p">,</span> <span class="n">conda_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get information on a conda package.</span>
 
@@ -831,7 +841,7 @@
             <span class="c1"># this clears the exception we just caugh and raises another one</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
                 <span class="s2">&quot;Missing expected environmental variable: </span><span class="si">{e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
         <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">ConnectTimeout</span><span class="p">:</span>
             <span class="n">c2</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
             <span class="n">c2</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlunparse</span><span class="p">(</span>
@@ -872,7 +882,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_split_versions</span><span class="p">(</span><span class="n">depends</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_split_versions</span><span class="p">(</span><span class="n">depends</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert a list of package dependencies into a dictionary of the form {name: version}.</span>
 
@@ -896,7 +906,7 @@
 
 <div class="viewcode-block" id="get_conda_pkg_dependencies">
 <a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_conda_pkg_dependencies">[docs]</a>
-<span class="k">def</span> <span class="nf">get_conda_pkg_dependencies</span><span class="p">(</span><span class="n">conda_package</span><span class="p">,</span> <span class="n">conda_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_conda_pkg_dependencies</span><span class="p">(</span><span class="n">conda_package</span><span class="p">,</span> <span class="n">conda_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get dependencies of a conda package.</span>
 
@@ -915,7 +925,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_get_release_commit</span><span class="p">(</span><span class="n">repository</span><span class="p">,</span> <span class="n">release_name</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_release_commit</span><span class="p">(</span><span class="n">repository</span><span class="p">,</span> <span class="n">release_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get release commit.</span>
 
@@ -933,7 +943,7 @@
     <span class="k">return</span> <span class="n">obj</span>
 
 
-<span class="k">def</span> <span class="nf">_get_repository_info_v3</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_repository_info_v3</span><span class="p">(</span>
     <span class="n">owner_repo</span><span class="p">,</span>
     <span class="n">since</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
     <span class="n">include_unreleased_commits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -1117,7 +1127,7 @@
 
 <div class="viewcode-block" id="repository_info_is_outdated">
 <a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.repository_info_is_outdated">[docs]</a>
-<span class="k">def</span> <span class="nf">repository_info_is_outdated</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">pkg_info</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">repository_info_is_outdated</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">pkg_info</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Cache update policy that returns True if the Github repository has been updated or pushed into.</span>
 
@@ -1143,7 +1153,7 @@
 
 <div class="viewcode-block" id="get_repository_info">
 <a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_repository_info">[docs]</a>
-<span class="k">def</span> <span class="nf">get_repository_info</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">&quot;v4&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_repository_info</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">&quot;v4&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get information about a Github repository</span>
 
@@ -1176,7 +1186,7 @@
     <span class="n">directory</span><span class="o">=</span><span class="s2">&quot;pkg_info&quot;</span><span class="p">,</span>
     <span class="n">update_policy</span><span class="o">=</span><span class="n">repository_info_is_outdated</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">_get_repository_info</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_repository_info</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="n">owner</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">owner_repo</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">version</span> <span class="o">==</span> <span class="s2">&quot;v4&quot;</span><span class="p">:</span>
@@ -1198,7 +1208,7 @@
 
 <div class="viewcode-block" id="get_repositories_info">
 <a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_repositories_info">[docs]</a>
-<span class="k">def</span> <span class="nf">get_repositories_info</span><span class="p">(</span><span class="n">repositories</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">&quot;v4&quot;</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_repositories_info</span><span class="p">(</span><span class="n">repositories</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">&quot;v4&quot;</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">repositories</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">repositories</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">p</span><span class="p">[</span><span class="s2">&quot;repository&quot;</span><span class="p">]</span>
@@ -1256,7 +1266,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">get_parser</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_parser</span><span class="p">():</span>
     <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">SkaRE3 Github information tool.</span>
 
@@ -1275,7 +1285,7 @@
     <span class="k">return</span> <span class="n">parser</span>
 
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">get_parser</span><span class="p">()</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
     <span class="n">github</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">token</span><span class="p">)</span>
@@ -1294,7 +1304,7 @@
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
 
 
@@ -1312,7 +1322,7 @@
     <a href="#">Back to Top</a></p>
   <p>
     &copy; Copyright 2020, Javier Gonzalez.<br/>
-    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 7.2.6. &nbsp;
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 9.1.0. &nbsp;
   </p>
 </footer>
   </body>

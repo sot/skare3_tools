@@ -5,13 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Dashboard &#8212; SkaRE3 Tools 1.5.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <title>Dashboard &#8212; SkaRE3 Tools 1.7.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="_static/documentation_options.js?v=e0a75244"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/documentation_options.js?v=030dc6f6"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
     <script type="text/javascript" src="_static/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -58,7 +58,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.5.0 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.7.0 documentation</a>
 	 &#187;
       </li>
       
@@ -99,12 +99,12 @@ Only available on web server.</p></li>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">dashboard</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">FILENAME</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h4>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h4>
+<section id="skare3_tools.dashboard.views.dashboard-get_parser-named-arguments">
+<h4>Named Arguments<a class="headerlink" href="#skare3_tools.dashboard.views.dashboard-get_parser-named-arguments" title="Link to this heading">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>-o</kbd></dt>
 <dd><p>Output file (default: index.html)</p>
-<p>Default: index.html</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">index.html</span></code></p>
 </dd>
 </dl>
 </section>
@@ -117,8 +117,8 @@ Only available on web server.</p></li>
                              <span class="p">[</span><span class="o">--</span><span class="n">log</span><span class="o">-</span><span class="nb">dir</span> <span class="n">LOG_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">static</span><span class="o">-</span><span class="nb">dir</span> <span class="n">STATIC_DIR</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h4>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h4>
+<section id="skare3_tools.dashboard.views.test_results-get_parser-named-arguments">
+<h4>Named Arguments<a class="headerlink" href="#skare3_tools.dashboard.views.test_results-get_parser-named-arguments" title="Link to this heading">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>-i</kbd></dt>
 <dd><p>Directory or JSON file containing all test results. If it is a directory, then it must have a file named all_tests.json.</p>
@@ -128,14 +128,14 @@ Only available on web server.</p></li>
 </dd>
 <dt><kbd>-b</kbd></dt>
 <dd><p>Batch mode: do not open a browser window with the result.</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--log-dir</kbd></dt>
-<dd><p>Default: “.”</p>
+<dd><p>Default: <code class="docutils literal notranslate"><span class="pre">'.'</span></code></p>
 </dd>
 <dt><kbd>--static-dir</kbd></dt>
 <dd><p>Location of static data directory.</p>
-<p>Default: “<a class="reference external" href="https://cxc.cfa.harvard.edu/mta/ASPECT/skare3/dashboard/static">https://cxc.cfa.harvard.edu/mta/ASPECT/skare3/dashboard/static</a>”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'https://cxc.cfa.harvard.edu/mta/ASPECT/skare3/dashboard/static'</span></code></p>
 </dd>
 </dl>
 </section>
@@ -148,18 +148,18 @@ Only available on web server.</p></li>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
 <ul>
 <li><a class="reference internal" href="#">Dashboard</a><ul>
 <li><a class="reference internal" href="#module-skare3_tools.dashboard.views">Views</a></li>
 <li><a class="reference internal" href="#scripts">Scripts</a><ul>
 <li><a class="reference internal" href="#skare3-dashboard"><span class="xref std std-ref">skare3-dashboard</span></a><ul>
-<li><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li><a class="reference internal" href="#skare3_tools.dashboard.views.dashboard-get_parser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#skare3-test-dashboard"><span class="xref std std-ref">skare3-test-dashboard</span></a><ul>
-<li><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li><a class="reference internal" href="#skare3_tools.dashboard.views.test_results-get_parser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 </ul>
@@ -202,7 +202,7 @@ Only available on web server.</p></li>
     <a href="#">Back to Top</a></p>
   <p>
     &copy; Copyright 2020, Javier Gonzalez.<br/>
-    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 7.2.6. &nbsp;
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 9.1.0. &nbsp;
   </p>
 </footer>
   </body>

@@ -5,13 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Github &#8212; SkaRE3 Tools 1.5.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <title>Github &#8212; SkaRE3 Tools 1.7.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="_static/documentation_options.js?v=e0a75244"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/documentation_options.js?v=030dc6f6"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
     <script type="text/javascript" src="_static/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -58,7 +58,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.5.0 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.7.0 documentation</a>
 	 &#187;
       </li>
       
@@ -78,7 +78,7 @@
 <p>In order to use it, one needs to give it an <a class="reference external" href="https://docs.github.com/en/authentication">authentication token</a>. The token is usually given
 using the GITHUB_API_TOKEN environmental variable. You can optionally initialize the API with a
 given token:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">github</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">github</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">github</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="s1">&#39;c7hvg6pqi3fhqwv0wvlgp4mk9agwbqk1gxc331iz&#39;</span><span class="p">)</span>  <span class="c1"># this is optional</span>
 </pre></div>
 </div>
@@ -89,7 +89,7 @@ given token:</p>
 It does not impose much structure on top of what is shown in their online documentation,
 and it should be easy to see the correspondence between both.</p>
 <p>As an example, this is how one gets a list of releases and pull requests for a repository:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">github</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">github</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">repo</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">Repository</span><span class="p">(</span><span class="s1">&#39;sot/Chandra.Maneuver&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">releases</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">releases</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">release</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">:</span>
@@ -110,7 +110,7 @@ and it should be easy to see the correspondence between both.</p>
 </pre></div>
 </div>
 <p>It is also possible to use the API directly, in case there is no appropriate high-level method:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">github</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">github</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">last_tag</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">GITHUB_API_V3</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;/repos/sot/Chandra.Maneuver/releases/latest&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">last_tag</span><span class="p">[</span><span class="s1">&#39;tag_name&#39;</span><span class="p">]</span>
 <span class="go">&#39;3.7.2&#39;</span>
@@ -119,7 +119,7 @@ and it should be easy to see the correspondence between both.</p>
 <section id="getting-and-editing-content">
 <h3>Getting and Editing Content<a class="headerlink" href="#getting-and-editing-content" title="Link to this heading">¶</a></h3>
 <p>Getting content:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools.github</span> <span class="kn">import</span> <span class="n">github</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools.github</span><span class="w"> </span><span class="kn">import</span> <span class="n">github</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">Repository</span><span class="p">(</span><span class="s1">&#39;sot/test-actions&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">contents</span><span class="p">(</span><span class="s1">&#39;README.md&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span>
@@ -127,7 +127,7 @@ and it should be easy to see the correspondence between both.</p>
 </pre></div>
 </div>
 <p>Editing content:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools.github</span> <span class="kn">import</span> <span class="n">github</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools.github</span><span class="w"> </span><span class="kn">import</span> <span class="n">github</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">Repository</span><span class="p">(</span><span class="s1">&#39;sot/test-actions&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">content</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="gp">... </span><span class="s2"># test-actions</span>
@@ -151,7 +151,7 @@ This can be seen in the corresponding workflow:</p>
 </pre></div>
 </div>
 <p>In this case, one can do:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">github</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">github</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">Repository</span><span class="p">(</span><span class="s1">&#39;sot/skare3_tools&#39;</span><span class="p">)</span>  <span class="c1"># changing the repository name accordingly!</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">dispatch_event</span><span class="p">(</span><span class="n">event_type</span><span class="o">=</span><span class="s1">&#39;build-docs&#39;</span><span class="p">)</span>
 </pre></div>
@@ -164,7 +164,7 @@ This can be seen in the corresponding workflow:</p>
 <p>This module does not build the query for you. This is because the possibilities afforded by GraphQL
 are large and it makes no sense to re-invent them. The easiest way to assemble a new query is to use
 <a class="reference external" href="https://developer.github.com/v4/explorer/">Github’s GraphQL Explorer</a>. For example, to get the homepage URL of a repository:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools.github</span> <span class="kn">import</span> <span class="n">graphql</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools.github</span><span class="w"> </span><span class="kn">import</span> <span class="n">graphql</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;{</span>
 <span class="gp">... </span><span class="s2">  repository(name: &quot;test-actions&quot;, owner: &quot;sot&quot;) {</span>
 <span class="gp">... </span><span class="s2">    homepageUrl</span>
@@ -178,7 +178,7 @@ are large and it makes no sense to re-invent them. The easiest way to assemble a
 </pre></div>
 </div>
 <p>and to set the homepage URL of a repository:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools.github</span> <span class="kn">import</span> <span class="n">graphql</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools.github</span><span class="w"> </span><span class="kn">import</span> <span class="n">graphql</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;mutation {</span>
 <span class="gp">... </span><span class="s2">  updateRepository(input: {repositoryId: &quot;MDEwOlJlcG9zaXRvcnkyMDkwMjE1NDQ=&quot;,</span>
 <span class="gp">... </span><span class="s2">                            homepageUrl: &quot;https://github.com/sot/test-actions&quot;})</span>
@@ -199,8 +199,8 @@ are large and it makes no sense to re-invent them. The easiest way to assemble a
 <p>Given the flexibility of the GraphQL interface, this module includes a small collection of common
 queries. Each query in the collection is a string that should be used as a jinja2 template. For
 example, to get a list all pull requests of a repository:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">jinja2</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools.github</span> <span class="kn">import</span> <span class="n">graphql</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">jinja2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools.github</span><span class="w"> </span><span class="kn">import</span> <span class="n">graphql</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">graphql</span><span class="o">.</span><span class="n">REPO_PR_QUERY</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">owner</span><span class="o">=</span><span class="s1">&#39;sot&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Quaternion&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">response</span> <span class="o">=</span> <span class="n">graphql</span><span class="o">.</span><span class="n">GITHUB_API</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;repository&#39;</span><span class="p">][</span><span class="s1">&#39;pullRequests&#39;</span><span class="p">][</span><span class="s1">&#39;nodes&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
@@ -233,8 +233,8 @@ the exemplify the usage of the API.</p>
                            <span class="p">[</span><span class="o">--</span><span class="n">body</span> <span class="n">BODY</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">label</span> <span class="n">LABEL</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h4>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h4>
+<section id="skare3_tools.github.scripts.create_issue-parser-named-arguments">
+<h4>Named Arguments<a class="headerlink" href="#skare3_tools.github.scripts.create_issue-parser-named-arguments" title="Link to this heading">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>--repository</kbd></dt>
 <dd><p>repository name. Example: sot/chandra_aca</p>
@@ -249,7 +249,7 @@ the exemplify the usage of the API.</p>
 <dd><p>Issue Description. Ignored if –latest-release is given</p>
 </dd>
 <dt><kbd>--label</kbd></dt>
-<dd><p>Default: []</p>
+<dd><p>Default: <code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
 </dd>
 <dt><kbd>--token, -t</kbd></dt>
 <dd><p>Github token, or name of file that contains token</p>
@@ -265,8 +265,8 @@ the exemplify the usage of the API.</p>
                         <span class="o">--</span><span class="n">base</span> <span class="n">BASE</span> <span class="o">--</span><span class="n">body</span> <span class="n">BODY</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h4>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h4>
+<section id="skare3_tools.github.scripts.create_pr-parser-named-arguments">
+<h4>Named Arguments<a class="headerlink" href="#skare3_tools.github.scripts.create_pr-parser-named-arguments" title="Link to this heading">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>--repository</kbd></dt>
 <dd><p>repository name. Example: sot/chandra_aca</p>
@@ -297,8 +297,8 @@ the exemplify the usage of the API.</p>
                    <span class="p">[</span><span class="o">--</span><span class="n">merge</span><span class="o">-</span><span class="n">method</span> <span class="n">MERGE_METHOD</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h4>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h4>
+<section id="skare3_tools.github.scripts.merge_pr-parser-named-arguments">
+<h4>Named Arguments<a class="headerlink" href="#skare3_tools.github.scripts.merge_pr-parser-named-arguments" title="Link to this heading">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>--repository</kbd></dt>
 <dd><p>repository name. Example: sot/chandra_aca</p>
@@ -360,26 +360,26 @@ asdf</p>
                           <span class="n">repositories</span> <span class="p">[</span><span class="n">repositories</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h4>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h4>
+<section id="skare3_tools.github.scripts.add_secrets-parser-positional-arguments">
+<h4>Positional Arguments<a class="headerlink" href="#skare3_tools.github.scripts.add_secrets-parser-positional-arguments" title="Link to this heading">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>repositories</kbd></dt>
 <dd></dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h4>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h4>
+<section id="skare3_tools.github.scripts.add_secrets-parser-named-arguments">
+<h4>Named Arguments<a class="headerlink" href="#skare3_tools.github.scripts.add_secrets-parser-named-arguments" title="Link to this heading">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>--secrets</kbd></dt>
 <dd><p>JSON file with all secrets</p>
-<p>Default: “secrets.json”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'secrets.json'</span></code></p>
 </dd>
 <dt><kbd>--user</kbd></dt>
 <dd><p>Github user name</p>
 </dd>
 <dt><kbd>--no-quit</kbd></dt>
 <dd><p>Do not close chrome browser at the end</p>
-<p>Default: True</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
 </dd>
 </dl>
 </section>
@@ -392,7 +392,7 @@ asdf</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
 <ul>
 <li><a class="reference internal" href="#">Github</a><ul>
@@ -404,21 +404,21 @@ asdf</p>
 <li><a class="reference internal" href="#module-skare3_tools.github.graphql">GraphQL Interface (V4)</a></li>
 <li><a class="reference internal" href="#github-scripts">Github Scripts</a><ul>
 <li><a class="reference internal" href="#skare3-create-issue">skare3-create-issue</a><ul>
-<li><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li><a class="reference internal" href="#skare3_tools.github.scripts.create_issue-parser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#skare3-create-pr">skare3-create-pr</a><ul>
-<li><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li><a class="reference internal" href="#skare3_tools.github.scripts.create_pr-parser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#skare3-merge-pr">skare3-merge-pr</a><ul>
-<li><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li><a class="reference internal" href="#skare3_tools.github.scripts.merge_pr-parser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#skare3-release-merge-info">skare3-release-merge-info</a></li>
 <li><a class="reference internal" href="#skare3-add-secrets">skare3-add-secrets</a><ul>
-<li><a class="reference internal" href="#positional-arguments">Positional Arguments</a></li>
-<li><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li><a class="reference internal" href="#skare3_tools.github.scripts.add_secrets-parser-positional-arguments">Positional Arguments</a></li>
+<li><a class="reference internal" href="#skare3_tools.github.scripts.add_secrets-parser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 </ul>
@@ -461,7 +461,7 @@ asdf</p>
     <a href="#">Back to Top</a></p>
   <p>
     &copy; Copyright 2020, Javier Gonzalez.<br/>
-    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 7.2.6. &nbsp;
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 9.1.0. &nbsp;
   </p>
 </footer>
   </body>

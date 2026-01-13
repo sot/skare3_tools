@@ -5,13 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Packages &#8212; SkaRE3 Tools 1.5.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <title>Packages &#8212; SkaRE3 Tools 1.7.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="_static/documentation_options.js?v=e0a75244"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/documentation_options.js?v=030dc6f6"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
     <script type="text/javascript" src="_static/copybutton.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -58,7 +58,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.5.0 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.7.0 documentation</a>
 	 &#187;
       </li>
       
@@ -89,7 +89,7 @@ the repository and the name of the conda package might not be the same.</p>
 </ul>
 <p>The package list is cached locally. The cache expires after one day.
 To use this module to get the package list, use <a class="reference internal" href="packages_api.html#skare3_tools.packages.get_package_list" title="skare3_tools.packages.get_package_list"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_package_list</span></code></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">packages</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">packages</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pkgs</span> <span class="o">=</span> <span class="n">packages</span><span class="o">.</span><span class="n">get_package_list</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pkgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="go">{&#39;name&#39;: &#39;ska3-core&#39;,</span>
@@ -107,7 +107,7 @@ as the number of open pull requests, number of branches. It also includes versio
 conda channels.</p>
 <p>To get the current information associated with a package using
 <a class="reference internal" href="packages_api.html#skare3_tools.packages.get_repository_info" title="skare3_tools.packages.get_repository_info"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_repository_info</span></code></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">packages</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">packages</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pkg</span> <span class="o">=</span> <span class="n">packages</span><span class="o">.</span><span class="n">get_repository_info</span><span class="p">(</span><span class="s1">&#39;sot/Quaternion&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pkg</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
 <span class="go">dict_keys([&#39;owner&#39;, &#39;name&#39;, &#39;pushed_at&#39;, &#39;updated_at&#39;, &#39;last_tag&#39;, &#39;last_tag_date&#39;,</span>
@@ -117,7 +117,7 @@ conda channels.</p>
 </div>
 <p>The information on all packages can be accessed with
 <a class="reference internal" href="packages_api.html#skare3_tools.packages.get_repositories_info" title="skare3_tools.packages.get_repositories_info"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_repositories_info</span></code></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">packages</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">packages</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pkg</span> <span class="o">=</span> <span class="n">packages</span><span class="o">.</span><span class="n">get_repositories_info</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -126,14 +126,14 @@ conda channels.</p>
 <h2>Conda Info<a class="headerlink" href="#conda-info" title="Link to this heading">¶</a></h2>
 <p>As part of the call to get_repository_info, the conda package versions are also fetched. This is
 done with <a class="reference internal" href="packages_api.html#skare3_tools.packages.get_conda_pkg_info" title="skare3_tools.packages.get_conda_pkg_info"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_conda_pkg_info</span></code></a>, something like:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">packages</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">packages</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">info</span> <span class="o">=</span> <span class="n">packages</span><span class="o">.</span><span class="n">get_conda_pkg_info</span><span class="p">(</span><span class="s1">&#39;quaternion&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>By default, this function looks for information on packages from a set of channels specified as
 the “main” channels. Extra sets of channels (i.e.: test, masters, shiny) can be specified as part
 of the <a class="reference internal" href="config.html#configuration"><span class="std std-ref">Configuration</span></a>, in which case one can do:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skare3_tools</span> <span class="kn">import</span> <span class="n">packages</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">packages</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">info</span> <span class="o">=</span> <span class="n">packages</span><span class="o">.</span><span class="n">get_conda_pkg_info</span><span class="p">(</span><span class="s1">&#39;quaternion&#39;</span><span class="p">,</span> <span class="n">conda_channel</span><span class="o">=</span><span class="s1">&#39;masters&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -148,12 +148,12 @@ of the <a class="reference internal" href="config.html#configuration"><span clas
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">github</span><span class="o">-</span><span class="n">info</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">O</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h4>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h4>
+<section id="skare3_tools.packages-get_parser-named-arguments">
+<h4>Named Arguments<a class="headerlink" href="#skare3_tools.packages-get_parser-named-arguments" title="Link to this heading">¶</a></h4>
 <dl class="option-list">
 <dt><kbd>-o</kbd></dt>
 <dd><p>Output file (default=repository_info.json)</p>
-<p>Default: “repository_info.json”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'repository_info.json'</span></code></p>
 </dd>
 <dt><kbd>--token</kbd></dt>
 <dd><p>Github token, or name of file that contains token</p>
@@ -169,7 +169,7 @@ of the <a class="reference internal" href="config.html#configuration"><span clas
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
 <ul>
 <li><a class="reference internal" href="#">Packages</a><ul>
@@ -178,7 +178,7 @@ of the <a class="reference internal" href="config.html#configuration"><span clas
 <li><a class="reference internal" href="#conda-info">Conda Info</a></li>
 <li><a class="reference internal" href="#scripts">Scripts</a><ul>
 <li><a class="reference internal" href="#skare3-github-info">skare3-github-info</a><ul>
-<li><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+<li><a class="reference internal" href="#skare3_tools.packages-get_parser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 </ul>
@@ -221,7 +221,7 @@ of the <a class="reference internal" href="config.html#configuration"><span clas
     <a href="#">Back to Top</a></p>
   <p>
     &copy; Copyright 2020, Javier Gonzalez.<br/>
-    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 7.2.6. &nbsp;
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 9.1.0. &nbsp;
   </p>
 </footer>
   </body>
