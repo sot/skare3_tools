@@ -58,6 +58,7 @@ setup(
             "static/*/*/*/*",
             "static/*/*/*/*/*",
             "templates/*",
+            "task_schedule.cfg",
         ],
     },
     license=(
