@@ -438,6 +438,7 @@ class Repository:
         self.branches = Branches(self)
         self.checks = Checks(self)
         self.pull_requests = PullRequests(self)
+        self.pull_request_reviews = PullReviews(self)
         self.compare = Compare(self)
         self.merge = Merge(self)
         self.dispatch_event = DispatchEvent(self)
@@ -1225,6 +1226,22 @@ class Checks(_EndpointGroup):
             "repos/:owner/:repo/commits/:ref/check-runs",
             headers={"Accept": "application/vnd.github.antiope-preview+json"},
             ref=ref,
+        )
+
+
+class PullReviews(_EndpointGroup):
+    """
+    Endpoints that have to do with pull request reviews.
+
+    (`pull request reviews API docs <https://developer.github.com/v3/pulls/reviews/>`_)
+    """
+
+    def __call__(self, pull_number):
+        # accept headers are custom because this endpoint is
+        # on preview for developers and can change any time
+        return self._get(
+            "repos/:owner/:repo/pulls/:pull_number/reviews",
+            pull_number=pull_number,
         )
 
 
