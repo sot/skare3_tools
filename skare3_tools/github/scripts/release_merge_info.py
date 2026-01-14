@@ -41,7 +41,7 @@ def merges_in_range(repo, sha_1, sha_2):
     commits_2 = repo.commits(sha=sha_2)
     sha_1 = [c["sha"] for c in commits_1]
     sha_2 = [c["sha"] for c in commits_2]
-    i = np.argwhere(np.in1d(sha_2, sha_1)).flatten()[0]
+    i = np.argwhere(np.isin(sha_2, sha_1)).flatten()[0]
     commits = commits_2[:i]
     assert len(commits)  # TODO: shouldn't it be possible with no commits?
 
