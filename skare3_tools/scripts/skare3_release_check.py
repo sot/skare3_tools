@@ -26,6 +26,7 @@ import jinja2
 import os
 import re
 import sys
+from pathlib import Path
 
 import git
 import yaml
@@ -39,7 +40,7 @@ def parser():
     parse = argparse.ArgumentParser(description=__doc__)
     parse.add_argument("--version", required=True, help="Target version to build")
     parse.add_argument(
-        "--skare3-path", default=".", help="local copy of the skare3 repo"
+        "--skare3-path", default=".", help="local copy of the skare3 repo", type=Path
     )
     parse.add_argument(
         "--repository", default="sot/skare3", help="Github repository name"
@@ -68,7 +69,7 @@ def log(msg, level=logging.ERROR):
 def main():
     arg_parser = parser()
     args = arg_parser.parse_args()
-    args.skare3_path = os.path.abspath(args.skare3_path)
+    args.skare3_path = args.skare3_path.resolve()
 
     git_repo = None
     try:
@@ -192,7 +193,7 @@ def main():
 
     # checking package versions
     # whenever a version equals `branch_name`, replace it by the full version.
-    files = glob.glob(os.path.join(args.skare3_path, "pkg_defs", "ska3-*", "meta.yaml"))
+    files = glob.glob(args.skare3_path / "pkg_defs" / "ska3-*" / "meta.yaml")
     packages = []
     possible_error = []
     version_str = str(version_info["final_version"])

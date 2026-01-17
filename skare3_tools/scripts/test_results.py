@@ -6,12 +6,12 @@ Deprecated Script: Gather test results from testr's log file.
 import argparse
 import importlib
 import json
-import os
 import re
+from pathlib import Path
 
 
 def test_results(directory):
-    filename = os.path.join(directory, "test.log")
+    filename = directory / "test.log"
     with open(filename) as f:
         for line in f:
             if re.match(r"\*\*\*\s+Package\s+Script\s+Status\s+\*\*\*", line):
@@ -35,7 +35,7 @@ def test_results(directory):
             result_dict[k[0]]["version"] = version
 
             test_results = {
-                "log_directory": os.path.basename(directory),
+                "log_directory": directory.name,
                 "results": result_dict,
             }
     return test_results
@@ -47,11 +47,13 @@ def parser():
         "directory",
         help="Directory containing all test results."
         "It must contain a file named test.log",
+        type=Path,
     )
     parse.add_argument(
         "-o",
         help="Output file name (default: test_results.json)",
         default="test_results.json",
+        type=Path,
     )
     return parse
 
