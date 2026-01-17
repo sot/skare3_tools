@@ -62,7 +62,7 @@ def overwrite_skare3_version(current_version, new_version, pkg_path):
                 and info["version"] == current_version
             ):
                 print(
-                    f'    - {info["name"]} dependency: {current_version} -> {new_version}'
+                    f"    - {info['name']} dependency: {current_version} -> {new_version}"
                 )
                 lines[i] = line.replace(current_version, new_version)
 
@@ -132,11 +132,11 @@ def main():
                 )
             version_info = rc.groupdict()
             version_info["label"] = (
-                f'+{version_info["label"]}' if version_info["label"] else ""
+                f"+{version_info['label']}" if version_info["label"] else ""
             )
             args.ska3_overwrite_version = (
-                f'{version_info["release"]}{version_info["label"]}'
-                f':{version_info["version"]}'
+                f"{version_info['release']}{version_info['label']}"
+                f":{version_info['version']}"
             )
 
     print("skare3 build args:", args)
@@ -169,8 +169,7 @@ def main():
                 )
     else:
         print(
-            "Conda password needs to be given"
-            " as environmental variable CONDA_PASSWORD"
+            "Conda password needs to be given as environmental variable CONDA_PASSWORD"
         )
         sys.exit(100)
 
@@ -267,7 +266,7 @@ def main():
         if "GITHUB_STEP_SUMMARY" in os.environ:
             mode = "r+" if os.path.exists(os.environ["GITHUB_STEP_SUMMARY"]) else "w"
             with open(os.environ["GITHUB_STEP_SUMMARY"], mode) as fh:
-                fh.write(f"## Files\n")
+                fh.write("## Files\n")
                 for filename in files:
                     fh.write(f"- {filename}\n")
 
