@@ -56,7 +56,7 @@ def _files_to_copy(package, platform, ska3_conda, to_channel, from_channels):
         # should not promote a package with no version
         return
     pkg_files = None
-    pkg = f'{package["name"]}-{package["version"]}'
+    pkg = f"{package['name']}-{package['version']}"
     dest_file = []
     from_file = []
     for arch in ["noarch", platform]:
@@ -119,7 +119,7 @@ def promote(package, args, platforms=None):
         # was not found.
         if pkgs == []:
             logging.warning(
-                f'package {package["name"]}=={package["version"]}'
+                f"package {package['name']}=={package['version']}"
                 f" not found for platform {platform}."
             )
             continue
@@ -127,7 +127,7 @@ def promote(package, args, platforms=None):
             package_names += [package["name"]]
             pkg_files += pkgs
         else:
-            logging.debug(f'package {package["name"]} is already promoted.')
+            logging.debug(f"package {package['name']} is already promoted.")
 
         for section in SECTIONS:
             if section not in data["requirements"]:
@@ -191,16 +191,10 @@ def promote(package, args, platforms=None):
         "win-64": "",
     }
     div.update(
-        {
-            k: ""
-            for k in [
-                "noarch-src",
-                "linux-64-src",
-                "osx-64-src",
-                "osx-arm64-src",
-                "win-64-src",
-            ]
-        }
+        dict.fromkeys(
+            ["noarch-src", "linux-64-src", "osx-64-src", "osx-arm64-src", "win-64-src"],
+            "",
+        )
     )
     div = row.format(**div).replace(" ", "-").replace("|", "+")
     header = {
@@ -212,25 +206,18 @@ def promote(package, args, platforms=None):
         "win-64": "win-64",
     }
     header.update(
-        {
-            k: ""
-            for k in [
-                "noarch-src",
-                "linux-64-src",
-                "osx-64-src",
-                "osx-arm64-src",
-                "win-64-src",
-            ]
-        }
+        dict.fromkeys(
+            ["noarch-src", "linux-64-src", "osx-64-src", "osx-arm64-src", "win-64-src"],
+            "",
+        )
     )
     header = row.format(**header)
     logging.info(div)
     logging.info(header)
     logging.info(div)
     for name in package_names:
-        versions = {
-            platform: "---"
-            for platform in [
+        versions = dict.fromkeys(
+            [
                 "noarch",
                 "linux-64",
                 "osx-64",
@@ -241,8 +228,9 @@ def promote(package, args, platforms=None):
                 "osx-64-src",
                 "osx-arm64-src",
                 "win-64-src",
-            ]
-        }
+            ],
+            "---",
+        )
         versions["package"] = name
         for pkg in pkg_files[name]:
             if pkg["version"] is None:
@@ -351,7 +339,7 @@ def main():
             logging.error(f'"{args.ska3_conda}" does not exist.')
             sys.exit(1)
 
-        logging.info(f'Promoting from: {", ".join(args.from_channels)}')
+        logging.info(f"Promoting from: {', '.join(args.from_channels)}")
         logging.info(f"Promoting to:   {args.to_channel}")
         if not args.skare3.exists():
             git.Repo.clone_from(SKARE3_URL, args.skare3)

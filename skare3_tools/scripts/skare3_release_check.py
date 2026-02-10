@@ -22,12 +22,12 @@ This script makes the following checks:
 import argparse
 import glob
 import logging
-import jinja2
 import os
 import re
 import sys
 
 import git
+import jinja2
 import yaml
 
 from skare3_tools import github
@@ -74,13 +74,9 @@ def main():
     try:
         git_repo = git.Repo(args.skare3_path)
     except git.NoSuchPathError:
-        log(
-            f'--skare3-path points to non-existent directory "{args.skare3_path}".'
-        )
+        log(f'--skare3-path points to non-existent directory "{args.skare3_path}".')
     except git.InvalidGitRepositoryError:
-        log(
-            f'--skare3-path points to an invalid git repo "{args.skare3_path}".'
-        )
+        log(f'--skare3-path points to an invalid git repo "{args.skare3_path}".')
     if git_repo is None:
         sys.exit(1)
 
@@ -103,7 +99,7 @@ def main():
 
     allowed_names = [f"{version_info['final_version']}-branch"]
     if version_info["label"]:
-        allowed_names += [f'{version_info["final_version"]}+{version_info["label"]}']
+        allowed_names += [f"{version_info['final_version']}+{version_info['label']}"]
 
     log(f"Sanity check for release {tag_name}", level=logging.INFO)
 
@@ -140,7 +136,7 @@ def main():
                 branch_name = release["target_commitish"]
                 pulls = repository.pull_requests(
                     state="open" if release["prerelease"] else "all",
-                    head=f'sot:{version_info["final_version"]}-branch',
+                    head=f"sot:{version_info['final_version']}-branch",
                 )
                 pulls = [
                     p for p in pulls if p["title"] == version_info["final_version"]
@@ -148,7 +144,7 @@ def main():
                 if branch_name not in allowed_names:
                     fail.append(
                         f'Invalid branch name "{branch_name}" for release "{tag_name}". '
-                        f'Allowed branch names for this tag are {", ".join(allowed_names)}'
+                        f"Allowed branch names for this tag are {', '.join(allowed_names)}"
                     )
                 if not pulls:
                     fail.append(
@@ -162,7 +158,7 @@ def main():
                     )
                 if version_info["label"] is not None and not release["prerelease"]:
                     fail.append(
-                        f'Release {tag_name} has label {version_info["label"]}, '
+                        f"Release {tag_name} has label {version_info['label']}, "
                         f"but the release is not a prerelease"
                     )
             # when workflow triggered by release, GITHUB_SHA must have the release commit sha
@@ -206,10 +202,7 @@ def main():
             version_pkg = str(data["package"]["version"])
             if version_str == version_pkg:
                 packages.append(data["package"]["name"])
-            elif (
-                version_str != version_float
-                and version_float == version_pkg
-            ):
+            elif version_str != version_float and version_float == version_pkg:
                 # versions like 2024.10 are "tricky" because if you interpret them as floats
                 # you get a different value. A typical error in meta.yaml is to write
                 #    version: 2024.10
@@ -237,13 +230,15 @@ def main():
 
     packages_str = " ".join(packages)
     prerelease = release["prerelease"]
-    overwrite_flag = f"--skare3-overwrite-version {version_info['final_version']}:{tag_name}\n"
+    overwrite_flag = (
+        f"--skare3-overwrite-version {version_info['final_version']}:{tag_name}\n"
+    )
 
     log(f"prerelease: {prerelease}", level=logging.INFO)
     log(f"packages: {packages_str}", level=logging.INFO)
     log(
         f"overwrite_flag: --skare3-overwrite-version {version_info['final_version']}:{tag_name}",
-        level=logging.INFO
+        level=logging.INFO,
     )
 
     # this output defines variables 'prerelease', 'packages', and 'overwrite_flag'

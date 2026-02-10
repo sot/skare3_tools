@@ -47,7 +47,7 @@ def main():
     prs = repository.pull_requests(**kwargs)
 
     if isinstance(prs, dict) and not prs["response"]["ok"]:
-        print(f'Failed getting requested PR: {prs["response"]["reason"]}')
+        print(f"Failed getting requested PR: {prs['response']['reason']}")
         sys.exit(1)
 
     if len(prs) != 1:
@@ -78,7 +78,7 @@ def main():
     result = repository.pull_requests.merge(**kwargs)
     if not result["response"]["ok"]:
         print(
-            f'Failed merging PR: {result["response"]["reason"]}. {result["response"]["message"]}'
+            f"Failed merging PR: {result['response']['reason']}. {result['response']['message']}"
         )
         sys.exit(1)
 

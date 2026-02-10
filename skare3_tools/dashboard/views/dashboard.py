@@ -50,12 +50,12 @@ def dashboard(config=None, render=True):
                     for ts in test_results["test_suites"]
                     if ts["package"] == repo2name[repo]
                 ]
-            if len(package_tests):
+            if package_tests:
                 status = [
                     tc["status"] for ts in package_tests for tc in ts["test_cases"]
                 ]
                 p["test_version"] = package_tests[0]["properties"]["package_version"]
-                if len([s for s in status if s == "fail"]):
+                if [s for s in status if s == "fail"]:
                     p["test_status"] = "FAIL"
                 elif len(status) == len([s for s in status if s == "skipped"]):
                     p["test_status"] = "SKIP"

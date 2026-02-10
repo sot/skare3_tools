@@ -20,17 +20,10 @@ def test_results():
 
 def _get_results(tests, config, render=True):
     if "run_info" not in tests:
-        tests["run_info"] = {
-            k: ""
-            for k in [
-                "date",
-                "ska_version",
-                "system",
-                "architecture",
-                "hostname",
-                "platform",
-            ]
-        }
+        tests["run_info"] = dict.fromkeys(
+            ["date", "ska_version", "system", "architecture", "hostname", "platform"],
+            "",
+        )
     for ts in tests["test_suites"]:
         n_skipped = 0
         n_fail = 0

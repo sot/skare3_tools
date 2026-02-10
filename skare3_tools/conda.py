@@ -45,14 +45,14 @@ def gather_env_pkgs(
         directory.mkdir(parents=True)
     for pkg in pkgs:
         name = ""
-        if (pkgs_dir / f'{pkg["dist_name"]}.conda').exists():
-            name = pkgs_dir / f'{pkg["dist_name"]}.conda'
-        elif (pkgs_dir / f'{pkg["dist_name"]}.tar.bz2').exists():
-            name = pkgs_dir / f'{pkg["dist_name"]}.tar.bz2'
+        if (pkgs_dir / f"{pkg['dist_name']}.conda").exists():
+            name = pkgs_dir / f"{pkg['dist_name']}.conda"
+        elif (pkgs_dir / f"{pkg['dist_name']}.tar.bz2").exists():
+            name = pkgs_dir / f"{pkg['dist_name']}.tar.bz2"
         if name:
             shutil.copy(name, directory)
         else:
-            logger.debug(f'ignored {pkg["dist_name"]}')
+            logger.debug(f"ignored {pkg['dist_name']}")
 
 
 def get_parser():

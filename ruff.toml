@@ -22,4 +22,5 @@ lint.extend-ignore = [
   # "C416", # Unnecessary `dict` comprehension (rewrite using `dict()`)
   # "G010", # warn is deprecated in favor of warning
   # "PYI056", # Calling `.append()` on `__all__` may not be supported by all type checkers
+  "S101",
 ]

@@ -107,10 +107,10 @@ def main():
     for merge in merges:
         if merge["pr"][0] == "#":
             merge["pr"] = (
-                f'[{merge["pr"]}]'
-                f'(https://github.com/{args.repository}/pull/{merge["pr"][1:]})'
+                f"[{merge['pr']}]"
+                f"(https://github.com/{args.repository}/pull/{merge['pr'][1:]})"
             )
-        msgs.append(f'PR {merge["pr"]}: {merge["description"]}')
+        msgs.append(f"PR {merge['pr']}: {merge['description']}")
 
     if msgs:
         # edit the release to include the merge information

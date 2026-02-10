@@ -124,7 +124,7 @@ def repository_change_summary(
                                 f" {version_1}, {releases}"
                             )
                         if len(releases) == 1 and releases[0] == "":
-                            logging.warning(f'Package {p["name"]} has no releases?')
+                            logging.warning(f"Package {p['name']} has no releases?")
                             continue
 
                         if version_1 in releases and version_1:
@@ -141,7 +141,7 @@ def repository_change_summary(
                         for merge in sum([release_info[k] for k in releases], []):
                             pr = merge["pr_number"]
                             if merge["pr_number"]:
-                                url = f'{p["owner"]}/{p["name"]}/pull/{pr}'
+                                url = f"{p['owner']}/{p['name']}/pull/{pr}"
                             else:
                                 url = ""
                             merges.append(
@@ -334,11 +334,11 @@ def _get_versions(version, repository_info, conda_info):
         version = conda_info[version]["depends"]
     elif version in special_versions:
         version = {
-            repo_to_package[f'{p["owner"]}/{p["name"]}']: p[version]
+            repo_to_package[f"{p['owner']}/{p['name']}"]: p[version]
             for p in repository_info
             if version in p
             and p[version]
-            and f'{p["owner"]}/{p["name"]}' in repo_to_package
+            and f"{p['owner']}/{p['name']}" in repo_to_package
         }
     elif os.path.exists(version):
         with open(version, "r") as f:

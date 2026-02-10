@@ -23,7 +23,7 @@ def main():
     args.cmd += extra
     packages = [line.strip() for line in open(args.repositories).readlines()]
     for package in packages:
-        header = f"\n\n{package}\n{'-'*len(package)}" ""
+        header = f"\n\n{package}\n{'-' * len(package)}"
         print(header)
         try:
             subprocess.check_call(args.cmd, cwd=package)

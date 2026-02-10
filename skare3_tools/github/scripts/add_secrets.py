@@ -132,8 +132,8 @@ def _get_link(text=None, **attributes):
     links = _driver_.find_elements_by_tag_name("a")
     if text is not None:
         links = [line for line in links if line.text == text]
-    for att in attributes:
-        links = [line for line in links if line.get_attribute(att) == attributes[att]]
+    for att, value in attributes.items():
+        links = [line for line in links if line.get_attribute(att) == value]
     msg = f"link with attributes={attributes}"
     if text is not None:
         msg += f" and text={text}"

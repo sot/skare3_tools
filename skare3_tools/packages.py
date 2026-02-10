@@ -1139,7 +1139,7 @@ def get_repositories_info(repositories=None, version="v4", update=False):
 
     info = {"packages": []}
     meta_pkg_versions = {
-        pkg: {r: "" for r in repositories} for pkg in ["ska3-flight", "ska3-matlab"]
+        pkg: dict.fromkeys(repositories, "") for pkg in ["ska3-flight", "ska3-matlab"]
     }
 
     for pkg in ["ska3-flight", "ska3-matlab"]:
@@ -1152,10 +1152,10 @@ def get_repositories_info(repositories=None, version="v4", update=False):
             info[pkg] = conda_info["version"]
             versions = conda_info["depends"]
             for owner_repo in repositories:
-                assert (
-                    owner_repo in repo_package_map
-                ), "Package {owner_repo} not in package map".format(
-                    owner_repo=owner_repo
+                assert owner_repo in repo_package_map, (
+                    "Package {owner_repo} not in package map".format(
+                        owner_repo=owner_repo
+                    )
                 )
                 conda_pkg = repo_package_map[owner_repo]
                 if conda_pkg in versions:
