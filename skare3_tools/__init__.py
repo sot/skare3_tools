@@ -27,17 +27,16 @@ def _get_version():
             # importing this here so we do not get a failure if setuptools_scm is not installed
             # and we are not in a git repo
             import setuptools_scm
+
             version = setuptools_scm.get_version(
                 root=pathlib.Path(".."), relative_to=module_file
             )
         else:
             version = metadata.version(package)
 
-
     except Exception as exc:
         logging.warning(f"Failed to get version for skare3_tools: {exc}")
         version = "0.0.0"
-
 
     return version
 
