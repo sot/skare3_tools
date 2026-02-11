@@ -1,3 +1,5 @@
+# we do not use ska_helpers.get_version, because skare3_tools is often used in CI workflows where
+# ska_helpers is not available, so this is a simplified version of that function.
 def _get_version():
     import importlib
     import logging
