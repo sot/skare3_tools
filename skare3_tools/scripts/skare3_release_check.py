@@ -169,8 +169,11 @@ def main():
                         f"but the release is not a prerelease"
                     )
             # when workflow triggered by release, GITHUB_SHA must have the release commit sha
-            if "GITHUB_SHA" in os.environ and not args.skip_github_sha_check:
-                if os.environ["GITHUB_SHA"] != tag["object"]["sha"]:
+            if "GITHUB_SHA" in os.environ:
+                if (
+                    not args.skip_github_sha_check
+                    and os.environ["GITHUB_SHA"] != tag["object"]["sha"]
+                ):
                     fail.append(
                         f"Tag {tag_name} sha differs from sha in GITHUB_SHA: "
                         f"{tag['object']['sha']} != {os.environ['GITHUB_SHA']}"
