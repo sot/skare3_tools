@@ -12,7 +12,6 @@ import argparse
 import re
 import sys
 
-import numpy as np
 from packaging.version import Version
 
 from skare3_tools import github, packages
@@ -41,7 +40,8 @@ def merges_in_range(repo, sha_1, sha_2):
     commits_2 = repo.commits(sha=sha_2)
     sha_1 = [c["sha"] for c in commits_1]
     sha_2 = [c["sha"] for c in commits_2]
-    i = np.argwhere(np.isin(sha_2, sha_1)).flatten()[0]
+    common = set(sha_1)
+    i = next(j for j, sha in enumerate(sha_2) if sha in common)
     commits = commits_2[:i]
     assert len(commits)  # TODO: shouldn't it be possible with no commits?
 
