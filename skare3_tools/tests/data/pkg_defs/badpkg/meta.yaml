@@ -1,0 +1,8 @@
+# Deliberately broken Jinja *syntax* (an empty {% if %} block).
+# jinja2.Template() raises TemplateSyntaxError at compile time, which
+# packages._conda_package_list catches (packages.py:253-258) to skip and log
+# the recipe rather than crashing. Note: a merely *undefined* variable does NOT
+# raise -- jinja renders it to an empty string -- so a syntax error is required
+# to exercise the skip branch.
+package:
+  name: {% if %}

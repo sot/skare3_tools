@@ -1,0 +1,16 @@
+name: Run tests
+on: [push]
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # setuptools_scm needs history + tags
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt . pytest responses
+      - run: pytest skare3_tools/tests -v
+        env:
+          SKARE3_TOOLS_DATA: ${{ runner.temp }}/skare3-data
