@@ -869,172 +869,6 @@ def _get_release_commit(repository, release_name):
     return obj
 
 
-def _get_repository_info_v3(
-    owner_repo,
-    since=7,
-    include_unreleased_commits=False,
-    include_commits=False,
-):
-    """
-    Get information about a Github repository.
-
-    This uses Github API v3. This function is DEPRECATED, use v4 instead.
-
-    :param owner_repo: str
-        the name of the repository, including owner, something like 'sot/skare3'.
-    :param since: int or str
-        the maximum number of releases to look back, or the release tag to look back to
-        (not inclusive).
-    :param include_unreleased_commits: bool
-        whether to include commits and merges for repositories that have no release.
-        This affects only top-level entries 'commits', 'merges', 'merge_info'.
-        It is for backward compatibility with the dashboard.
-    :param include_commits: bool
-        whether to include commits in release_info.
-    :return:
-    """
-    api = github.GITHUB_API_V3
-
-    owner, repo = owner_repo.split("/")
-    repository = github.Repository(owner_repo)
-
-    releases = [
-        release
-        for release in repository.releases()
-        if not release["prerelease"] and not release["draft"]
-    ]
-
-    # get the actual commit sha and date for each release
-    release_commits = [_get_release_commit(repository, r["tag_name"]) for r in releases]
-    release_commits = [repository.commits(ref=c["sha"]) for c in release_commits]
-    release_dates = {
-        r["tag_name"]: c["commit"]["committer"]["date"]
-        for r, c in zip(releases, release_commits, strict=True)
-    }
-
-    date_since = None
-    if isinstance(since, int):
-        # only the latest 'since' releases (at most) will be included in summary
-        if len(releases) > since:
-            date_since = sorted(release_dates.values(), reverse=True)[since]
-    elif since in release_dates:
-        # only releases _after_ 'since' will be included in summary
-        date_since = release_dates[since]
-    else:
-        raise Exception(
-            "Requested repository info with since={since},".format(since=since)
-            + "which is not and integer and is not one of the known releases"
-            + "({releases})".format(releases=sorted(release_dates.keys()))
-        )
-
-    release_info = [
-        {"release_tag": "", "release_tag_date": "", "commits": [], "merges": []}
-    ]
-
-    all_pull_requests = repository.pull_requests(state="all")
-    all_pull_requests = {pr["number"]: pr for pr in all_pull_requests}
-    commits = repository.commits(
-        sha=repository.info["default_branch"], since=date_since
-    )
-    if date_since is not None:
-        commits = commits[:-1]  # remove first commit, which was just the starting point
-    for commit in commits:
-        sha = commit["sha"]
-        releases_at_commit = [
-            {
-                "release_tag": release["tag_name"],
-                "release_tag_date": release["published_at"],
-                "commits": [],
-                "merges": [],
-            }
-            for release in [
-                r
-                for r, c in zip(releases, release_commits, strict=True)
-                if c["sha"] == sha
-            ]
-        ]
-        release_info += releases_at_commit
-
-        release_info[-1]["commits"].append(
-            {
-                "sha": commit["sha"],
-                "message": commit["commit"]["message"],
-                "date": commit["commit"]["committer"]["date"],
-                "author": commit["commit"]["author"]["name"],
-            }
-        )
-        match = re.match(
-            r"Merge pull request #(?P<pr_number>.+) from (?P<branch>\S+)\n\n(?P<title>.+)",
-            commit["commit"]["message"],
-        )
-        if match:
-            merge = match.groupdict()
-            merge["pr_number"] = int(merge["pr_number"])
-            if merge["pr_number"] in all_pull_requests:
-                merge["title"] = all_pull_requests[merge["pr_number"]]["title"].strip()
-            release_info[-1]["merges"].append(merge)
-
-    if len(release_info) > 1:
-        last_tag = release_info[1]["release_tag"]
-        last_tag_date = release_info[1]["release_tag_date"]
-    else:
-        last_tag = ""
-        last_tag_date = ""
-
-    branches = repository.branches()
-    issues = [i for i in repository.issues() if "pull_request" not in i]
-
-    pull_requests = []
-    for pr in repository.pull_requests():
-        pr_commits = api.get(pr["commits_url"]).json()
-        date = pr_commits[-1]["commit"]["committer"]["date"]
-        pull_requests.append(
-            {
-                "number": pr["number"],
-                "url": pr["_links"]["html"]["href"],
-                "title": pr["title"],
-                "n_commits": len(pr_commits),
-                "last_commit_date": date,
-            }
-        )
-
-    headers = {"Accept": "application/vnd.github.antiope-preview+json"}
-    workflows = api.get(
-        "/repos/{owner}/{repo}/actions/workflows".format(owner=owner, repo=repo),
-        headers=headers,
-    ).json()
-    workflows = [
-        {k: w[k] for k in ["name", "badge_url"]} for w in workflows["workflows"]
-    ]
-
-    repo_info = {
-        "owner": owner,
-        "name": repo,
-        "last_tag": last_tag,
-        "last_tag_date": last_tag_date,
-        "commits": len(release_info[0]["commits"]),
-        "merges": len(release_info[0]["merges"]),
-        "merge_info": release_info[0]["merges"],
-        "release_info": release_info,
-        "issues": len(issues),
-        "n_pull_requests": len(pull_requests),
-        "branches": len(branches),
-        "pull_requests": pull_requests,
-        "workflows": workflows,
-    }
-
-    if not include_commits:
-        for r in repo_info["release_info"]:
-            del r["commits"]
-
-    if not include_unreleased_commits and len(repo_info["release_info"]) == 1:
-        repo_info["commits"] = 0
-        repo_info["merges"] = 0
-        repo_info["merge_info"] = []
-
-    return repo_info
-
-
 _LAST_UPDATED_QUERY = jinja2.Template(
     """
 {
@@ -1074,7 +908,7 @@ def repository_info_is_outdated(_, pkg_info):
     return outdated
 
 
-def get_repository_info(owner_repo, version="v4", **kwargs):
+def get_repository_info(owner_repo, **kwargs):
     """
     Get information about a Github repository
 
@@ -1089,16 +923,11 @@ def get_repository_info(owner_repo, version="v4", **kwargs):
         It is for backward compatibility with the dashboard.
     :param include_commits: bool
         whether to include commits in release_info.
-    :param version: str
-        Github API version to use.
     :param update: bool
         Force update of the cached info. By default updates only if pushed_at or updated_at change.
     :return:
     """
-    # the indirect call is to make sure the version argument is set at this point
-    # otherwise, there are two caches if the version is explicitly set to the default value
-    # (one where it is set and one where it is not)
-    return _get_repository_info(owner_repo, version, **kwargs)
+    return _get_repository_info(owner_repo, **kwargs)
 
 
 @json_cache(
@@ -1106,13 +935,10 @@ def get_repository_info(owner_repo, version="v4", **kwargs):
     directory="pkg_info",
     update_policy=repository_info_is_outdated,
 )
-def _get_repository_info(owner_repo, version, **kwargs):
+def _get_repository_info(owner_repo, **kwargs):
     owner, name = owner_repo.split("/")
 
-    if version == "v4":
-        info = _get_repository_info_v4(owner_repo, **kwargs)
-    else:
-        info = _get_repository_info_v3(owner_repo, **kwargs)
+    info = _get_repository_info_v4(owner_repo, **kwargs)
 
     info["master_version"] = ""
     conda_info = get_conda_pkg_info(name, conda_channel="masters")
@@ -1126,7 +952,7 @@ get_repository_info.clear_cache = _get_repository_info.clear_cache
 get_repository_info.rm_cache_entry = _get_repository_info.rm_cache_entry
 
 
-def get_repositories_info(repositories=None, version="v4", update=False):
+def get_repositories_info(repositories=None, update=False):
     if repositories is None:
         repositories = [
             p["repository"]
@@ -1170,7 +996,7 @@ def get_repositories_info(repositories=None, version="v4", update=False):
     for owner_repo in repositories:
         # print(owner_repo)
         try:
-            repo_info = get_repository_info(owner_repo, version=version, update=update)
+            repo_info = get_repository_info(owner_repo, update=update)
             repo_info["matlab"] = meta_pkg_versions["ska3-matlab"][owner_repo]
             repo_info["flight"] = meta_pkg_versions["ska3-flight"][owner_repo]
             info["packages"].append(repo_info)
