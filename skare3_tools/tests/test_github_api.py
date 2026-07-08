@@ -27,7 +27,7 @@ def test_token_resolution_precedence(monkeypatch):
     monkeypatch.setenv("GITHUB_API_TOKEN", "aaa")
     monkeypatch.setenv("GITHUB_TOKEN", "bbb")
     api = github.GithubAPI()
-    assert api.headers["Authorization"] == "token aaa"   # GITHUB_API_TOKEN wins
+    assert api.headers["Authorization"] == "token aaa"  # GITHUB_API_TOKEN wins
 
     monkeypatch.delenv("GITHUB_API_TOKEN")
     api = github.GithubAPI()

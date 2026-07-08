@@ -33,7 +33,7 @@ def _cache_file(name):
 def test_cold_call_does_not_persist():
     fn, calls = _counting("t_cold")
     assert fn() == {"value": 1}
-    assert fn() == {"value": 2}          # no file -> function runs again
+    assert fn() == {"value": 2}  # no file -> function runs again
     assert calls["n"] == 2
     assert not os.path.exists(_cache_file("t_cold"))
 
@@ -42,7 +42,7 @@ def test_update_writes_and_hits():
     fn, calls = _counting("t_update")
     assert fn(update=True) == {"value": 1}
     assert os.path.exists(_cache_file("t_update"))
-    assert fn() == {"value": 1}          # served from file
+    assert fn() == {"value": 1}  # served from file
     assert calls["n"] == 1
 
 
@@ -51,7 +51,7 @@ def test_expiry_refreshes():
     fn(update=True)
     two_days_ago = os.path.getmtime(_cache_file("t_expiry")) - 2 * 86400
     os.utime(_cache_file("t_expiry"), (two_days_ago, two_days_ago))
-    assert fn() == {"value": 2}          # stale -> function re-runs
+    assert fn() == {"value": 2}  # stale -> function re-runs
     assert calls["n"] == 2
     # and the file was rewritten (fresh mtime)
     assert os.path.getmtime(_cache_file("t_expiry")) - two_days_ago > 86400

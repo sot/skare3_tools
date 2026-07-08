@@ -36,15 +36,13 @@ def test_get_package_list_parses_pkg_defs(monkeypatch, fake_skare3_repo):
     result = packages.get_package_list(update=True)
     by_name = {p["name"]: p for p in result if p["name"]}
     foo = by_name["foo"]
-    assert foo["repository"] == "sot/foo"   # full owner/repo, from about.home
+    assert foo["repository"] == "sot/foo"  # full owner/repo, from about.home
     assert foo["owner"] == "sot"
     assert foo["package"] == "foo"
-    assert by_name["nohome"]["repository"] is None   # no about.home -> no repo
+    assert by_name["nohome"]["repository"] is None  # no about.home -> no repo
     assert by_name["nohome"]["owner"] is None
     # extra org repo appended even though it has no pkg_def
-    assert any(
-        p["repository"] == "sot/bar" and p["package"] is None for p in result
-    )
+    assert any(p["repository"] == "sot/bar" and p["package"] is None for p in result)
     # sorted output (matches production sort key: repository-or-"" then name)
     keys = [((p["repository"] or ""), p["name"]) for p in result]
     assert keys == sorted(keys)
@@ -52,5 +50,5 @@ def test_get_package_list_parses_pkg_defs(monkeypatch, fake_skare3_repo):
 
 def test_get_package_list_skips_bad_recipe(monkeypatch, fake_skare3_repo):
     monkeypatch.setattr(packages.github, "Organization", FakeOrganization)
-    result = packages.get_package_list(update=True)   # badpkg present in fixtures
+    result = packages.get_package_list(update=True)  # badpkg present in fixtures
     assert all(p["name"] != "badpkg" for p in result)  # skipped, not raised
