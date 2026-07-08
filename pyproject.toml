@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skare3_tools"
+description = "Tools used for skare3 package management"
+authors = [{name = "Javier Gonzalez", email = "javier.gonzalez@cfa.harvard.edu"}]
+license = {text = "BSD-3-Clause"}
+urls = {Homepage = "http://cxc.harvard.edu/mta/ASPECT/tool_doc/pydocs/skare3_tools.html"}
+dynamic = ["version"]
+
+[project.scripts]
+skare3-build = "skare3_tools.scripts.build:main"
+skare3-git-pass = "skare3_tools.scripts.git_pass:main"
+skare3-release-check = "skare3_tools.scripts.skare3_release_check:main"
+skare3-test-results = "skare3_tools.test_results:main"
+skare3-github-info = "skare3_tools.packages:main"
+skare3-changes-summary = "skare3_tools.scripts.skare3_update_summary:main"
+skare3-test-report = "skare3_tools.dashboard.views.test_results:main"
+skare3-dashboard = "skare3_tools.dashboard.views.dashboard:main"
+skare3-test-dashboard = "skare3_tools.dashboard.views.test_results:main"
+skare3-bulk = "skare3_tools.scripts.bulk:main"
+skare3-promote = "skare3_tools.scripts.skare3_promote:main"
+skare3-add-secrets = "skare3_tools.github.scripts.add_secrets:main"
+skare3-create-issue = "skare3_tools.github.scripts.create_issue:main"
+skare3-create-pr = "skare3_tools.github.scripts.create_pr:main"
+skare3-merge-pr = "skare3_tools.github.scripts.merge_pr:main"
+skare3-release-merge-info = "skare3_tools.github.scripts.release_merge_info:main"
+skare3-milestone-issues = "skare3_tools.github.scripts.milestone_issues:main"
+skare3-clone-git-repos = "skare3_tools.scripts.clone_git_repos:main"
+skare3-fix-namespace-packages = "skare3_tools.scripts.fix_namespace_packages:main"
+
+[tool.setuptools]
+zip-safe = false
+packages = ["skare3_tools", "skare3_tools.scripts", "skare3_tools.github",
+            "skare3_tools.github.scripts", "skare3_tools.dashboard",
+            "skare3_tools.dashboard.views", "skare3_tools.tests"]
+
+[tool.setuptools.package-data]
+"skare3_tools.tests" = ["data/**"]
+"skare3_tools.dashboard" = ["static/**", "templates/*"]
+
+[tool.setuptools_scm]
