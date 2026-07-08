@@ -8,3 +8,5 @@ packaging
 json5
 keyring
 requests
+pyjwt
+cryptography
