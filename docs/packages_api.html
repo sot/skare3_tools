@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Packages &#8212; SkaRE3 Tools 1.7.0 documentation</title>
+    <title>Packages &#8212; SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="_static/documentation_options.js?v=030dc6f6"></script>
+    <script src="_static/documentation_options.js?v=7a2fd62e"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -52,7 +52,7 @@
 	
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.7.0 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</a>
 	 &#187;
       </li>
       <li><a href="api.html" accesskey="U">API</a> &#187;</li>
@@ -83,7 +83,7 @@ Dictionary contains only basic information</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="skare3_tools.packages.get_repository_info">
-<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_repository_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner_repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'v4'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_repository_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_repository_info" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_repository_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner_repo</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_repository_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_repository_info" title="Link to this definition">¶</a></dt>
 <dd><p>Get information about a Github repository</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -99,8 +99,6 @@ This affects only top-level entries ‘commits’, ‘merges’, ‘merge_info�
 It is for backward compatibility with the dashboard.</p></li>
 <li><p><strong>include_commits</strong> – bool
 whether to include commits in release_info.</p></li>
-<li><p><strong>version</strong> – str
-Github API version to use.</p></li>
 <li><p><strong>update</strong> – bool
 Force update of the cached info. By default updates only if pushed_at or updated_at change.</p></li>
 </ul>
@@ -113,7 +111,7 @@ Force update of the cached info. By default updates only if pushed_at or updated
 
 <dl class="py function">
 <dt class="sig sig-object py" id="skare3_tools.packages.get_repositories_info">
-<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_repositories_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repositories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'v4'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_repositories_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_repositories_info" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_repositories_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repositories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_repositories_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_repositories_info" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">

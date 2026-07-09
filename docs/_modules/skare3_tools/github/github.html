@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>skare3_tools.github.github &#8212; SkaRE3 Tools 1.7.0 documentation</title>
+    <title>skare3_tools.github.github &#8212; SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="../../../_static/documentation_options.js?v=030dc6f6"></script>
+    <script src="../../../_static/documentation_options.js?v=7a2fd62e"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="../../../_static/sidebar.js"></script>
@@ -44,7 +44,7 @@
     <h3>Navigation</h3>
     <ul>
       <li>
-	<a href="../../../index.html">SkaRE3 Tools 1.7.0 documentation</a>
+	<a href="../../../index.html">SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</a>
 	 &#187;
       </li>
       <li><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
@@ -523,6 +523,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">branches</span> <span class="o">=</span> <span class="n">Branches</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">checks</span> <span class="o">=</span> <span class="n">Checks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pull_requests</span> <span class="o">=</span> <span class="n">PullRequests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pull_request_reviews</span> <span class="o">=</span> <span class="n">PullReviews</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">compare</span> <span class="o">=</span> <span class="n">Compare</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">merge</span> <span class="o">=</span> <span class="n">Merge</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dispatch_event</span> <span class="o">=</span> <span class="n">DispatchEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -1387,6 +1388,22 @@
         <span class="p">)</span></div>
 </div>
 
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PullReviews</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Endpoints that have to do with pull request reviews.</span>
+
+<span class="sd">    (`pull request reviews API docs &lt;https://developer.github.com/v3/pulls/reviews/&gt;`_)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pull_number</span><span class="p">):</span>
+        <span class="c1"># accept headers are custom because this endpoint is</span>
+        <span class="c1"># on preview for developers and can change any time</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span>
+            <span class="s2">&quot;repos/:owner/:repo/pulls/:pull_number/reviews&quot;</span><span class="p">,</span>
+            <span class="n">pull_number</span><span class="o">=</span><span class="n">pull_number</span><span class="p">,</span>
+        <span class="p">)</span>
 
 
 <div class="viewcode-block" id="DispatchEvent">

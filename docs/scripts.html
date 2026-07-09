@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Scripts &#8212; SkaRE3 Tools 1.7.0 documentation</title>
+    <title>Scripts &#8212; SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="_static/documentation_options.js?v=030dc6f6"></script>
+    <script src="_static/documentation_options.js?v=7a2fd62e"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -58,7 +58,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.7.0 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</a>
 	 &#187;
       </li>
       
@@ -231,59 +231,6 @@ containing a dictionary of versions indexed by package names (which can be creat
 </section>
 <section id="skare3-promote">
 <span id="id5"></span><h2><a class="reference internal" href="#skare3-promote"><span class="std std-ref">skare3-promote</span></a><a class="headerlink" href="#skare3-promote" title="Link to this heading">¶</a></h2>
-<p><p>Promote ska3 meta-packages or packages from a list of channels to one target channel.</p>
-<p>”Promotion” usually means copying conda package files from the source
-channels to the target channel. The channels are expected to be within
-the same directory, which is specified by the <cite>ska3-conda</cite> argument.</p>
-<p>The packages to be promoted must be defined in skare3. If the package is
-a ska3- metapackage, this script reads the metapackage’s meta.yaml requirements
-in skare3, finds the corresponding packages in the source channels, and copies/moves
-them to the target channel.</p>
-</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">promote</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ska3</span><span class="o">-</span><span class="n">conda</span> <span class="n">SKA3_CONDA</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="kn">from</span><span class="w"> </span><span class="nn">FROM_CHANNEL</span> <span class="p">[</span><span class="o">--</span><span class="kn">from</span><span class="w"> </span><span class="nn">FROM_CHANNEL</span> <span class="o">...</span><span class="p">]</span> <span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">to</span> <span class="n">TO_CHANNEL</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">move</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">skare3</span><span class="o">-</span><span class="n">local</span><span class="o">-</span><span class="n">copy</span> <span class="n">SKARE3</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">log</span><span class="o">-</span><span class="n">level</span> <span class="p">{</span><span class="n">error</span><span class="p">,</span><span class="n">warning</span><span class="p">,</span><span class="n">info</span><span class="p">,</span><span class="n">debug</span><span class="p">}]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">package</span> <span class="n">name</span><span class="o">&gt;==&lt;</span><span class="n">version</span><span class="o">&gt;</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">package</span> <span class="n">name</span><span class="o">&gt;==&lt;</span><span class="n">version</span><span class="o">&gt;</span> <span class="o">...</span><span class="p">]</span>
-</pre></div>
-</div>
-<section id="skare3_tools.scripts.skare3_promote-parser-positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#skare3_tools.scripts.skare3_promote-parser-positional-arguments" title="Link to this heading">¶</a></h3>
-<dl class="option-list">
-<dt><kbd>&lt;package name&gt;==&lt;version&gt;</kbd></dt>
-<dd></dd>
-</dl>
-</section>
-<section id="skare3_tools.scripts.skare3_promote-parser-named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#skare3_tools.scripts.skare3_promote-parser-named-arguments" title="Link to this heading">¶</a></h3>
-<dl class="option-list">
-<dt><kbd>--ska3-conda</kbd></dt>
-<dd><p>ska3-conda directory containing source and target channels (defaults to the standard location)</p>
-<p>Default: <code class="docutils literal notranslate"><span class="pre">'/proj/sot/ska/www/ASPECT_ICXC/ska3-conda'</span></code></p>
-</dd>
-<dt><kbd>--from</kbd></dt>
-<dd><p>source channel (default: [‘masters’, ‘test’])</p>
-</dd>
-<dt><kbd>--to</kbd></dt>
-<dd><p>target channel (default: ‘flight’)</p>
-</dd>
-<dt><kbd>--dry-run</kbd></dt>
-<dd><p>do not copy/move and do not index target conda channel</p>
-<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt><kbd>--move</kbd></dt>
-<dd><p>move packages instead of copying</p>
-<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
-</dd>
-<dt><kbd>--skare3-local-copy</kbd></dt>
-<dd><p>path to the local copy of the skare3 repo (on a tempdir by default)</p>
-</dd>
-<dt><kbd>--log-level</kbd></dt>
-<dd><p>Possible choices: error, warning, info, debug</p>
-<p>verbosity level (error, warning, info, debug)</p>
-<p>Default: <code class="docutils literal notranslate"><span class="pre">'info'</span></code></p>
-</dd>
-<dt><kbd>-v</kbd></dt>
-<dd><p>Debug verbosity</p>
-</dd>
-</dl>
-</section>
 </section>
 <section id="skare3-git-pass">
 <span id="id6"></span><h2><a class="reference internal" href="#skare3-git-pass"><span class="std std-ref">skare3-git-pass</span></a><a class="headerlink" href="#skare3-git-pass" title="Link to this heading">¶</a></h2>
@@ -335,11 +282,7 @@ and GIT_PASSWORD, git takes care of the rest.</p>
 <li><a class="reference internal" href="#skare3_tools.scripts.skare3_update_summary-parser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#skare3-promote"><span class="xref std std-ref">skare3-promote</span></a><ul>
-<li><a class="reference internal" href="#skare3_tools.scripts.skare3_promote-parser-positional-arguments">Positional Arguments</a></li>
-<li><a class="reference internal" href="#skare3_tools.scripts.skare3_promote-parser-named-arguments">Named Arguments</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#skare3-promote"><span class="xref std std-ref">skare3-promote</span></a></li>
 <li><a class="reference internal" href="#skare3-git-pass"><span class="xref std std-ref">skare3-git-pass</span></a><ul>
 <li><a class="reference internal" href="#skare3_tools.scripts.git_pass-parser-positional-arguments">Positional Arguments</a></li>
 </ul>
