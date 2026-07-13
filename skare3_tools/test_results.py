@@ -43,51 +43,55 @@ class TestResultException(Exception):
     pass
 
 
-SKARE3_TEST_DATA = Path(CONFIG["data_dir"]).absolute() / "test_logs"
-INDEX_FILE = SKARE3_TEST_DATA / "index.json"
+def _test_data_dir():
+    """The test-results store, resolved from the configuration at call time."""
+    return Path(CONFIG["data_dir"]).absolute() / "test_logs"
 
-if not SKARE3_TEST_DATA.exists():
-    SKARE3_TEST_DATA.mkdir(parents=True)
 
-if not INDEX_FILE.exists():
-    with open(INDEX_FILE, "w") as f:
-        f.write("[]")
-    del f
+def _index_file():
+    return _test_data_dir() / "index.json"
+
+
+def _ensure_store():
+    """Create the store on first write (readers get FileNotFoundError)."""
+    _test_data_dir().mkdir(parents=True, exist_ok=True)
+    if not _index_file().exists():
+        _index_file().write_text("[]")
 
 
 LOGGER = logging.getLogger("skare3_tools")
 
 
 def remove(uid=None, directory=None, uids=(), directories=()):
-    with open(INDEX_FILE, "r") as fh:
+    with open(_index_file(), "r") as fh:
         test_result_index = json.load(fh)
 
     uids = list(uids)
     if uid and uid not in uids:
         uids += [uid]
 
-    directories = [SKARE3_TEST_DATA / directory for directory in directories]
+    directories = [_test_data_dir() / directory for directory in directories]
     if directory and directory not in directories:
-        directories += [SKARE3_TEST_DATA / directory]
+        directories += [_test_data_dir() / directory]
 
     # make sure all directories are absolute and within the data tree
     for drctry in directories:
-        if SKARE3_TEST_DATA not in drctry.resolve().parents:
+        if _test_data_dir() not in drctry.resolve().parents:
             LOGGER.warning(f"warning: {drctry} not in SKARE3_DASH_DATA. Ignoring")
     directories = [
-        drctry for drctry in directories if SKARE3_TEST_DATA in drctry.resolve().parents
+        drctry for drctry in directories if _test_data_dir() in drctry.resolve().parents
     ]
 
     # make a list of everything that will be removed
     rm = [
         tr
         for tr in test_result_index
-        if tr["uid"] in uids or SKARE3_TEST_DATA / tr["destination"] in directories
+        if tr["uid"] in uids or _test_data_dir() / tr["destination"] in directories
     ]
 
     for tr in rm:
         test_result_index.remove(tr)
-        shutil.rmtree(SKARE3_TEST_DATA / tr["destination"])
+        shutil.rmtree(_test_data_dir() / tr["destination"])
 
     for drctry in directories:
         if drctry.exists():
@@ -97,16 +101,16 @@ def remove(uid=None, directory=None, uids=(), directories=()):
                 "in which case it is safe to remove it by hand."
             )
 
-    with open(INDEX_FILE, "w") as fh:
+    with open(_index_file(), "w") as fh:
         json.dump(test_result_index, fh, indent=2)
 
 
 def remove_older_than(days):
-    with open(INDEX_FILE, "r") as fh:
+    with open(_index_file(), "r") as fh:
         test_result_index = json.load(fh)
 
     for tr in test_result_index:
-        all_test_log = SKARE3_TEST_DATA / tr["destination"] / "all_tests.json"
+        all_test_log = _test_data_dir() / tr["destination"] / "all_tests.json"
         with open(all_test_log) as fh:
             test_suites = json.load(fh)
             date = CxoTime(test_suites["run_info"]["date"])
@@ -129,6 +133,7 @@ def add(directory, stream, tags=(), properties=None):
     """
     if properties is None:
         properties = {}
+    _ensure_store()
     directory = Path(directory)
     if not directory.exists():
         raise TestResultException(
@@ -146,7 +151,7 @@ def add(directory, stream, tags=(), properties=None):
     with open(all_test_log) as f:
         uid = hashlib.md5(f.read().encode()).hexdigest()
 
-    with open(INDEX_FILE, "r") as f:
+    with open(_index_file(), "r") as f:
         test_result_index = json.load(f)
 
     if uid in [r["uid"] for r in test_result_index]:
@@ -158,7 +163,7 @@ def add(directory, stream, tags=(), properties=None):
 
     date = test_suites["run_info"]["date"]
     destination = "{stream}_{date}_{uid}".format(stream=stream, date=date, uid=uid)
-    abs_destination = SKARE3_TEST_DATA / destination
+    abs_destination = _test_data_dir() / destination
     if abs_destination.exists():
         raise Exception(f"Destination already exists: {abs_destination}")
 
@@ -172,9 +177,12 @@ def add(directory, stream, tags=(), properties=None):
     test_suites["run_info"]["platform"] = " ".join(test_suites["run_info"]["platform"])
 
     for ts in test_suites["test_suites"]:
-        ts["n_skip"] = len([tc for tc in ts["test_cases"] if "skipped" in tc])
-        ts["n_fail"] = len([tc for tc in ts["test_cases"] if "fail" in tc])
-        ts["n_pass"] = len([tc for tc in ts["test_cases"] if "pass" in tc])
+        # count by the per-case status testr reports (the "skipped"/"failure"
+        # sub-dicts only carry messages and are not present on passing cases)
+        status = [tc.get("status") for tc in ts["test_cases"]]
+        ts["n_skip"] = status.count("skipped")
+        ts["n_fail"] = status.count("fail") + status.count("error")
+        ts["n_pass"] = status.count("pass")
         if ts["n_skip"] == len(ts["test_cases"]):
             ts["status"] = "skipped"
         elif ts["n_fail"] > 0:
@@ -227,11 +235,11 @@ def add(directory, stream, tags=(), properties=None):
             abs_destination,
         )
 
-    with open(INDEX_FILE, "w") as f:
+    with open(_index_file(), "w") as f:
         json.dump(test_result_index, f, indent=2)
 
     # update the symbolic link pointing to the latest test in the stream
-    symlink = SKARE3_TEST_DATA / stream
+    symlink = _test_data_dir() / stream
 
     symlink.unlink(missing_ok=True)
     symlink.symlink_to(abs_destination)
@@ -252,7 +260,7 @@ def get(stream=None, architecture=None, tag=None, system=None):
     :param system: str
     :return: list
     """
-    with open(INDEX_FILE, "r") as f:
+    with open(_index_file(), "r") as f:
         test_result_index = json.load(f)
 
     result = []
@@ -265,7 +273,7 @@ def get(stream=None, architecture=None, tag=None, system=None):
         ):
             continue
         directory = tr["destination"]
-        all_test_log = SKARE3_TEST_DATA / directory / "all_tests.json"
+        all_test_log = _test_data_dir() / directory / "all_tests.json"
         with open(all_test_log) as f:
             test_suites = json.load(f)
             if "run_info" not in test_suites:
@@ -294,7 +302,7 @@ def streams():
     """
     Get available streams.
     """
-    with open(INDEX_FILE, "r") as f:
+    with open(_index_file(), "r") as f:
         test_result_index = json.load(f)
     return {tr["stream"] for tr in test_result_index}
 

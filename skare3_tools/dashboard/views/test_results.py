@@ -6,14 +6,16 @@ import webbrowser
 from pathlib import Path
 
 from skare3_tools import dashboard
-from skare3_tools import test_results as tr
+from skare3_tools.packages import DataClient
 
 
-def test_results():
-    test_run = tr.get()[-1]
+def test_results(client=None):
+    if client is None:
+        client = DataClient()
+    test_run = client.test_results()
     config = {
         "static_dir": "static",
-        "log_dir": "tests/logs/{uid}".format(uid=test_run["run_info"]["uid"]),
+        "log_dir": "tests/logs/{uid}".format(uid=test_run["run_info"].get("uid", "")),
     }
     return _get_results(test_run, config)
 
@@ -109,7 +111,7 @@ def main():
         parser.exit(1)
 
     if not args.file_in:
-        results = tr.get()[-1]
+        results = DataClient().test_results()
     else:
         with open(args.file_in, "r") as f:
             results = json.load(f)

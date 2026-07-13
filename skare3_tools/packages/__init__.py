@@ -21,3 +21,7 @@ from .packages import (  # noqa: F401
     main,
     repository_info_is_outdated,
 )
+
+# isort: split
+# DataClient builds on .packages and .store, so it imports after them.
+from .client import DataClient  # noqa: F401

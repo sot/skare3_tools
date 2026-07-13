@@ -20,7 +20,8 @@ def test_default_config_has_p2_keys():
     assert config._DEFAULT_CONFIG["config_version"] == 2
     deprecated = config._DEFAULT_CONFIG["deprecated_repositories"]
     assert "acisops/dpa_check" in deprecated
-    assert len(deprecated) == 6
+    assert "sot/skare" in deprecated  # the dashboard always excluded it
+    assert len(deprecated) == 7
     assert config._DEFAULT_CONFIG["store_url"].startswith("https://")
 
 

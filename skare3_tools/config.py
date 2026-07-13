@@ -102,6 +102,7 @@ _DEFAULT_CONFIG = {
     "organizations": ["sot", "acisops"],
     # excluded from the data store and dashboards (dead repos, broken workflows)
     "deprecated_repositories": [
+        "sot/skare",
         "acisops/dpa_check",
         "acisops/psmc_check",
         "acisops/acisfp_check",

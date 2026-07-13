@@ -79,6 +79,7 @@ import re
 import subprocess
 import sys
 import urllib
+import warnings
 from pathlib import Path
 
 import jinja2
@@ -960,6 +961,19 @@ get_repository_info.rm_cache_entry = _get_repository_info.rm_cache_entry
 
 
 def get_repositories_info(repositories=None, update=False):
+    """
+    Get information about many Github repositories by querying GitHub directly.
+
+    Deprecated for most uses: read the published data with
+    :class:`~skare3_tools.packages.DataClient` instead; the store is produced
+    by ``skare3-refresh`` and needs no token.
+    """
+    warnings.warn(
+        "get_repositories_info queries GitHub directly; most consumers should "
+        "read the data store through skare3_tools.packages.DataClient",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if repositories is None:
         repositories = [
             p["repository"]
