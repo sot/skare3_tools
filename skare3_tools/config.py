@@ -22,7 +22,7 @@ The default looks like this:
 .. code-block:: JSON
 
     {
-      "config_version": 1,
+      "config_version": 2,
       "repository": "https://github.com/sot/skare3",
       "conda_channels": {
         "masters": [
@@ -43,6 +43,10 @@ The default looks like this:
         "sot",
         "acisops"
       ],
+      "deprecated_repositories": [
+        "acisops/dpa_check"
+      ],
+      "store_url": "https://cxc.cfa.harvard.edu/mta/ASPECT/skare3/dashboard",
       "data_dir": ""
     }
 
@@ -78,9 +82,10 @@ import json
 import os
 
 # this is just a default config. This gets saved in a file which can be modified later on.
-# If the file exists, this will be ignored unless explicitly resetting.
+# If the file exists, its values win, but new default keys are merged in when
+# config_version is older (see init).
 _DEFAULT_CONFIG = {
-    "config_version": 1,
+    "config_version": 2,
     "repository": "https://github.com/sot/skare3",
     "conda_channels": {
         "masters": [
@@ -95,6 +100,17 @@ _DEFAULT_CONFIG = {
         ],
     },
     "organizations": ["sot", "acisops"],
+    # excluded from the data store and dashboards (dead repos, broken workflows)
+    "deprecated_repositories": [
+        "acisops/dpa_check",
+        "acisops/psmc_check",
+        "acisops/acisfp_check",
+        "acisops/fep1_mong_check",
+        "acisops/fep1_actel_check",
+        "acisops/bep_pcb_check",
+    ],
+    # published data store location, for readers without a local copy
+    "store_url": "https://cxc.cfa.harvard.edu/mta/ASPECT/skare3/dashboard",
     "data_dir": "",
 }
 
@@ -151,13 +167,22 @@ def init(config=None, reset=False):
         )
     config_file = os.path.join(app_data_dir, "config.json")
     exists = os.path.exists(config_file)
+    upgraded = False
     if exists and not reset:
         with open(config_file) as f:
             CONFIG = json.load(f)
+        if CONFIG.get("config_version", 0) < _DEFAULT_CONFIG["config_version"]:
+            # merge in default keys added since the file was written
+            # (existing values win, except the version itself)
+            upgraded = True
+            merged = _DEFAULT_CONFIG.copy()
+            merged.update(CONFIG)
+            merged["config_version"] = _DEFAULT_CONFIG["config_version"]
+            CONFIG = merged
 
     if config is not None:
         CONFIG.update(config)
-    if config or reset or not exists:
+    if config or reset or not exists or upgraded:
         if reset:
             CONFIG = _DEFAULT_CONFIG.copy()
         if "data_dir" not in CONFIG or not CONFIG["data_dir"]:

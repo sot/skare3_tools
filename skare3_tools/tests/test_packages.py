@@ -77,3 +77,23 @@ def test_get_all_nodes_forwards_org(monkeypatch):
         owner="acisops", name="foo", path="data/repository/refs", query="{}"
     )
     assert orgs_seen == ["acisops"]
+
+
+def test_public_api_reexported():
+    # Everything external code imports from skare3_tools.packages must stay
+    # importable after the module became a subpackage.
+    for name in [
+        "get_package_list",
+        "get_repository_info",
+        "get_repositories_info",
+        "get_conda_pkg_info",
+        "get_conda_pkg_dependencies",
+        "repository_info_is_outdated",
+        "json_cache",
+        "NetworkException",
+        "get_parser",
+        "main",
+        "_get_release_commit",  # used by github/scripts/release_merge_info.py
+    ]:
+        assert getattr(packages, name) is not None
+    assert packages.github is not None  # patched by tests via packages.github

@@ -33,9 +33,10 @@ skare3-fix-namespace-packages = "skare3_tools.scripts.fix_namespace_packages:mai
 
 [tool.setuptools]
 zip-safe = false
-packages = ["skare3_tools", "skare3_tools.scripts", "skare3_tools.github",
-            "skare3_tools.github.scripts", "skare3_tools.dashboard",
-            "skare3_tools.dashboard.views", "skare3_tools.tests"]
+packages = ["skare3_tools", "skare3_tools.packages", "skare3_tools.scripts",
+            "skare3_tools.github", "skare3_tools.github.scripts",
+            "skare3_tools.dashboard", "skare3_tools.dashboard.views",
+            "skare3_tools.tests"]
 
 [tool.setuptools.package-data]
 "skare3_tools.tests" = ["data/**"]
