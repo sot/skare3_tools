@@ -64,27 +64,26 @@ def test_get_installation_token(app_key):
     assert auth_header.startswith("Bearer ")
 
 
-@responses.activate
-def test_get_installation_token_id_from_env(app_key, monkeypatch):
+def test_app_settings(monkeypatch):
     from skare3_tools.github import app_auth
 
-    monkeypatch.setenv("SKARE3_GITHUB_APP_INSTALLATION", "11316003")
-    responses.add(
-        responses.POST,
-        "https://api.github.com/app/installations/11316003/access_tokens",
-        json={"token": "ghs_testtoken", "expires_at": "2099-01-01T00:00:00Z"},
-        status=201,
-    )
-    result = app_auth.get_installation_token()
-    assert result["token"] == "ghs_testtoken"
+    monkeypatch.setenv("SKARE3_GITHUB_APP_KEY", "/some/key.pem")
+    monkeypatch.setenv("SKARE3_GITHUB_APP_ORG", "sot")
+    assert app_auth.app_settings() == {
+        "app_id": app_auth.APP_ID,
+        "key_path": "/some/key.pem",
+        "org": "sot",
+    }
 
 
-def test_get_installation_token_no_id_raises(app_key, monkeypatch):
+def test_app_settings_unset(monkeypatch):
     from skare3_tools.github import app_auth
 
-    monkeypatch.delenv("SKARE3_GITHUB_APP_INSTALLATION", raising=False)
-    with pytest.raises(ValueError, match="SKARE3_GITHUB_APP_INSTALLATION"):
-        app_auth.get_installation_token()
+    monkeypatch.delenv("SKARE3_GITHUB_APP_KEY", raising=False)
+    monkeypatch.delenv("SKARE3_GITHUB_APP_ORG", raising=False)
+    settings = app_auth.app_settings()
+    assert settings["key_path"] is None
+    assert settings["org"] is None
 
 
 @responses.activate
@@ -110,46 +109,24 @@ def test_resolve_token_argument_wins(monkeypatch):
     assert resolve_token("ghp_arg") == "ghp_arg"
 
 
-def test_resolve_token_env_wins_over_app_key(app_key, monkeypatch):
+def test_resolve_token_from_env(monkeypatch):
     from skare3_tools.github.github import resolve_token
 
-    monkeypatch.setenv("GITHUB_TOKEN", "ghp_env")
-    monkeypatch.setenv("SKARE3_GITHUB_APP_INSTALLATION", "11316003")
-    assert resolve_token() == "ghp_env"
+    monkeypatch.setenv("GITHUB_API_TOKEN", "ghp_api")
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_plain")
+    assert resolve_token() == "ghp_api"
+    monkeypatch.delenv("GITHUB_API_TOKEN")
+    assert resolve_token() == "ghp_plain"
 
 
-def test_resolve_token_key_without_installation_is_none(app_key, monkeypatch):
+def test_resolve_token_none_without_credentials(app_key, monkeypatch):
     from skare3_tools.github.github import resolve_token
 
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
     monkeypatch.delenv("GITHUB_API_TOKEN", raising=False)
-    monkeypatch.delenv("SKARE3_GITHUB_APP_INSTALLATION", raising=False)
+    # an App key alone does not make resolve_token return a token;
+    # App auth is handled by the callers via AppTokenCache
     assert resolve_token() is None
-
-
-@responses.activate
-def test_rest_init_falls_back_to_app_token(app_key, monkeypatch):
-    from skare3_tools.github import github
-
-    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
-    monkeypatch.delenv("GITHUB_API_TOKEN", raising=False)
-    monkeypatch.setenv("SKARE3_GITHUB_APP_INSTALLATION", "11316003")
-    responses.add(
-        responses.POST,
-        "https://api.github.com/app/installations/11316003/access_tokens",
-        json={"token": "ghs_apptoken", "expires_at": "2099-01-01T00:00:00Z"},
-        status=201,
-    )
-    responses.add(responses.GET, "https://api.github.com/", json={}, status=200)
-    responses.add(
-        responses.GET,
-        "https://api.github.com/user",
-        json={"login": "skare3[bot]"},
-        status=200,
-    )
-    api = github.GithubAPI()
-    assert api.initialized
-    assert api.headers["Authorization"] == "token ghs_apptoken"
 
 
 @responses.activate
@@ -157,7 +134,6 @@ def test_rest_init_env_token_wins_over_app_key(app_key, monkeypatch):
     from skare3_tools.github import github
 
     monkeypatch.setenv("GITHUB_TOKEN", "ghp_env")
-    monkeypatch.setenv("SKARE3_GITHUB_APP_INSTALLATION", "11316003")
     responses.add(responses.GET, "https://api.github.com/", json={}, status=200)
     responses.add(
         responses.GET,
@@ -169,28 +145,3 @@ def test_rest_init_env_token_wins_over_app_key(app_key, monkeypatch):
     assert api.headers["Authorization"] == "token ghp_env"
     urls = [call.request.url for call in responses.calls]
     assert not any("access_tokens" in url for url in urls)
-
-
-@responses.activate
-def test_graphql_init_falls_back_to_app_token(app_key, monkeypatch):
-    from skare3_tools.github import graphql
-
-    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
-    monkeypatch.delenv("GITHUB_API_TOKEN", raising=False)
-    monkeypatch.setenv("SKARE3_GITHUB_APP_INSTALLATION", "11316003")
-    responses.add(
-        responses.POST,
-        "https://api.github.com/app/installations/11316003/access_tokens",
-        json={"token": "ghs_apptoken", "expires_at": "2099-01-01T00:00:00Z"},
-        status=201,
-    )
-    responses.add(
-        responses.POST,
-        "https://api.github.com/graphql",
-        json={"data": {"viewer": {"login": "skare3[bot]"}}},
-        status=200,
-    )
-    api = graphql.GithubAPI()
-    api.init()
-    assert api.initialized
-    assert api.headers["Authorization"] == "token ghs_apptoken"

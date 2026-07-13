@@ -2,23 +2,37 @@
 Authentication helpers for the skare3 GitHub App (App ID 77359).
 
 The App's private key is read from the path in the ``SKARE3_GITHUB_APP_KEY``
-environment variable (or an explicit ``key_path`` argument). The installation
-to mint tokens for is taken from the ``SKARE3_GITHUB_APP_INSTALLATION``
-environment variable (or an explicit ``installation_id`` argument).
+environment variable (or an explicit ``key_path`` argument). The organization
+acted on by default is taken from the ``SKARE3_GITHUB_APP_ORG`` environment
+variable.
 """
 
 import os
 import time
 
-import jwt
 import requests
 
 APP_ID = 77359
 GITHUB_API = "https://api.github.com"
 
 
+def app_settings():
+    """
+    GitHub App auth settings, read from the environment.
+
+    This is the single place where the App environment variables are read,
+    so the source can change later (e.g. a config file) without touching
+    callers.
+    """
+    return {
+        "app_id": APP_ID,
+        "key_path": os.environ.get("SKARE3_GITHUB_APP_KEY"),
+        "org": os.environ.get("SKARE3_GITHUB_APP_ORG"),
+    }
+
+
 def _read_key(key_path=None):
-    key_path = key_path or os.environ.get("SKARE3_GITHUB_APP_KEY")
+    key_path = key_path or app_settings()["key_path"]
     if not key_path:
         raise ValueError(
             "No GitHub App key: pass key_path or set SKARE3_GITHUB_APP_KEY"
@@ -29,6 +43,11 @@ def _read_key(key_path=None):
 
 def github_app_token(key_path=None):
     """Return a short-lived JWT identifying the GitHub App."""
+    # pyjwt/cryptography are only needed for App auth, and this module is
+    # imported from github.py's init; import lazily so personal-token users
+    # do not need them installed.
+    import jwt
+
     now = int(time.time())
     # PyJWT >= 2.10 requires the "iss" claim to be a string; APP_ID stays an
     # int constant (matching GitHub's own docs) and is stringified here.
@@ -57,15 +76,8 @@ def get_installations(key_path=None):
     return r.json()
 
 
-def get_installation_token(installation_id=None, key_path=None):
+def get_installation_token(installation_id, key_path=None):
     """Mint an installation access token (dict with 'token', 'expires_at')."""
-    if installation_id is None:
-        installation_id = os.environ.get("SKARE3_GITHUB_APP_INSTALLATION")
-    if not installation_id:
-        raise ValueError(
-            "No GitHub App installation: pass installation_id "
-            "or set SKARE3_GITHUB_APP_INSTALLATION"
-        )
     r = requests.post(
         f"{GITHUB_API}/app/installations/{installation_id}/access_tokens",
         headers=_app_headers(key_path),

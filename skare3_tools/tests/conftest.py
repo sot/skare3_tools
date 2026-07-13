@@ -15,7 +15,7 @@ os.environ["SKARE3_TOOLS_DATA"] = _TMP
 os.environ.pop("GITHUB_TOKEN", None)
 os.environ.pop("GITHUB_API_TOKEN", None)
 os.environ.pop("SKARE3_GITHUB_APP_KEY", None)
-os.environ.pop("SKARE3_GITHUB_APP_INSTALLATION", None)
+os.environ.pop("SKARE3_GITHUB_APP_ORG", None)
 
 import requests  # noqa: E402
 
