@@ -404,3 +404,49 @@ def test_graphql_pat_ignores_org(monkeypatch):
     api("{viewer {login}}", org="acisops")
     for call in responses.calls:
         assert call.request.headers["Authorization"] == "token ghp_env"
+
+
+@responses.activate
+def test_graphql_init_swallows_app_auth_errors(app_key, monkeypatch):
+    from skare3_tools.github import graphql
+
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.delenv("GITHUB_API_TOKEN", raising=False)
+    monkeypatch.delenv("SKARE3_GITHUB_APP_ORG", raising=False)
+    responses.add(
+        responses.GET,
+        "https://api.github.com/app/installations",
+        json=[
+            {"id": 1, "account": {"login": "sot"}},
+            {"id": 2, "account": {"login": "acisops"}},
+        ],
+        status=200,
+    )
+    api = graphql.GithubAPI()  # must not raise: degrade to uninitialized
+    assert not api.initialized
+
+
+def test_rest_init_swallows_missing_key_file(monkeypatch):
+    from skare3_tools.github import github
+
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.delenv("GITHUB_API_TOKEN", raising=False)
+    monkeypatch.setenv("SKARE3_GITHUB_APP_KEY", "/nonexistent/key.pem")
+    api = github.GithubAPI()  # must not raise: degrade to uninitialized
+    assert not api.initialized
+
+
+@responses.activate
+def test_token_cache_surfaces_server_errors(app_key):
+    import requests
+
+    from skare3_tools.github import app_auth
+
+    responses.add(
+        responses.GET,
+        "https://api.github.com/orgs/sot/installation",
+        json={"message": "Server Error"},
+        status=500,
+    )
+    with pytest.raises(requests.HTTPError):
+        app_auth.AppTokenCache().token("sot")

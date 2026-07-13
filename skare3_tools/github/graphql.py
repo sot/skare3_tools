@@ -74,6 +74,7 @@ import os
 
 import requests
 
+from skare3_tools.github.github import AuthException as _AuthException
 from skare3_tools.github.github import resolve_token
 
 
@@ -81,7 +82,7 @@ class GithubException(Exception):
     pass
 
 
-class AuthException(Exception):
+class AuthException(_AuthException):
     pass
 
 
@@ -367,7 +368,7 @@ class GithubAPI:
         self.api_url = "https://api.github.com/graphql"
         try:
             self.init(token)
-        except AuthException:
+        except _AuthException:
             # the exception is not raised if we are creating the API with default args.
             # An exception will be raised later, when one tries to use it.
             if token is not None:

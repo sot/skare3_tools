@@ -38,8 +38,13 @@ def _read_key(key_path=None):
         raise ValueError(
             "No GitHub App key: pass key_path or set SKARE3_GITHUB_APP_KEY"
         )
-    with open(key_path, "rb") as fh:
-        return fh.read()
+    try:
+        with open(key_path, "rb") as fh:
+            return fh.read()
+    except OSError as err:
+        raise _auth_exception(
+            f"Cannot read GitHub App key at '{key_path}': {err}"
+        ) from err
 
 
 def github_app_token(key_path=None):
@@ -167,6 +172,8 @@ class AppTokenCache:
                 if r.ok:
                     self._installations[org] = r.json()["id"]
                     break
+                if r.status_code != 404:
+                    r.raise_for_status()
             else:
                 raise self._not_covered_error(org)
         return self._installations[org]
