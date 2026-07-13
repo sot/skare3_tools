@@ -314,10 +314,13 @@ def get_parser():
 
 def main():
     args = get_parser().parse_args()
+    # verbosity applies to this logger only: at DEBUG level the github
+    # wrapper logs request headers, including the authorization token
     logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
-        format="%(asctime)s %(levelname)s %(message)s",
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s"
     )
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
     if args.ingest_tests:
         test_results.add(str(args.ingest_tests), stream=args.stream)
     try:
