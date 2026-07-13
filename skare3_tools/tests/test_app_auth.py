@@ -130,24 +130,6 @@ def test_resolve_token_none_without_credentials(app_key, monkeypatch):
     assert resolve_token() is None
 
 
-@responses.activate
-def test_rest_init_env_token_wins_over_app_key(app_key, monkeypatch):
-    from skare3_tools.github import github
-
-    monkeypatch.setenv("GITHUB_TOKEN", "ghp_env")
-    responses.add(responses.GET, "https://api.github.com/", json={}, status=200)
-    responses.add(
-        responses.GET,
-        "https://api.github.com/user",
-        json={"login": "tester"},
-        status=200,
-    )
-    api = github.GithubAPI()
-    assert api.headers["Authorization"] == "token ghp_env"
-    urls = [call.request.url for call in responses.calls]
-    assert not any("access_tokens" in url for url in urls)
-
-
 def _stub_installation(org, installation_id):
     responses.add(
         responses.GET,
@@ -306,3 +288,73 @@ def test_token_cache_uncovered_org_message(app_key):
     assert "acisops, sot" in message
     assert "https://github.com/apps/skare3/installations/new" in message
     assert "GITHUB_TOKEN" in message
+
+
+def test_org_from_endpoint():
+    from skare3_tools.github.github import _org_from_endpoint
+
+    assert _org_from_endpoint("repos/sot/skare3/releases") == "sot"
+    assert _org_from_endpoint("orgs/acisops/repos") == "acisops"
+    assert _org_from_endpoint("users/javierggt/repos") == "javierggt"
+    assert _org_from_endpoint("rate_limit") is None
+    assert _org_from_endpoint("") is None
+    assert _org_from_endpoint("repos") is None
+
+
+@responses.activate
+def test_rest_uses_per_org_tokens(app_key, monkeypatch):
+    from skare3_tools.github import github
+
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.delenv("GITHUB_API_TOKEN", raising=False)
+    monkeypatch.setenv("SKARE3_GITHUB_APP_ORG", "sot")
+    _stub_installation("sot", 1)
+    _stub_installation("acisops", 2)
+    _stub_mint(1, "ghs_sot")
+    _stub_mint(2, "ghs_acisops")
+    responses.add(responses.GET, "https://api.github.com/", json={}, status=200)
+    responses.add(
+        responses.GET,
+        "https://api.github.com/user",
+        json={"message": "Resource not accessible by integration"},
+        status=403,
+    )
+    responses.add(
+        responses.GET,
+        "https://api.github.com/repos/acisops/foo",
+        json={"name": "foo"},
+        status=200,
+    )
+    api = github.GithubAPI()
+    assert api.initialized
+    api.get("/repos/acisops/foo")
+    auth_by_url = {
+        call.request.url: call.request.headers.get("Authorization")
+        for call in responses.calls
+    }
+    # org-less init requests use the default (sot) token
+    assert auth_by_url["https://api.github.com/"] == "token ghs_sot"
+    # the acisops repo request uses the acisops token
+    assert (
+        auth_by_url["https://api.github.com/repos/acisops/foo"] == "token ghs_acisops"
+    )
+
+
+@responses.activate
+def test_rest_init_env_token_wins_over_app_key(app_key, monkeypatch):
+    from skare3_tools.github import github
+
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_env")
+    monkeypatch.setenv("SKARE3_GITHUB_APP_ORG", "sot")
+    responses.add(responses.GET, "https://api.github.com/", json={}, status=200)
+    responses.add(
+        responses.GET,
+        "https://api.github.com/user",
+        json={"login": "tester"},
+        status=200,
+    )
+    api = github.GithubAPI()
+    assert api.headers["Authorization"] == "token ghp_env"
+    assert api._app_tokens is None
+    urls = [call.request.url for call in responses.calls]
+    assert not any("installation" in url for url in urls)

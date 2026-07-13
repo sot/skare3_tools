@@ -137,6 +137,20 @@ def resolve_token(token=None):
     return token
 
 
+def _org_from_endpoint(endpoint_str):
+    """
+    The organization (or user account) a REST endpoint path refers to.
+
+    Endpoints addressing a repository or account start with
+    ``repos/{owner}/...``, ``orgs/{org}/...`` or ``users/{user}/...``;
+    for any other endpoint this returns None.
+    """
+    parts = endpoint_str.strip("/").split("/")
+    if len(parts) >= 2 and parts[0] in ("repos", "orgs", "users"):
+        return parts[1]
+    return None
+
+
 def _get_user_password(user, password):
     if user is None:
         if "GITHUB_USER" in os.environ:
@@ -169,6 +183,7 @@ class GithubAPI:
         self.initialized = False
         self.auth = None
         self.headers = None
+        self._app_tokens = None
         self.api_url = "https://api.github.com"
 
         try:
@@ -189,6 +204,8 @@ class GithubAPI:
         If no token is provided, it tries the following:
         - look for GITHUB_API_TOKEN environmental variable
         - look for GITHUB_TOKEN environmental variable
+        - use the skare3 GitHub App key if SKARE3_GITHUB_APP_KEY is set (tokens are
+          minted per organization; SKARE3_GITHUB_APP_ORG names the default organization)
 
         If that fails, try with user/password (deprecated)
         If no user name is provided, it tries the following:
@@ -214,15 +231,24 @@ class GithubAPI:
 
         token = resolve_token(token)
 
+        self._app_tokens = None
         if token is not None:
             self.auth = None
             self.headers = {"Authorization": f"token {token}"}
         else:
-            user, password = _get_user_password(user, password)
-            if user and password:
-                _logger.warning("Using basic auth, which is deprecated")
-            self.auth = HTTPBasicAuth(user, password)
-            self.headers = {"Accept": "application/json"}
+            # pyjwt/cryptography are needed only for App auth; import lazily
+            from skare3_tools.github import app_auth
+
+            if app_auth.app_settings()["key_path"]:
+                self.auth = None
+                self._app_tokens = app_auth.AppTokenCache()
+                self.headers = {"Accept": "application/vnd.github+json"}
+            else:
+                user, password = _get_user_password(user, password)
+                if user and password:
+                    _logger.warning("Using basic auth, which is deprecated")
+                self.auth = HTTPBasicAuth(user, password)
+                self.headers = {"Accept": "application/json"}
 
         try:
             self.initialized = True
@@ -248,6 +274,7 @@ class GithubAPI:
         except Exception:
             self.auth = None
             self.headers = None
+            self._app_tokens = None
             self.initialized = False
             raise
 
@@ -284,6 +311,9 @@ class GithubAPI:
             endpoint_str = endpoint_str[1:]
         url = f"{self.api_url}/{endpoint_str}"
         _headers = self.headers.copy()
+        if self._app_tokens is not None:
+            org = _org_from_endpoint(endpoint_str)
+            _headers["Authorization"] = f"token {self._app_tokens.token(org)}"
         _headers.update(headers)
         kwargs = {k: v for k, v in kwargs.items() if k in ["json"]}
         _logger.debug(
