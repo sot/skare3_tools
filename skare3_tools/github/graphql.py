@@ -363,6 +363,7 @@ class GithubAPI:
     def __init__(self, token=None):
         self.initialized = False
         self.headers = None
+        self._app_tokens = None
         self.api_url = "https://api.github.com/graphql"
         try:
             self.init(token)
@@ -392,21 +393,30 @@ class GithubAPI:
             return
 
         token = resolve_token(token)
+        self._app_tokens = None
         if token is not None:
-            token = os.path.expandvars(token)
+            headers = {"Authorization": f"token {os.path.expandvars(token)}"}
         else:
-            raise AuthException(
-                "Bad credentials. "
-                "Github token needs to be given as argument "
-                "or set in either GITHUB_TOKEN or GITHUB_API_TOKEN "
-                "environment variables"
-            )
+            # pyjwt/cryptography are needed only for App auth; import lazily
+            from skare3_tools.github import app_auth
+
+            if app_auth.app_settings()["key_path"]:
+                self._app_tokens = app_auth.AppTokenCache()
+                headers = {}
+            else:
+                raise AuthException(
+                    "Bad credentials. "
+                    "Github token needs to be given as argument "
+                    "or set in either GITHUB_TOKEN or GITHUB_API_TOKEN "
+                    "environment variables"
+                )
         try:
             self.initialized = True
-            self.headers = {"Authorization": f"token {token}"}
+            self.headers = headers
             response = self("{viewer {login}}")
         except Exception:
             self.headers = None
+            self._app_tokens = None
             self.initialized = False
             raise
 
@@ -415,20 +425,25 @@ class GithubAPI:
             _logger.debug(f"Github interface initialized (user={user})")
         except Exception:
             _logger.info(f"Github interface initialized ({response})")
-        self.headers = {"Authorization": f"token {token}"}
 
     @staticmethod
     def check(response):
         if not response.ok:
             raise GithubException(f"Error: {response.reason} ({response.status_code})")
 
-    def __call__(self, query, headers=(), **kwargs):
+    def __call__(self, query, headers=(), org=None, **kwargs):
         """
         Call the API (encapsulates a requests call, including headers and error checking).
 
         :param query: str
             GraphQL query
         :param headers: dict
+        :param org: str
+            organization the query refers to. Only used with GitHub App
+            authentication, where tokens are scoped per organization;
+            ignored with a personal token. Default: the organization in
+            SKARE3_GITHUB_APP_ORG. A query spanning several organizations
+            needs a personal token.
         :param kwargs: dict
         :return:
         """
@@ -436,6 +451,8 @@ class GithubAPI:
             raise Exception("GithubAPI authentication credentials are not initialized")
 
         _headers = self.headers.copy()
+        if self._app_tokens is not None:
+            _headers["Authorization"] = f"token {self._app_tokens.token(org)}"
         _headers.update(headers)
         response = requests.request(
             "post", self.api_url, headers=_headers, json={"query": query}, **kwargs

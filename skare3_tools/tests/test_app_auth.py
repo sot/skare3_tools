@@ -358,3 +358,49 @@ def test_rest_init_env_token_wins_over_app_key(app_key, monkeypatch):
     assert api._app_tokens is None
     urls = [call.request.url for call in responses.calls]
     assert not any("installation" in url for url in urls)
+
+
+@responses.activate
+def test_graphql_app_mode_and_org_kwarg(app_key, monkeypatch):
+    from skare3_tools.github import graphql
+
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.delenv("GITHUB_API_TOKEN", raising=False)
+    monkeypatch.setenv("SKARE3_GITHUB_APP_ORG", "sot")
+    _stub_installation("sot", 1)
+    _stub_installation("acisops", 2)
+    _stub_mint(1, "ghs_sot")
+    _stub_mint(2, "ghs_acisops")
+    responses.add(
+        responses.POST,
+        "https://api.github.com/graphql",
+        json={"data": {"viewer": {"login": "skare3[bot]"}}},
+        status=200,
+    )
+    api = graphql.GithubAPI()
+    assert api.initialized
+    api('{repository(owner: "acisops", name: "foo") {id}}', org="acisops")
+    graphql_calls = [
+        call.request.headers.get("Authorization")
+        for call in responses.calls
+        if call.request.url == "https://api.github.com/graphql"
+    ]
+    # first call is the init handshake (default org), second the acisops query
+    assert graphql_calls == ["token ghs_sot", "token ghs_acisops"]
+
+
+@responses.activate
+def test_graphql_pat_ignores_org(monkeypatch):
+    from skare3_tools.github import graphql
+
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_env")
+    responses.add(
+        responses.POST,
+        "https://api.github.com/graphql",
+        json={"data": {"viewer": {"login": "tester"}}},
+        status=200,
+    )
+    api = graphql.GithubAPI()
+    api("{viewer {login}}", org="acisops")
+    for call in responses.calls:
+        assert call.request.headers["Authorization"] == "token ghp_env"
