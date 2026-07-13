@@ -16,18 +16,18 @@ from os import environ
 def parser():
     parse = argparse.ArgumentParser(description=__doc__)
     parse.add_argument(
-        "what",
-        help="What is being requested (either password or username).",
-        choices=["username", "password"],
+        "prompt",
+        help="The prompt from git, e.g. \"Username for 'https://github.com': \".",
     )
     return parse
 
 
 def main():
     args = parser().parse_args()
-    if args.what.lower() == "username":
+    prompt = args.prompt.lower()
+    if "username" in prompt:
         print(environ["GIT_USERNAME"])
-    elif args.what.lower() == "password":
+    elif "password" in prompt:
         print(environ["GIT_PASSWORD"])
 
 
