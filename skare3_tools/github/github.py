@@ -121,6 +121,39 @@ def init(user=None, password=None, token=None, force=True):
     return GITHUB_API
 
 
+def resolve_token(token=None):
+    """
+    Resolve the GitHub token to use, in this order:
+
+    - the ``token`` argument,
+    - the ``GITHUB_API_TOKEN`` environment variable,
+    - the ``GITHUB_TOKEN`` environment variable,
+    - a token minted with the skare3 GitHub App key, if both
+      ``SKARE3_GITHUB_APP_KEY`` and ``SKARE3_GITHUB_APP_INSTALLATION`` are set
+      (see :mod:`skare3_tools.github.app_auth`).
+
+    Returns None if no token can be found.
+    """
+    if token is None:
+        if "GITHUB_API_TOKEN" in os.environ:
+            token = os.environ["GITHUB_API_TOKEN"]
+        elif "GITHUB_TOKEN" in os.environ:
+            token = os.environ["GITHUB_TOKEN"]
+
+    if (
+        token is None
+        and "SKARE3_GITHUB_APP_KEY" in os.environ
+        and "SKARE3_GITHUB_APP_INSTALLATION" in os.environ
+    ):
+        # pyjwt/cryptography are needed only on this path, so import lazily
+        from skare3_tools.github import app_auth
+
+        token = app_auth.get_installation_token()["token"]
+        _logger.debug("Github token minted with the GitHub App key")
+
+    return token
+
+
 def _get_user_password(user, password):
     if user is None:
         if "GITHUB_USER" in os.environ:
@@ -173,6 +206,8 @@ class GithubAPI:
         If not token is provided, it tries the following:
         - look for GITHUB_API_TOKEN environmental variable
         - look for GITHUB_TOKEN environmental variable
+        - mint an installation token with the skare3 GitHub App key, if both
+          SKARE3_GITHUB_APP_KEY and SKARE3_GITHUB_APP_INSTALLATION are set
 
         If that fails, try with user/password (deprecated)
         If no user name is provided, it tries the following:
@@ -196,11 +231,7 @@ class GithubAPI:
         if self.initialized and not force:
             return
 
-        if token is None:
-            if "GITHUB_API_TOKEN" in os.environ:
-                token = os.environ["GITHUB_API_TOKEN"]
-            elif "GITHUB_TOKEN" in os.environ:
-                token = os.environ["GITHUB_TOKEN"]
+        token = resolve_token(token)
 
         if token is not None:
             self.auth = None

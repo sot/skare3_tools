@@ -74,6 +74,8 @@ import os
 
 import requests
 
+from skare3_tools.github.github import resolve_token
+
 
 class GithubException(Exception):
     pass
@@ -389,12 +391,9 @@ class GithubAPI:
         if self.initialized and not force:
             return
 
+        token = resolve_token(token)
         if token is not None:
             token = os.path.expandvars(token)
-        elif "GITHUB_API_TOKEN" in os.environ:
-            token = os.path.expandvars(os.environ["GITHUB_API_TOKEN"])
-        elif "GITHUB_TOKEN" in os.environ:
-            token = os.path.expandvars(os.environ["GITHUB_TOKEN"])
         else:
             raise AuthException(
                 "Bad credentials. "

@@ -2,7 +2,9 @@
 Authentication helpers for the skare3 GitHub App (App ID 77359).
 
 The App's private key is read from the path in the ``SKARE3_GITHUB_APP_KEY``
-environment variable (or an explicit ``key_path`` argument).
+environment variable (or an explicit ``key_path`` argument). The installation
+to mint tokens for is taken from the ``SKARE3_GITHUB_APP_INSTALLATION``
+environment variable (or an explicit ``installation_id`` argument).
 """
 
 import os
@@ -48,8 +50,22 @@ def get_app_info(key_path=None):
     return r.json()
 
 
-def get_installation_token(installation_id, key_path=None):
+def get_installations(key_path=None):
+    """List the App's installations (e.g. to find an installation id)."""
+    r = requests.get(f"{GITHUB_API}/app/installations", headers=_app_headers(key_path))
+    r.raise_for_status()
+    return r.json()
+
+
+def get_installation_token(installation_id=None, key_path=None):
     """Mint an installation access token (dict with 'token', 'expires_at')."""
+    if installation_id is None:
+        installation_id = os.environ.get("SKARE3_GITHUB_APP_INSTALLATION")
+    if not installation_id:
+        raise ValueError(
+            "No GitHub App installation: pass installation_id "
+            "or set SKARE3_GITHUB_APP_INSTALLATION"
+        )
     r = requests.post(
         f"{GITHUB_API}/app/installations/{installation_id}/access_tokens",
         headers=_app_headers(key_path),
