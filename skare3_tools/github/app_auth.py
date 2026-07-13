@@ -9,6 +9,7 @@ variable.
 
 import os
 import time
+from datetime import datetime, timezone
 
 import requests
 
@@ -95,3 +96,98 @@ def get_repositories(token):
     r = requests.get(f"{GITHUB_API}/installation/repositories", headers=headers)
     r.raise_for_status()
     return r.json()
+
+
+class AppTokenCache:
+    """
+    GitHub App installation tokens, minted on demand and cached per organization.
+
+    Installation tokens are scoped to one organization, so a process that
+    touches several organizations needs one token per organization. The App
+    installation for an organization is looked up the first time it is seen,
+    and tokens are re-minted shortly before they expire (they last one hour).
+    """
+
+    EXPIRY_MARGIN = 300  # seconds; re-mint a token this close to its expiry
+
+    def __init__(self, key_path=None):
+        self.key_path = key_path or app_settings()["key_path"]
+        self._default_org = None
+        self._installations = {}  # org name -> installation id
+        self._tokens = {}  # org name -> {"token": str, "expires_at": datetime}
+
+    def token(self, org=None):
+        """Return a valid installation token for org (the default org if None)."""
+        if org is None:
+            org = self.default_org()
+        entry = self._tokens.get(org)
+        if entry is None or self._expiring(entry):
+            entry = self._mint(org)
+            self._tokens[org] = entry
+        return entry["token"]
+
+    def default_org(self):
+        """The org acted on when a request does not determine one."""
+        if self._default_org is None:
+            org = app_settings()["org"]
+            if org is None:
+                installations = get_installations(self.key_path)
+                if len(installations) != 1:
+                    raise _auth_exception(
+                        "Set SKARE3_GITHUB_APP_ORG to choose the organization "
+                        "the skare3 GitHub credentials act on by default"
+                    )
+                org = installations[0]["account"]["login"]
+            self._default_org = org
+        return self._default_org
+
+    def _expiring(self, entry):
+        remaining = entry["expires_at"] - datetime.now(timezone.utc)
+        return remaining.total_seconds() < self.EXPIRY_MARGIN
+
+    def _mint(self, org):
+        info = get_installation_token(
+            self._installation_id(org), key_path=self.key_path
+        )
+        return {
+            "token": info["token"],
+            "expires_at": datetime.fromisoformat(
+                info["expires_at"].replace("Z", "+00:00")
+            ),
+        }
+
+    def _installation_id(self, org):
+        if org not in self._installations:
+            # repositories can be owned by an organization or by a user account
+            for account_type in ["orgs", "users"]:
+                r = requests.get(
+                    f"{GITHUB_API}/{account_type}/{org}/installation",
+                    headers=_app_headers(self.key_path),
+                )
+                if r.ok:
+                    self._installations[org] = r.json()["id"]
+                    break
+            else:
+                raise self._not_covered_error(org)
+        return self._installations[org]
+
+    def _not_covered_error(self, org):
+        covered = sorted(
+            inst["account"]["login"] for inst in get_installations(self.key_path)
+        )
+        slug = get_app_info(self.key_path)["slug"]
+        return _auth_exception(
+            f"The skare3 GitHub credentials cannot access '{org}'. "
+            f"They currently cover: {', '.join(covered) or 'no organizations'}. "
+            f"A GitHub admin of '{org}' can enable it at "
+            f"https://github.com/apps/{slug}/installations/new "
+            "(or set GITHUB_TOKEN to use a personal token instead)."
+        )
+
+
+def _auth_exception(message):
+    # local import: github.py lazily imports this module, so a module-level
+    # import here would be circular
+    from skare3_tools.github.github import AuthException
+
+    return AuthException(message)
