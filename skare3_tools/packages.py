@@ -471,7 +471,8 @@ def get_all_nodes(
         has_more = "hasNextPage"
     data = Dict(
         github.GITHUB_API_V4(
-            jinja2.Template(query).render(name=name, owner=owner, cursor=at, **kwargs)
+            jinja2.Template(query).render(name=name, owner=owner, cursor=at, **kwargs),
+            org=owner,
         )
     )
     check_api_errors(data)
@@ -487,7 +488,8 @@ def get_all_nodes(
             github.GITHUB_API_V4(
                 jinja2.Template(query_2).render(
                     name=name, owner=owner, cursor=at, **kwargs
-                )
+                ),
+                org=owner,
             )
         )
         check_api_errors(data)
@@ -544,7 +546,10 @@ def _get_repository_info_v4(
     owner, name = owner_repo.split("/")
     api = github.GITHUB_API_V4
     data_v4 = Dict(
-        api(jinja2.Template(github.graphql.REPO_QUERY).render(name=name, owner=owner))
+        api(
+            jinja2.Template(github.graphql.REPO_QUERY).render(name=name, owner=owner),
+            org=owner,
+        )
     )
     if "errors" in data_v4:
         try:
@@ -899,7 +904,9 @@ def repository_info_is_outdated(_, pkg_info):
     update = os.environ.get("SKARE3_REPO_INFO_LATEST", "").lower() in ["true", "1"]
     if not dir_access_ok(CONFIG["data_dir"]) and not update:
         return False
-    result = github.GITHUB_API_V4(_LAST_UPDATED_QUERY.render(**pkg_info))
+    result = github.GITHUB_API_V4(
+        _LAST_UPDATED_QUERY.render(**pkg_info), org=pkg_info["owner"]
+    )
     result = result["data"]["repository"]
     outdated = (
         pkg_info["pushed_at"] < result["pushedAt"]

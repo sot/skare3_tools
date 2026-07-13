@@ -15,7 +15,7 @@ def milestone_issues(milestone):
     query = jinja2.Template(github.REPO_ISSUES_QUERY).render(
         owner="sot", name="skare3", label='"Package update"'
     )
-    info = github.GITHUB_API(query)["data"]["repository"]["issues"]
+    info = github.GITHUB_API(query, org="sot")["data"]["repository"]["issues"]
     nodes = sorted(info["nodes"], key=lambda n: n["title"])
     nodes = [
         issue

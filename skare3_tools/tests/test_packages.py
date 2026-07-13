@@ -52,3 +52,28 @@ def test_get_package_list_skips_bad_recipe(monkeypatch, fake_skare3_repo):
     monkeypatch.setattr(packages.github, "Organization", FakeOrganization)
     result = packages.get_package_list(update=True)  # badpkg present in fixtures
     assert all(p["name"] != "badpkg" for p in result)  # skipped, not raised
+
+
+def test_get_all_nodes_forwards_org(monkeypatch):
+    from skare3_tools import packages
+
+    orgs_seen = []
+
+    def fake_api(query, org=None, **kwargs):
+        orgs_seen.append(org)
+        return {
+            "data": {
+                "repository": {
+                    "refs": {
+                        "nodes": [],
+                        "pageInfo": {"hasNextPage": False, "endCursor": None},
+                    }
+                }
+            }
+        }
+
+    monkeypatch.setattr(packages.github, "GITHUB_API_V4", fake_api)
+    packages.get_all_nodes(
+        owner="acisops", name="foo", path="data/repository/refs", query="{}"
+    )
+    assert orgs_seen == ["acisops"]
