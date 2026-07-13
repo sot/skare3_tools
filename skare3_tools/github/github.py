@@ -173,6 +173,19 @@ def _get_user_password(user, password):
     return user, password
 
 
+class _NotModified:
+    """Sentinel returned on a 304 response to a conditional (etag) request."""
+
+    def __repr__(self):
+        return "NOT_MODIFIED"
+
+    def __bool__(self):
+        return False
+
+
+NOT_MODIFIED = _NotModified()
+
+
 class GithubAPI:
     """
     Main class that encapsulates Github's REST API.
@@ -304,6 +317,7 @@ class GithubAPI:
         check=False,
         return_json=False,
         headers=(),
+        etag=None,
         **kwargs,
     ):
         if not self.initialized:
@@ -328,6 +342,8 @@ class GithubAPI:
             org = _org_from_endpoint(endpoint_str)
             _headers["Authorization"] = f"token {self._app_tokens.token(org)}"
         _headers.update(headers)
+        if etag is not None:
+            _headers["If-None-Match"] = etag
         kwargs = {k: v for k, v in kwargs.items() if k in ["json"]}
         _logger.debug(
             "%s %s\n  headers: %s\n  params: %s,\n kwargs: %s",
@@ -340,6 +356,8 @@ class GithubAPI:
         r = requests.request(
             method, url, headers=_headers, auth=self.auth, params=params, **kwargs
         )
+        if etag is not None and r.status_code == 304:
+            return NOT_MODIFIED
         if check:
             self.check(r)
         if return_json:
@@ -363,6 +381,41 @@ class GithubAPI:
         """
         r = self(path, method="get", params=params, **kwargs)
         return r
+
+    def get_conditional(self, path, state, params=None, **kwargs):
+        """
+        Get all items of a paginated listing using conditional requests.
+
+        Each page is requested with ``If-None-Match`` when a previous ETag is
+        known; on a 304 the page body cached in ``state`` is reused. ``state``
+        is a caller-owned dict, updated in place, meant to be persisted
+        between runs (e.g. in a refresh state file).
+
+        :param path: str. The endpoint path, e.g. ``"/orgs/:owner/repos"``.
+        :param state: dict. Maps a page key to ``{"etag": ..., "body": [...]}``.
+        :param params: dict. Extra query parameters.
+        :return: list of all items.
+        """
+        items = []
+        params = dict(params) if params else {}
+        page = 1
+        while True:
+            params["page"] = page
+            key = f"{path}?{urllib.parse.urlencode(sorted(params.items()))}"
+            cached = state.get(key)
+            r = self.get(
+                path, params=params, etag=cached["etag"] if cached else None, **kwargs
+            )
+            if r is NOT_MODIFIED:
+                page_items = cached["body"]
+            else:
+                page_items = r.json()
+                state[key] = {"etag": r.headers.get("ETag"), "body": page_items}
+            if not page_items:
+                break
+            items.extend(page_items)
+            page += 1
+        return items
 
     def post(self, path, params=None, **kwargs):
         """

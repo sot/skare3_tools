@@ -483,3 +483,43 @@ class GithubAPI:
 
 GITHUB_API = GithubAPI()
 """THE API"""
+
+
+def get_last_updated(repos, api=None, chunk_size=50):
+    """
+    Get the last-updated timestamps of many repositories in few requests.
+
+    GraphQL has no ETag mechanism, so this batched query is the cheap way to
+    ask "which repositories changed?" before fetching anything expensive.
+
+    :param repos: list of "owner/name" strings.
+    :param api: GithubAPI. Defaults to the module-level GITHUB_API.
+    :param chunk_size: int. Repositories per query.
+    :return: dict mapping "owner/name" to
+        ``{"pushed_at": ..., "updated_at": ...}``, or None if the repository
+        was not found.
+    """
+    if api is None:
+        api = GITHUB_API
+    result = {}
+    for start in range(0, len(repos), chunk_size):
+        chunk = repos[start : start + chunk_size]
+        fields = [
+            'r{i}: repository(owner: "{owner}", name: "{name}") '
+            "{{ nameWithOwner pushedAt updatedAt }}".format(
+                i=i, owner=owner_repo.split("/")[0], name=owner_repo.split("/")[1]
+            )
+            for i, owner_repo in enumerate(chunk)
+        ]
+        response = api("{ " + " ".join(fields) + " }")
+        data = response.get("data") or {}
+        for i, owner_repo in enumerate(chunk):
+            node = data.get(f"r{i}")
+            if node:
+                result[owner_repo] = {
+                    "pushed_at": node["pushedAt"],
+                    "updated_at": node["updatedAt"],
+                }
+            else:
+                result[owner_repo] = None
+    return result
