@@ -491,6 +491,8 @@ def get_last_updated(repos, api=None, chunk_size=50):
 
     GraphQL has no ETag mechanism, so this batched query is the cheap way to
     ask "which repositories changed?" before fetching anything expensive.
+    Queries are batched per owner, so with App authentication each batch is
+    made with that organization's installation token.
 
     :param repos: list of "owner/name" strings.
     :param api: GithubAPI. Defaults to the module-level GITHUB_API.
@@ -501,25 +503,29 @@ def get_last_updated(repos, api=None, chunk_size=50):
     """
     if api is None:
         api = GITHUB_API
+    by_owner = {}
+    for owner_repo in repos:
+        by_owner.setdefault(owner_repo.split("/")[0], []).append(owner_repo)
     result = {}
-    for start in range(0, len(repos), chunk_size):
-        chunk = repos[start : start + chunk_size]
-        fields = [
-            'r{i}: repository(owner: "{owner}", name: "{name}") '
-            "{{ nameWithOwner pushedAt updatedAt }}".format(
-                i=i, owner=owner_repo.split("/")[0], name=owner_repo.split("/")[1]
-            )
-            for i, owner_repo in enumerate(chunk)
-        ]
-        response = api("{ " + " ".join(fields) + " }")
-        data = response.get("data") or {}
-        for i, owner_repo in enumerate(chunk):
-            node = data.get(f"r{i}")
-            if node:
-                result[owner_repo] = {
-                    "pushed_at": node["pushedAt"],
-                    "updated_at": node["updatedAt"],
-                }
-            else:
-                result[owner_repo] = None
+    for owner, owner_repos in by_owner.items():
+        for start in range(0, len(owner_repos), chunk_size):
+            chunk = owner_repos[start : start + chunk_size]
+            fields = [
+                'r{i}: repository(owner: "{owner}", name: "{name}") '
+                "{{ nameWithOwner pushedAt updatedAt }}".format(
+                    i=i, owner=owner, name=owner_repo.split("/")[1]
+                )
+                for i, owner_repo in enumerate(chunk)
+            ]
+            response = api("{ " + " ".join(fields) + " }", org=owner)
+            data = response.get("data") or {}
+            for i, owner_repo in enumerate(chunk):
+                node = data.get(f"r{i}")
+                if node:
+                    result[owner_repo] = {
+                        "pushed_at": node["pushedAt"],
+                        "updated_at": node["updatedAt"],
+                    }
+                else:
+                    result[owner_repo] = None
     return result

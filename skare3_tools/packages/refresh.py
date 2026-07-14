@@ -13,17 +13,15 @@ One run brings the store (see :mod:`skare3_tools.packages.store`) up to date:
    and advance ``meta/state.json`` last, so an interrupted run only causes a
    refetch.
 
-Authentication: with ``SKARE3_GITHUB_APP_KEY`` set, per-org installation
-tokens are minted for GitHub App 77359; otherwise the usual
-``GITHUB_API_TOKEN``/``GITHUB_TOKEN`` PAT is used for both orgs. Note that
-installation tokens are org-scoped: cross-org listings only see public
-repositories, which all Ska repositories are.
+Authentication is entirely the github wrappers' business: a personal token
+(``GITHUB_API_TOKEN``/``GITHUB_TOKEN``) or, when ``SKARE3_GITHUB_APP_KEY`` is
+set, per-organization App-77359 installation tokens minted transparently per
+request (see :mod:`skare3_tools.github.app_auth`).
 """
 
 import argparse
 import json
 import logging
-import os
 import sys
 from datetime import datetime, timezone
 from importlib import metadata
@@ -31,7 +29,7 @@ from pathlib import Path
 
 from skare3_tools import test_results
 from skare3_tools.config import CONFIG
-from skare3_tools.github import github, graphql
+from skare3_tools.github import graphql
 from skare3_tools.packages import packages, store
 
 logger = logging.getLogger("skare3.refresh")
@@ -61,23 +59,6 @@ def resolve_metapackages(conda_info):
         latest = conda_info[name][-1]
         meta[name] = {"version": latest["version"], "pins": latest["depends"]}
     return meta
-
-
-def _resolve_tokens(organizations):
-    """One GitHub token per org: App installation tokens, or the PAT for all."""
-    if os.environ.get("SKARE3_GITHUB_APP_KEY"):
-        from skare3_tools.github import app_auth
-
-        installations = app_auth.get_installations()
-        tokens = {}
-        for org in organizations:
-            if org not in installations:
-                raise RefreshError(f"GitHub App is not installed on org {org}")
-            tokens[org] = app_auth.get_installation_token(installations[org])["token"]
-        return tokens
-    # PAT (possibly None: the wrappers then use whatever they already have)
-    token = os.environ.get("GITHUB_API_TOKEN") or os.environ.get("GITHUB_TOKEN")
-    return dict.fromkeys(organizations, token)
 
 
 def _metapackage_fields(conda_package, metapackages):
@@ -139,31 +120,23 @@ def _latest_test_run(stream):
         return {}
 
 
-def refresh(data_dir=None, full=False, stream="ska3-masters", tokens=None):
+def refresh(data_dir=None, full=False, stream="ska3-masters"):
     """
     Refresh the data store. Returns a summary dict.
 
     :param data_dir: store directory (default: the configured store root).
     :param full: bool. Refetch every repository, ignoring change detection.
     :param stream: str. Test-results stream baked into the aggregate.
-    :param tokens: dict. org -> token; resolved from the environment when
-        None. A None token means "leave the API singletons as they are"
-        (used in tests).
     :return: dict with "written", "skipped" and "failures".
     """
     directory = Path(data_dir) if data_dir else store.store_dir()
     organizations = CONFIG["organizations"]
     deprecated = set(CONFIG.get("deprecated_repositories", []))
-    if tokens is None:
-        tokens = _resolve_tokens(organizations)
 
     with store.StoreLock(directory):
         state = _read_state(directory)
 
         # the package universe: pkg_defs + org repos, minus deprecated
-        first_org = organizations[0]
-        if tokens.get(first_org):
-            github.init(token=tokens[first_org])
         pkg_list = packages.get_package_list(update=True)
         pkg_list = [
             p
@@ -179,13 +152,11 @@ def refresh(data_dir=None, full=False, stream="ska3-masters", tokens=None):
         conda_masters = packages.get_conda_pkg_info("*", conda_channel="masters")
         metapackages = resolve_metapackages(conda_main)
 
-        # change detection: one batched query instead of per-repo round trips
+        # change detection: batched queries instead of per-repo round trips
         last_updated = graphql.get_last_updated(universe)
         state_repos = state.get("repos", {})
         summary = {"written": [], "skipped": [], "failures": {}}
-        by_org = {org: [] for org in organizations}
         for owner_repo in universe:
-            org = owner_repo.split("/")[0]
             repo_file = _repo_file(directory, owner_repo)
             if (
                 not full
@@ -194,24 +165,16 @@ def refresh(data_dir=None, full=False, stream="ska3-masters", tokens=None):
                 and state_repos.get(owner_repo) == last_updated[owner_repo]
             ):
                 summary["skipped"].append(owner_repo)
-            else:
-                by_org[org].append(owner_repo)
-
-        for org in organizations:
-            if not by_org[org]:
                 continue
-            if tokens.get(org):
-                github.init(token=tokens[org])
-            for owner_repo in by_org[org]:
-                try:
-                    info = packages._get_repository_info_v4(owner_repo)
-                except Exception as exc:
-                    logger.error("failed to fetch %s: %s", owner_repo, exc)
-                    summary["failures"][owner_repo] = str(exc)
-                    continue
-                store.atomic_write_json(_repo_file(directory, owner_repo), info)
-                state_repos[owner_repo] = last_updated.get(owner_repo)
-                summary["written"].append(owner_repo)
+            try:
+                info = packages._get_repository_info_v4(owner_repo)
+            except Exception as exc:
+                logger.error("failed to fetch %s: %s", owner_repo, exc)
+                summary["failures"][owner_repo] = str(exc)
+                continue
+            store.atomic_write_json(_repo_file(directory, owner_repo), info)
+            state_repos[owner_repo] = last_updated.get(owner_repo)
+            summary["written"].append(owner_repo)
 
         # the aggregate is always rebuilt: channel versions and metapackage
         # pins move without any repository push
@@ -281,10 +244,11 @@ def _repo_file(directory, owner_repo):
 
 
 def _producer_id():
-    if os.environ.get("SKARE3_GITHUB_APP_KEY"):
-        from skare3_tools.github.app_auth import APP_ID
+    from skare3_tools.github import app_auth
 
-        return f"app:{APP_ID}"
+    settings = app_auth.app_settings()
+    if settings["key_path"]:
+        return f"app:{settings['app_id']}"
     return "token"
 
 

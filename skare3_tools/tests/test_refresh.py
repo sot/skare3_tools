@@ -135,7 +135,7 @@ def clean_store(data_dir):
 
 
 def test_full_refresh_writes_schema2_store(fake_github, clean_store):
-    summary = refresh.refresh(tokens={})
+    summary = refresh.refresh()
     assert summary["failures"] == {}
 
     reader = store.StoreReader(clean_store)
@@ -175,21 +175,21 @@ def test_full_refresh_writes_schema2_store(fake_github, clean_store):
 
 
 def test_second_run_fetches_nothing_when_unchanged(fake_github, clean_store):
-    refresh.refresh(tokens={})
+    refresh.refresh()
     fake_github["v4"].clear()
-    refresh.refresh(tokens={})
+    refresh.refresh()
     assert fake_github["v4"] == []
 
 
 def test_changed_repo_is_refetched(fake_github, clean_store, monkeypatch):
-    refresh.refresh(tokens={})
+    refresh.refresh()
     fake_github["v4"].clear()
     bumped = dict(LAST_UPDATED)
     bumped["sot/foo"] = dict(LAST_UPDATED["sot/foo"], pushed_at="2026-07-13T00:00:00Z")
     monkeypatch.setattr(
         graphql, "get_last_updated", lambda repos, **kw: dict.fromkeys(repos) | bumped
     )
-    refresh.refresh(tokens={})
+    refresh.refresh()
     assert fake_github["v4"] == ["sot/foo"]
 
 
@@ -206,18 +206,18 @@ def test_missing_metapackage_aborts_before_writing(
         }[conda_channel],
     )
     with pytest.raises(refresh.RefreshError, match="ska3-perl"):
-        refresh.refresh(tokens={})
+        refresh.refresh()
     assert not (clean_store / "packages.json").exists()
 
 
 def test_repo_fetch_failure_keeps_previous_data(fake_github, clean_store, monkeypatch):
-    refresh.refresh(tokens={})
+    refresh.refresh()
 
     def failing_v4(owner_repo, **kwargs):
         raise RuntimeError("boom")
 
     monkeypatch.setattr(packages, "_get_repository_info_v4", failing_v4)
-    summary = refresh.refresh(tokens={}, full=True)
+    summary = refresh.refresh(full=True)
     assert set(summary["failures"]) == {"sot/foo", "sot/bar"}
     # the aggregate still carries the previously-fetched data
     info = store.StoreReader(clean_store).packages()
@@ -230,6 +230,6 @@ def test_no_test_results_yet(fake_github, clean_store, monkeypatch):
         "get_latest",
         lambda **kw: (_ for _ in ()).throw(FileNotFoundError()),
     )
-    refresh.refresh(tokens={})
+    refresh.refresh()
     info = store.StoreReader(clean_store).packages()
     assert all(p["test_status"] == "" for p in info["packages"])
