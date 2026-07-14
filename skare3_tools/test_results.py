@@ -66,7 +66,7 @@ def remove(uid=None, directory=None, uids=(), directories=()):
     if uid and uid not in uids:
         uids += [uid]
 
-    directories = [SKARE3_TEST_DATA / directory for directory in directories]
+    directories = [SKARE3_TEST_DATA / drctry for drctry in directories]
     if directory and directory not in directories:
         directories += [SKARE3_TEST_DATA / directory]
 
