@@ -3,8 +3,8 @@ Authentication helpers for the skare3 GitHub App (App ID 77359).
 
 The App's private key is read from the path in the ``SKARE3_GITHUB_APP_KEY``
 environment variable (or an explicit ``key_path`` argument). The organization
-acted on by default is taken from the ``SKARE3_GITHUB_APP_ORG`` environment
-variable.
+acted on by default is "sot", overridable with the ``SKARE3_GITHUB_APP_ORG``
+environment variable.
 """
 
 import os
@@ -15,6 +15,11 @@ import requests
 
 APP_ID = 77359
 GITHUB_API = "https://api.github.com"
+
+# org used for requests that do not name one (e.g. GraphQL calls without an
+# org argument); SKARE3_GITHUB_APP_ORG overrides it. Requests that do name an
+# org (like most REST endpoints) route to that org regardless.
+_SKARE3_GITHUB_APP_ORG = "sot"
 
 
 def app_settings():
@@ -28,7 +33,7 @@ def app_settings():
     return {
         "app_id": APP_ID,
         "key_path": os.environ.get("SKARE3_GITHUB_APP_KEY"),
-        "org": os.environ.get("SKARE3_GITHUB_APP_ORG"),
+        "org": os.environ.get("SKARE3_GITHUB_APP_ORG", _SKARE3_GITHUB_APP_ORG),
     }
 
 
@@ -117,7 +122,6 @@ class AppTokenCache:
 
     def __init__(self, key_path=None):
         self.key_path = key_path or app_settings()["key_path"]
-        self._default_org = None
         self._installations = {}  # org name -> installation id
         self._tokens = {}  # org name -> {"token": str, "expires_at": datetime}
 
@@ -133,18 +137,7 @@ class AppTokenCache:
 
     def default_org(self):
         """The org acted on when a request does not determine one."""
-        if self._default_org is None:
-            org = app_settings()["org"]
-            if org is None:
-                installations = get_installations(self.key_path)
-                if len(installations) != 1:
-                    raise _auth_exception(
-                        "Set SKARE3_GITHUB_APP_ORG to choose the organization "
-                        "the skare3 GitHub credentials act on by default"
-                    )
-                org = installations[0]["account"]["login"]
-            self._default_org = org
-        return self._default_org
+        return app_settings()["org"]
 
     def _expiring(self, entry):
         remaining = entry["expires_at"] - datetime.now(timezone.utc)

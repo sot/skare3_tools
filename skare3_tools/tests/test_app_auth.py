@@ -84,7 +84,7 @@ def test_app_settings_unset(monkeypatch):
     monkeypatch.delenv("SKARE3_GITHUB_APP_ORG", raising=False)
     settings = app_auth.app_settings()
     assert settings["key_path"] is None
-    assert settings["org"] is None
+    assert settings["org"] == "sot"  # built-in default org
 
 
 @responses.activate
@@ -190,48 +190,23 @@ def test_token_cache_reminits_near_expiry(app_key):
 
 
 @responses.activate
+def test_token_cache_default_org_is_sot(app_key, monkeypatch):
+    from skare3_tools.github import app_auth
+
+    monkeypatch.delenv("SKARE3_GITHUB_APP_ORG", raising=False)
+    _stub_installation("sot", 1)
+    _stub_mint(1, "ghs_sot")
+    assert app_auth.AppTokenCache().token() == "ghs_sot"
+
+
+@responses.activate
 def test_token_cache_default_org_from_env(app_key, monkeypatch):
     from skare3_tools.github import app_auth
 
-    monkeypatch.setenv("SKARE3_GITHUB_APP_ORG", "sot")
-    _stub_installation("sot", 1)
-    _stub_mint(1, "ghs_sot")
-    assert app_auth.AppTokenCache().token() == "ghs_sot"
-
-
-@responses.activate
-def test_token_cache_default_org_single_installation(app_key, monkeypatch):
-    from skare3_tools.github import app_auth
-
-    monkeypatch.delenv("SKARE3_GITHUB_APP_ORG", raising=False)
-    responses.add(
-        responses.GET,
-        "https://api.github.com/app/installations",
-        json=[{"id": 1, "account": {"login": "sot"}}],
-        status=200,
-    )
-    _stub_installation("sot", 1)
-    _stub_mint(1, "ghs_sot")
-    assert app_auth.AppTokenCache().token() == "ghs_sot"
-
-
-@responses.activate
-def test_token_cache_default_org_ambiguous(app_key, monkeypatch):
-    from skare3_tools.github import app_auth
-    from skare3_tools.github.github import AuthException
-
-    monkeypatch.delenv("SKARE3_GITHUB_APP_ORG", raising=False)
-    responses.add(
-        responses.GET,
-        "https://api.github.com/app/installations",
-        json=[
-            {"id": 1, "account": {"login": "sot"}},
-            {"id": 2, "account": {"login": "acisops"}},
-        ],
-        status=200,
-    )
-    with pytest.raises(AuthException, match="SKARE3_GITHUB_APP_ORG"):
-        app_auth.AppTokenCache().token()
+    monkeypatch.setenv("SKARE3_GITHUB_APP_ORG", "acisops")
+    _stub_installation("acisops", 2)
+    _stub_mint(2, "ghs_acisops")
+    assert app_auth.AppTokenCache().token() == "ghs_acisops"
 
 
 @responses.activate
@@ -408,18 +383,30 @@ def test_graphql_pat_ignores_org(monkeypatch):
 
 @responses.activate
 def test_graphql_init_swallows_app_auth_errors(app_key, monkeypatch):
+    # the App is not installed on the default org: the init handshake fails
+    # with an auth error, which must not escape the constructor
     from skare3_tools.github import graphql
 
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
     monkeypatch.delenv("GITHUB_API_TOKEN", raising=False)
     monkeypatch.delenv("SKARE3_GITHUB_APP_ORG", raising=False)
+    for account_type in ["orgs", "users"]:
+        responses.add(
+            responses.GET,
+            f"https://api.github.com/{account_type}/sot/installation",
+            json={"message": "Not Found"},
+            status=404,
+        )
     responses.add(
         responses.GET,
         "https://api.github.com/app/installations",
-        json=[
-            {"id": 1, "account": {"login": "sot"}},
-            {"id": 2, "account": {"login": "acisops"}},
-        ],
+        json=[],
+        status=200,
+    )
+    responses.add(
+        responses.GET,
+        "https://api.github.com/app",
+        json={"slug": "skare3", "name": "skare3"},
         status=200,
     )
     api = graphql.GithubAPI()  # must not raise: degrade to uninitialized
