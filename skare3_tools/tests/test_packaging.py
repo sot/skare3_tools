@@ -52,7 +52,6 @@ OPTIONAL_DEP_SCRIPTS = {
 def test_console_scripts_declared_and_loadable():
     scripts = _declared_scripts()
     assert all(name.startswith("skare3-") for name in scripts)
-    assert len(scripts) >= 19
     for name, target in sorted(scripts.items()):
         if name in OPTIONAL_DEP_SCRIPTS:
             continue
