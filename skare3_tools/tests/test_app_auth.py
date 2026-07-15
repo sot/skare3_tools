@@ -8,22 +8,33 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 
-@pytest.fixture()
-def app_key(tmp_path, monkeypatch):
-    """Generate a throwaway RSA key, point SKARE3_GITHUB_APP_KEY at it."""
+def _generate_key():
+    """A throwaway RSA key as (private PEM bytes, public PEM bytes)."""
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     pem = key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption(),
     )
-    key_file = tmp_path / "app.pem"
-    key_file.write_bytes(pem)
-    monkeypatch.setenv("SKARE3_GITHUB_APP_KEY", str(key_file))
     public_pem = key.public_key().public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
+    return pem, public_pem
+
+
+@pytest.fixture()
+def app_key_pem():
+    return _generate_key()
+
+
+@pytest.fixture()
+def app_key(app_key_pem, tmp_path, monkeypatch):
+    """Generate a throwaway RSA key, point SKARE3_GITHUB_APP_KEY at it."""
+    pem, public_pem = app_key_pem
+    key_file = tmp_path / "app.pem"
+    key_file.write_bytes(pem)
+    monkeypatch.setenv("SKARE3_GITHUB_APP_KEY", str(key_file))
     return key_file, public_pem
 
 
@@ -39,6 +50,54 @@ def test_github_app_token_is_valid_jwt(app_key):
     assert payload["iss"] == str(app_auth.APP_ID)
     assert payload["exp"] - payload["iat"] == 600
     assert abs(payload["iat"] - time.time()) < 60
+
+
+def _assert_valid_app_jwt(public_pem):
+    from skare3_tools.github import app_auth
+
+    payload = jwt.decode(app_auth.github_app_token(), public_pem, algorithms=["RS256"])
+    assert payload["iss"] == str(app_auth.APP_ID)
+
+
+def test_github_app_token_from_key_content(app_key_pem, monkeypatch):
+    # SKARE3_GITHUB_APP_KEY may hold the key itself (e.g. an Actions secret)
+    pem, public_pem = app_key_pem
+    monkeypatch.setenv("SKARE3_GITHUB_APP_KEY", pem.decode())
+    _assert_valid_app_jwt(public_pem)
+
+
+def test_github_app_token_from_key_content_escaped_newlines(app_key_pem, monkeypatch):
+    # PEMs stuffed into env vars often end up with literal backslash-n
+    pem, public_pem = app_key_pem
+    monkeypatch.setenv("SKARE3_GITHUB_APP_KEY", pem.decode().replace("\n", "\\n"))
+    _assert_valid_app_jwt(public_pem)
+
+
+def test_github_app_token_from_key_content_crlf(app_key_pem, monkeypatch):
+    pem, public_pem = app_key_pem
+    monkeypatch.setenv("SKARE3_GITHUB_APP_KEY", pem.decode().replace("\n", "\r\n"))
+    _assert_valid_app_jwt(public_pem)
+
+
+def test_github_app_token_invalid_key_content(monkeypatch):
+    from skare3_tools.github import app_auth
+    from skare3_tools.github.github import AuthException
+
+    monkeypatch.setenv(
+        "SKARE3_GITHUB_APP_KEY",
+        "-----BEGIN RSA PRIVATE KEY-----\ngarbage\n-----END RSA PRIVATE KEY-----",
+    )
+    with pytest.raises(AuthException, match="SKARE3_GITHUB_APP_KEY"):
+        app_auth.github_app_token()
+
+
+def test_github_app_token_bad_path_message(monkeypatch):
+    from skare3_tools.github import app_auth
+    from skare3_tools.github.github import AuthException
+
+    monkeypatch.setenv("SKARE3_GITHUB_APP_KEY", "/nonexistent/key.pem")
+    with pytest.raises(AuthException, match="Cannot read GitHub App key"):
+        app_auth.github_app_token()
 
 
 def test_github_app_token_no_key_raises(monkeypatch):

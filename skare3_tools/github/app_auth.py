@@ -1,10 +1,14 @@
 """
 Authentication helpers for the skare3 GitHub App (App ID 77359).
 
-The App's private key is read from the path in the ``SKARE3_GITHUB_APP_KEY``
-environment variable (or an explicit ``key_path`` argument). The organization
-acted on by default is "sot", overridable with the ``SKARE3_GITHUB_APP_ORG``
-environment variable.
+The App's private key comes from the ``SKARE3_GITHUB_APP_KEY`` environment
+variable (or an explicit ``key_path`` argument), which holds either the path
+to the key file or the PEM content itself. Path is the mode for hosts with a
+deployed key file; content is the mode for GitHub-hosted runners, where the
+key rides in as an Actions secret (note that the self-hosted runner ``.env``
+file is line-based and cannot carry a multiline PEM — use a path there).
+The organization acted on by default is "sot", overridable with the
+``SKARE3_GITHUB_APP_ORG`` environment variable.
 """
 
 import os
@@ -38,18 +42,21 @@ def app_settings():
 
 
 def _read_key(key_path=None):
-    key_path = key_path or app_settings()["key_path"]
-    if not key_path:
+    key = key_path or app_settings()["key_path"]
+    if not key:
         raise ValueError(
             "No GitHub App key: pass key_path or set SKARE3_GITHUB_APP_KEY"
         )
+    if "-----BEGIN" in key:
+        # the value is the key itself, not a path (e.g. an Actions secret).
+        # PEMs passed through environment variables often arrive with literal
+        # "\n" sequences or CRLF line endings; normalize both.
+        return key.replace("\\n", "\n").replace("\r\n", "\n").encode()
     try:
-        with open(key_path, "rb") as fh:
+        with open(key, "rb") as fh:
             return fh.read()
     except OSError as err:
-        raise _auth_exception(
-            f"Cannot read GitHub App key at '{key_path}': {err}"
-        ) from err
+        raise _auth_exception(f"Cannot read GitHub App key at '{key}': {err}") from err
 
 
 def github_app_token(key_path=None):
@@ -63,7 +70,13 @@ def github_app_token(key_path=None):
     # PyJWT >= 2.10 requires the "iss" claim to be a string; APP_ID stays an
     # int constant (matching GitHub's own docs) and is stringified here.
     payload = {"iat": now, "exp": now + 10 * 60, "iss": str(APP_ID)}
-    return jwt.encode(payload, _read_key(key_path), algorithm="RS256")
+    key = _read_key(key_path)
+    try:
+        return jwt.encode(payload, key, algorithm="RS256")
+    except (ValueError, TypeError, jwt.exceptions.PyJWTError) as err:
+        raise _auth_exception(
+            f"Invalid GitHub App private key (key_path/SKARE3_GITHUB_APP_KEY): {err}"
+        ) from err
 
 
 def _app_headers(key_path=None):
