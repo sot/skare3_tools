@@ -122,18 +122,17 @@ def init(user=None, password=None, token=None, force=True):
 
 
 def resolve_token(token=None):
-    """Resolve a static GitHub token.
+    """Resolve an explicitly requested GitHub token.
 
-    Tries the ``token`` argument, then ``GITHUB_API_TOKEN`` and
-    ``GITHUB_TOKEN`` environment variables. Returns None if none is set.
-    Callers may then fall back to GitHub App authentication (see
-    :mod:`skare3_tools.github.app_auth`).
+    Tries the ``token`` argument, then the ``GITHUB_API_TOKEN`` environment
+    variable. Returns None if neither is set. ``GITHUB_TOKEN`` is deliberately
+    NOT read here: it ranks below GitHub App authentication (the Actions-
+    provided token is scoped to the calling repo and would otherwise shadow
+    App auth in every workflow), so the clients read it in ``init()`` only
+    after finding no App key (see :mod:`skare3_tools.github.app_auth`).
     """
     if token is None:
-        if "GITHUB_API_TOKEN" in os.environ:
-            token = os.environ["GITHUB_API_TOKEN"]
-        elif "GITHUB_TOKEN" in os.environ:
-            token = os.environ["GITHUB_TOKEN"]
+        token = os.environ.get("GITHUB_API_TOKEN")
     return token
 
 
@@ -203,9 +202,11 @@ class GithubAPI:
 
         If no token is provided, it tries the following:
         - look for GITHUB_API_TOKEN environmental variable
-        - look for GITHUB_TOKEN environmental variable
         - use the skare3 GitHub App key if SKARE3_GITHUB_APP_KEY is set (tokens are
           minted per organization; SKARE3_GITHUB_APP_ORG names the default organization)
+        - look for GITHUB_TOKEN environmental variable (below App auth on purpose:
+          in Actions it is scoped to the calling repo, and it should not shadow
+          App auth on hosts where the App key is ambient)
 
         If that fails, try with user/password (deprecated)
         If no user name is provided, it tries the following:
@@ -229,10 +230,14 @@ class GithubAPI:
         if self.initialized and not force:
             return
 
+        explicit_token = token is not None
         token = resolve_token(token)
 
         self._app_tokens = None
         if token is not None:
+            auth_source = (
+                "token (argument)" if explicit_token else "token (GITHUB_API_TOKEN)"
+            )
             self.auth = None
             self.headers = {"Authorization": f"token {token}"}
         else:
@@ -240,15 +245,22 @@ class GithubAPI:
             from skare3_tools.github import app_auth
 
             if app_auth.app_settings()["key_path"]:
+                auth_source = "GitHub App (per-org tokens)"
                 self.auth = None
                 self._app_tokens = app_auth.AppTokenCache()
                 self.headers = {"Accept": "application/vnd.github+json"}
+            elif "GITHUB_TOKEN" in os.environ:
+                auth_source = "token (GITHUB_TOKEN)"
+                self.auth = None
+                self.headers = {"Authorization": f"token {os.environ['GITHUB_TOKEN']}"}
             else:
+                auth_source = "basic auth"
                 user, password = _get_user_password(user, password)
                 if user and password:
                     _logger.warning("Using basic auth, which is deprecated")
                 self.auth = HTTPBasicAuth(user, password)
                 self.headers = {"Accept": "application/json"}
+        _logger.info("GitHub auth: %s", auth_source)
 
         try:
             self.initialized = True
@@ -256,9 +268,10 @@ class GithubAPI:
             if r.status_code == 401:
                 msg = r.json()["message"] + ". "
                 msg += (
-                    "Github token should be given as argument "
-                    "or set in either GITHUB_TOKEN or GITHUB_API_TOKEN "
-                    "environment variables"
+                    "Github credentials should be given as argument, "
+                    "set in the GITHUB_API_TOKEN or GITHUB_TOKEN "
+                    "environment variables, or provided by the skare3 GitHub "
+                    "App via SKARE3_GITHUB_APP_KEY"
                 )
                 raise AuthException(msg)
             if not r.ok:

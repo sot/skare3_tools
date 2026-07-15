@@ -1,3 +1,4 @@
+import logging
 import time
 from datetime import datetime, timedelta, timezone
 
@@ -176,7 +177,9 @@ def test_resolve_token_from_env(monkeypatch):
     monkeypatch.setenv("GITHUB_TOKEN", "ghp_plain")
     assert resolve_token() == "ghp_api"
     monkeypatch.delenv("GITHUB_API_TOKEN")
-    assert resolve_token() == "ghp_plain"
+    # GITHUB_TOKEN deliberately ranks below App auth; the clients read it
+    # in init() only after finding no App key
+    assert resolve_token() is None
 
 
 def test_resolve_token_none_without_credentials(app_key, monkeypatch):
@@ -375,9 +378,10 @@ def test_rest_uses_per_org_tokens(app_key, monkeypatch):
 
 
 @responses.activate
-def test_rest_init_env_token_wins_over_app_key(app_key, monkeypatch):
+def test_rest_init_api_token_wins_over_app_key(app_key, monkeypatch):
     from skare3_tools.github import github
 
+    monkeypatch.setenv("GITHUB_API_TOKEN", "ghp_explicit")
     monkeypatch.setenv("GITHUB_TOKEN", "ghp_env")
     monkeypatch.setenv("SKARE3_GITHUB_APP_ORG", "sot")
     responses.add(responses.GET, "https://api.github.com/", json={}, status=200)
@@ -388,10 +392,79 @@ def test_rest_init_env_token_wins_over_app_key(app_key, monkeypatch):
         status=200,
     )
     api = github.GithubAPI()
-    assert api.headers["Authorization"] == "token ghp_env"
+    assert api.headers["Authorization"] == "token ghp_explicit"
     assert api._app_tokens is None
     urls = [call.request.url for call in responses.calls]
     assert not any("installation" in url for url in urls)
+
+
+@responses.activate
+def test_rest_init_app_key_wins_over_github_token(app_key, monkeypatch, caplog):
+    from skare3_tools.github import github
+
+    monkeypatch.delenv("GITHUB_API_TOKEN", raising=False)
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_env")
+    monkeypatch.setenv("SKARE3_GITHUB_APP_ORG", "sot")
+    _stub_installation("sot", 1)
+    _stub_mint(1, "ghs_sot")
+    responses.add(responses.GET, "https://api.github.com/", json={}, status=200)
+    responses.add(
+        responses.GET,
+        "https://api.github.com/user",
+        json={"message": "Resource not accessible by integration"},
+        status=403,
+    )
+    with caplog.at_level(logging.INFO):
+        api = github.GithubAPI()
+    assert api._app_tokens is not None
+    assert "GitHub auth: GitHub App" in caplog.text
+    for call in responses.calls:
+        assert call.request.headers.get("Authorization") != "token ghp_env"
+
+
+@responses.activate
+def test_rest_init_github_token_used_without_app_key(monkeypatch, caplog):
+    from skare3_tools.github import github
+
+    monkeypatch.delenv("GITHUB_API_TOKEN", raising=False)
+    monkeypatch.delenv("SKARE3_GITHUB_APP_KEY", raising=False)
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_env")
+    responses.add(responses.GET, "https://api.github.com/", json={}, status=200)
+    responses.add(
+        responses.GET,
+        "https://api.github.com/user",
+        json={"login": "tester"},
+        status=200,
+    )
+    with caplog.at_level(logging.INFO):
+        api = github.GithubAPI()
+    assert api.headers["Authorization"] == "token ghp_env"
+    assert "GitHub auth: token (GITHUB_TOKEN)" in caplog.text
+
+
+@responses.activate
+def test_graphql_app_key_wins_over_github_token(app_key, monkeypatch):
+    from skare3_tools.github import graphql
+
+    monkeypatch.delenv("GITHUB_API_TOKEN", raising=False)
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_env")
+    monkeypatch.setenv("SKARE3_GITHUB_APP_ORG", "sot")
+    _stub_installation("sot", 1)
+    _stub_mint(1, "ghs_sot")
+    responses.add(
+        responses.POST,
+        "https://api.github.com/graphql",
+        json={"data": {"viewer": {"login": "skare3[bot]"}}},
+        status=200,
+    )
+    api = graphql.GithubAPI()
+    assert api.initialized
+    graphql_auth = [
+        call.request.headers["Authorization"]
+        for call in responses.calls
+        if call.request.url == "https://api.github.com/graphql"
+    ]
+    assert graphql_auth == ["token ghs_sot"]
 
 
 @responses.activate

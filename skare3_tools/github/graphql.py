@@ -386,6 +386,12 @@ class GithubAPI:
         """
         Initialize the Github API.
 
+        Credentials are tried in the same order as the REST client: token
+        argument, GITHUB_API_TOKEN, the skare3 GitHub App key, and finally
+        GITHUB_TOKEN (below App auth on purpose: in Actions it is scoped to
+        the calling repo, and it should not shadow App auth on hosts where
+        the App key is ambient).
+
         :param token: str
         :param force: bool
         :return: GithubAPI
@@ -393,24 +399,34 @@ class GithubAPI:
         if self.initialized and not force:
             return
 
+        explicit_token = token is not None
         token = resolve_token(token)
         self._app_tokens = None
         if token is not None:
+            auth_source = (
+                "token (argument)" if explicit_token else "token (GITHUB_API_TOKEN)"
+            )
             headers = {"Authorization": f"token {os.path.expandvars(token)}"}
         else:
             # pyjwt/cryptography are needed only for App auth; import lazily
             from skare3_tools.github import app_auth
 
             if app_auth.app_settings()["key_path"]:
+                auth_source = "GitHub App (per-org tokens)"
                 self._app_tokens = app_auth.AppTokenCache()
                 headers = {}
+            elif "GITHUB_TOKEN" in os.environ:
+                auth_source = "token (GITHUB_TOKEN)"
+                headers = {"Authorization": f"token {os.environ['GITHUB_TOKEN']}"}
             else:
                 raise AuthException(
                     "Bad credentials. "
-                    "Github token needs to be given as argument "
-                    "or set in either GITHUB_TOKEN or GITHUB_API_TOKEN "
-                    "environment variables"
+                    "Github credentials should be given as argument, "
+                    "set in the GITHUB_API_TOKEN or GITHUB_TOKEN "
+                    "environment variables, or provided by the skare3 GitHub "
+                    "App via SKARE3_GITHUB_APP_KEY"
                 )
+        _logger.info("GitHub auth: %s", auth_source)
         try:
             self.initialized = True
             self.headers = headers
