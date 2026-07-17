@@ -19,6 +19,7 @@ os.environ.pop("GITHUB_TOKEN", None)
 os.environ.pop("GITHUB_API_TOKEN", None)
 os.environ.pop("SKARE3_GITHUB_APP_KEY", None)
 os.environ.pop("SKARE3_GITHUB_APP_ORG", None)
+os.environ.pop("FSDS_JIRA_TOKEN", None)
 
 import pytest  # noqa: E402
 import responses  # noqa: E402
