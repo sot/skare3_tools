@@ -8,6 +8,7 @@ rsync. Layout::
 
     <data_dir>/
     ├── manifest.json          # schema_version, generated, producer, excluded
+    ├── repository_status.json # operator-edited: {owner/repo: "deprecated"|"ignored"}
     ├── packages.json          # dashboard-compatible aggregate
     ├── test_results.json      # pre-digested latest test results
     ├── repos/{owner}/{name}.json   # per-repository detail
@@ -18,6 +19,10 @@ rsync. Layout::
 
 Every file is written atomically (temp file + ``os.replace``), so readers on
 rsync'd copies never see a half-written file. Readers never take the lock.
+
+``repository_status.json`` is the one file the producer reads rather than
+writes: repositories listed there (with either status) are excluded from the
+store. The first refresh seeds it if absent; after that it is never overwritten.
 """
 
 import fcntl
@@ -30,6 +35,10 @@ from pathlib import Path
 from skare3_tools.config import CONFIG
 
 SCHEMA_VERSION = 2
+
+# statuses an operator may assign in repository_status.json; any repo listed
+# (with either status) is excluded from the store
+REPOSITORY_STATUSES = ("deprecated", "ignored")
 
 
 class StoreNotFoundError(Exception):
@@ -53,6 +62,26 @@ def store_present(directory=None):
     except (OSError, json.JSONDecodeError):
         return False
     return True
+
+
+def repository_status(directory=None):
+    """The operator-edited status map ({owner/repo: status}); {} if the file is absent."""
+    directory = Path(directory) if directory else store_dir()
+    try:
+        status = _read_json(directory / "repository_status.json")
+    except FileNotFoundError:
+        return {}
+    unknown = {
+        repo: value
+        for repo, value in status.items()
+        if value not in REPOSITORY_STATUSES
+    }
+    if unknown:
+        raise ValueError(
+            f"repository_status.json: unknown status for {unknown}; "
+            f"allowed: {REPOSITORY_STATUSES}"
+        )
+    return status
 
 
 def atomic_write_json(path, obj):

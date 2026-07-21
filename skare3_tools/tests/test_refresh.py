@@ -6,14 +6,18 @@ Behavior pinned:
   test_results.json, repos/{owner}/{name}.json and meta/state.json, with all
   the fields the dashboard consumes plus the metapackage model
   (aca/flight/matlab/perl membership + pins, is_ska).
-- Deprecated repositories are not fetched and not in the aggregate; they are
-  listed in manifest["excluded"].
+- Repositories listed in repository_status.json ("deprecated" or "ignored")
+  are not fetched and not in the aggregate; they are listed in
+  manifest["excluded"]. The file is seeded once when missing, never
+  overwritten, and an unknown status aborts the run.
 - A second run with unchanged pushedAt/updatedAt fetches no repository detail
   (change detection via the batched last-updated query).
 - A missing metapackage aborts the run before anything is written.
 - A per-repository fetch failure keeps the previous good file in the
   aggregate and is reported in the summary.
 """
+
+import json
 
 import pytest
 
@@ -120,7 +124,13 @@ def fake_github(monkeypatch, fake_skare3_repo):
 
 @pytest.fixture()
 def clean_store(data_dir):
-    for name in ("manifest.json", "packages.json", "test_results.json"):
+    names = (
+        "manifest.json",
+        "packages.json",
+        "test_results.json",
+        "repository_status.json",
+    )
+    for name in names:
         if (data_dir / name).exists():
             (data_dir / name).unlink()
     for sub in ("repos", "meta"):
@@ -142,6 +152,12 @@ def test_full_refresh_writes_schema2_store(fake_github, clean_store):
     manifest = reader.manifest()
     assert manifest["schema_version"] == store.SCHEMA_VERSION
     assert "acisops/dpa_check" in manifest["excluded"]
+
+    # the status file was seeded and echoed into the manifest
+    seeded = store.repository_status(clean_store)
+    assert seeded == refresh.INITIAL_REPOSITORY_STATUS
+    assert seeded["sot/test-actions"] == "ignored"
+    assert manifest["repository_status"] == seeded
 
     info = reader.packages()
     # legacy top-level fields, consumed by the React dashboard
@@ -172,6 +188,29 @@ def test_full_refresh_writes_schema2_store(fake_github, clean_store):
 
     assert reader.repository_info("sot/foo")["name"] == "foo"
     assert reader.test_results()["test_suites"][0]["status"] == "pass"
+
+
+def test_status_file_is_input_not_overwritten(fake_github, clean_store):
+    operator_map = {"sot/bar": "ignored"}
+    (clean_store / "repository_status.json").write_text(json.dumps(operator_map))
+    refresh.refresh()
+
+    reader = store.StoreReader(clean_store)
+    names = {p["name"] for p in reader.packages()["packages"]}
+    # the operator's map wins: bar is out, and the seed was not applied
+    # (dpa_check would be excluded by it)
+    assert names == {"foo", "dpa_check"}
+    assert reader.manifest()["excluded"] == ["sot/bar"]
+    assert store.repository_status(clean_store) == operator_map
+
+
+def test_unknown_status_fails_loudly(fake_github, clean_store):
+    (clean_store / "repository_status.json").write_text(
+        json.dumps({"sot/foo": "deprectaed"})
+    )
+    with pytest.raises(refresh.RefreshError, match="deprectaed"):
+        refresh.refresh()
+    assert not (clean_store / "packages.json").exists()
 
 
 def test_second_run_fetches_nothing_when_unchanged(fake_github, clean_store):

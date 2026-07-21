@@ -12,7 +12,10 @@ on synced hosts, which reaches every machine through the existing ``$SKA/data``
 rsync). It holds:
 
 - ``manifest.json`` — schema version, generation time, producer identity, and
-  the repositories excluded as deprecated,
+  the excluded repositories,
+- ``repository_status.json`` — operator-edited input mapping ``owner/repo`` to
+  ``"deprecated"`` or ``"ignored"`` (both excluded from the store); seeded once
+  by the first refresh, never overwritten,
 - ``packages.json`` — the aggregate the dashboards consume,
 - ``test_results.json`` — the digested latest regression-test results,
 - ``repos/{owner}/{name}.json`` — per-repository detail,

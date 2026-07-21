@@ -3,7 +3,9 @@
 
 One run brings the store (see :mod:`skare3_tools.packages.store`) up to date:
 
-1. refresh the package list (skare3 pkg_defs + org repositories),
+1. refresh the package list (skare3 pkg_defs + org repositories), excluding
+   repositories listed in ``repository_status.json`` at the store root — an
+   operator-edited file that refresh seeds once if missing and never overwrites,
 2. snapshot the conda channels once and resolve the four metapackages
    (ska3-aca/flight/matlab/perl) — failing loudly if any can't be resolved,
 3. detect changed repositories with one batched GraphQL query and fetch
@@ -37,6 +39,19 @@ logger = logging.getLogger("skare3.refresh")
 METAPACKAGES = ("ska3-aca", "ska3-flight", "ska3-matlab", "ska3-perl")
 # metapackages whose members count as "ska packages" (perl is recorded only)
 SKA_METAPACKAGES = ("ska3-aca", "ska3-flight", "ska3-matlab")
+
+# initial repository_status.json, written only if the file does not exist;
+# after that the file is operator-edited input and refresh never writes it
+INITIAL_REPOSITORY_STATUS = {
+    "sot/skare": "deprecated",
+    "sot/test-actions": "ignored",  # workflow-testing sandbox: alive, but not a package
+    "acisops/dpa_check": "deprecated",
+    "acisops/psmc_check": "deprecated",
+    "acisops/acisfp_check": "deprecated",
+    "acisops/fep1_mong_check": "deprecated",
+    "acisops/fep1_actel_check": "deprecated",
+    "acisops/bep_pcb_check": "deprecated",
+}
 
 
 class RefreshError(Exception):
@@ -131,17 +146,30 @@ def refresh(data_dir=None, full=False, stream="ska3-masters"):
     """
     directory = Path(data_dir) if data_dir else store.store_dir()
     organizations = CONFIG["organizations"]
-    deprecated = set(CONFIG.get("deprecated_repositories", []))
 
     with store.StoreLock(directory):
+        status_file = directory / "repository_status.json"
+        if not status_file.exists():
+            store.atomic_write_json(status_file, INITIAL_REPOSITORY_STATUS)
+            logger.info(
+                "seeded %s with %d repositories",
+                status_file,
+                len(INITIAL_REPOSITORY_STATUS),
+            )
+        try:
+            repository_status = store.repository_status(directory)
+        except ValueError as exc:
+            raise RefreshError(str(exc)) from None
+        excluded = set(repository_status)
+
         state = _read_state(directory)
 
-        # the package universe: pkg_defs + org repos, minus deprecated
+        # the package universe: pkg_defs + org repos, minus excluded statuses
         pkg_list = packages.get_package_list(update=True)
         pkg_list = [
             p
             for p in pkg_list
-            if p["owner"] in organizations and p["repository"] not in deprecated
+            if p["owner"] in organizations and p["repository"] not in excluded
         ]
         repo_package_map = {p["repository"]: p["package"] for p in pkg_list}
         repo2name = {p["repository"]: p["name"] for p in pkg_list}
@@ -221,7 +249,8 @@ def refresh(data_dir=None, full=False, stream="ska3-masters"):
                 "schema_version": store.SCHEMA_VERSION,
                 "generated": info["time"],
                 "producer": _producer_id(),
-                "excluded": sorted(deprecated),
+                "excluded": sorted(excluded),
+                "repository_status": repository_status,
                 "skare3_tools_version": _version(),
             },
         )

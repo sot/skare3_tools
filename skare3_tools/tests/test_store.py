@@ -8,6 +8,8 @@ Behavior pinned:
 - StoreLock is exclusive: a second acquisition raises StoreLockedError.
 - StoreReader reads the store files and rejects a store written with a newer
   schema than this code understands.
+- repository_status returns {} when the file is absent and fails loudly on an
+  unknown status value.
 """
 
 import json
@@ -22,7 +24,13 @@ from skare3_tools.packages import store
 @pytest.fixture()
 def store_dir(data_dir):
     """A clean store root (== CONFIG['data_dir'], see conftest)."""
-    for name in ("manifest.json", "packages.json", "test_results.json"):
+    names = (
+        "manifest.json",
+        "packages.json",
+        "test_results.json",
+        "repository_status.json",
+    )
+    for name in names:
         path = data_dir / name
         if path.exists():
             path.unlink()
@@ -86,6 +94,21 @@ def test_reader_round_trip(store_dir):
 def test_reader_missing_store_raises(store_dir):
     with pytest.raises(store.StoreNotFoundError):
         store.StoreReader(store_dir)
+
+
+def test_repository_status(store_dir):
+    assert store.repository_status(store_dir) == {}
+    status = {"sot/skare": "deprecated", "sot/test-actions": "ignored"}
+    (store_dir / "repository_status.json").write_text(json.dumps(status))
+    assert store.repository_status(store_dir) == status
+
+
+def test_repository_status_rejects_unknown_status(store_dir):
+    (store_dir / "repository_status.json").write_text(
+        json.dumps({"sot/skare": "deprectaed"})
+    )
+    with pytest.raises(ValueError, match="deprectaed"):
+        store.repository_status(store_dir)
 
 
 def test_reader_rejects_newer_schema(store_dir):

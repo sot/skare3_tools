@@ -22,7 +22,7 @@ The default looks like this:
 .. code-block:: JSON
 
     {
-      "config_version": 2,
+      "config_version": 3,
       "repository": "https://github.com/sot/skare3",
       "conda_channels": {
         "masters": [
@@ -30,9 +30,6 @@ The default looks like this:
         ],
         "main": [
           "https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight"
-        ],
-        "dull": [
-          "https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight-2020.12"
         ],
         "test": [
           "https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight",
@@ -43,12 +40,13 @@ The default looks like this:
         "sot",
         "acisops"
       ],
-      "deprecated_repositories": [
-        "acisops/dpa_check"
-      ],
       "store_url": "https://cxc.cfa.harvard.edu/mta/ASPECT/skare3/dashboard",
       "data_dir": ""
     }
+
+Repository exclusions are not configuration: they live in ``repository_status.json``
+at the store root (see :mod:`skare3_tools.packages.store`), so they can change
+without a skare3_tools release.
 
 
 Cache Directory
@@ -82,10 +80,10 @@ import json
 import os
 
 # this is just a default config. This gets saved in a file which can be modified later on.
-# If the file exists, its values win, but new default keys are merged in when
-# config_version is older (see init).
+# If the file exists, its values win, but new default keys are merged in and
+# obsolete keys dropped when config_version is older (see init).
 _DEFAULT_CONFIG = {
-    "config_version": 2,
+    "config_version": 3,
     "repository": "https://github.com/sot/skare3",
     "conda_channels": {
         "masters": [
@@ -100,21 +98,14 @@ _DEFAULT_CONFIG = {
         ],
     },
     "organizations": ["sot", "acisops"],
-    # excluded from the data store and dashboards (dead repos, broken workflows)
-    "deprecated_repositories": [
-        "sot/skare",
-        "sot/test-actions",
-        "acisops/dpa_check",
-        "acisops/psmc_check",
-        "acisops/acisfp_check",
-        "acisops/fep1_mong_check",
-        "acisops/fep1_actel_check",
-        "acisops/bep_pcb_check",
-    ],
     # published data store location, for readers without a local copy
     "store_url": "https://cxc.cfa.harvard.edu/mta/ASPECT/skare3/dashboard",
     "data_dir": "",
 }
+
+# keys removed from the config in later versions; dropped on upgrade
+# (v3: deprecated_repositories moved to <data_dir>/repository_status.json)
+_OBSOLETE_KEYS = ("deprecated_repositories",)
 
 
 # behavior that must be tested:
@@ -180,6 +171,8 @@ def init(config=None, reset=False):
             merged = _DEFAULT_CONFIG.copy()
             merged.update(CONFIG)
             merged["config_version"] = _DEFAULT_CONFIG["config_version"]
+            for key in _OBSOLETE_KEYS:
+                merged.pop(key, None)
             CONFIG = merged
 
     if config is not None:
