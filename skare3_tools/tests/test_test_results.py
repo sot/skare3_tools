@@ -13,8 +13,12 @@ import json
 
 import pytest
 
-from skare3_tools import test_results as tr
-from skare3_tools.config import CONFIG
+# test_results needs cxotime, which is not pip-installable
+# (unavailable in the PR workflow environment)
+pytest.importorskip("cxotime")
+
+from skare3_tools import test_results as tr  # noqa: E402
+from skare3_tools.config import CONFIG  # noqa: E402
 
 ALL_TESTS = {
     "run_info": {
