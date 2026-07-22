@@ -17,6 +17,8 @@ skare3-release-check = "skare3_tools.scripts.skare3_release_check:main"
 skare3-test-results = "skare3_tools.test_results:main"
 skare3-github-info = "skare3_tools.packages:main"
 skare3-refresh = "skare3_tools.packages.refresh:main"
+skare3-dashboard-update = "skare3_tools.packages.dashboard_update:main"
+skare3-tasks = "skare3_tools.scripts.tasks:main"
 skare3-changes-summary = "skare3_tools.scripts.skare3_update_summary:main"
 skare3-test-report = "skare3_tools.dashboard.views.test_results:main"
 skare3-dashboard = "skare3_tools.dashboard.views.dashboard:main"
@@ -40,6 +42,7 @@ packages = ["skare3_tools", "skare3_tools.packages", "skare3_tools.scripts",
             "skare3_tools.tests"]
 
 [tool.setuptools.package-data]
+"skare3_tools" = ["task_schedules/*.cfg"]
 "skare3_tools.tests" = ["data/**"]
 "skare3_tools.dashboard" = ["static/**", "templates/*"]
 
