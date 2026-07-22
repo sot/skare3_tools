@@ -13,6 +13,8 @@ Behavior pinned:
 - The data directory is never guessed from HOME: it is SKARE3_TOOLS_DATA or
   $SKA/data/skare3/skare3_data, it must exist, and it must be writable when
   init needs to write. Each failure gets its own informative error.
+- Exception: a pending version upgrade on a read-only directory (a synced
+  host) is kept in memory, not persisted — readers must keep working there.
 """
 
 import json
@@ -74,6 +76,28 @@ def test_init_unwritable_data_dir_fails(tmp_path, monkeypatch):
             config.init()
     finally:
         tmp_path.chmod(0o700)
+
+
+def test_init_upgrade_on_readonly_dir_stays_in_memory(tmp_path, monkeypatch):
+    old = {
+        "config_version": 2,
+        "organizations": ["sot"],
+        "deprecated_repositories": ["sot/skare"],
+        "data_dir": str(tmp_path / "data"),
+    }
+    (tmp_path / "config.json").write_text(json.dumps(old))
+    tmp_path.chmod(0o500)
+    monkeypatch.setenv("SKARE3_TOOLS_DATA", str(tmp_path))
+    try:
+        config.init()
+        assert config.CONFIG["config_version"] == 3  # upgraded in memory
+        assert "deprecated_repositories" not in config.CONFIG
+        on_disk = json.loads((tmp_path / "config.json").read_text())
+        assert on_disk["config_version"] == 2  # nothing persisted
+    finally:
+        tmp_path.chmod(0o700)
+        monkeypatch.undo()
+        config.init(reset=True)
 
 
 def test_init_leaves_current_config_alone(tmp_path, monkeypatch):

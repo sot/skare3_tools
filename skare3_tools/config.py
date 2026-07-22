@@ -16,6 +16,8 @@ The configuration is saved in JSON format, in the data directory:
 The directory must already exist: it is operational data (on synced hosts it
 rides the $SKA/data sync). If it cannot be determined, does not exist, or
 needs to be written and is not writable, init fails with an error saying so.
+The one exception is a pending config-version upgrade on a read-only copy
+(e.g. a synced host): the upgraded config is kept in memory and not persisted.
 
 The default looks like this:
 
@@ -76,6 +78,7 @@ strings as values:
 """
 
 import json
+import logging
 import os
 
 # this is just a default config. This gets saved in a file which can be modified later on.
@@ -160,14 +163,21 @@ def init(config=None, reset=False):
     if config is not None:
         CONFIG.update(config)
     if config or reset or not exists or upgraded:
-        if not os.access(app_data_dir, os.W_OK):
-            raise Exception(
-                f"skare3_tools data directory is not writable: {app_data_dir}"
-            )
         if reset:
             CONFIG = _DEFAULT_CONFIG.copy()
         if "data_dir" not in CONFIG or not CONFIG["data_dir"]:
             CONFIG["data_dir"] = os.path.join(app_data_dir, "data")
+        if not os.access(app_data_dir, os.W_OK):
+            if config or reset or not exists:
+                raise Exception(
+                    f"skare3_tools data directory is not writable: {app_data_dir}"
+                )
+            # only the version upgrade needs persisting: a read-only copy
+            # (e.g. a synced host) keeps the upgraded config in memory
+            logging.getLogger("skare3.config").warning(
+                "config upgrade not persisted (%s is not writable)", app_data_dir
+            )
+            return
         if not os.path.exists(CONFIG["data_dir"]):
             os.makedirs(CONFIG["data_dir"])
         with open(config_file, "w") as f:
