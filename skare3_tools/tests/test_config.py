@@ -10,9 +10,14 @@ Behavior pinned:
   (v3 removed ``deprecated_repositories``), and the bumped version is written
   back. Without this, hosts with a pre-existing config.json would silently
   never gain new keys or shed old ones.
+- The data directory is never guessed from HOME: it is SKARE3_TOOLS_DATA or
+  $SKA/data/skare3/skare3_data, it must exist, and it must be writable when
+  init needs to write. Each failure gets its own informative error.
 """
 
 import json
+
+import pytest
 
 from skare3_tools import config
 
@@ -45,6 +50,30 @@ def test_init_upgrades_old_config(tmp_path, monkeypatch):
     finally:
         monkeypatch.undo()
         config.init(reset=True)
+
+
+def test_init_without_ska_fails(monkeypatch):
+    monkeypatch.delenv("SKARE3_TOOLS_DATA", raising=False)
+    monkeypatch.delenv("SKA", raising=False)
+    with pytest.raises(Exception, match="SKA environment variable"):
+        config.init()
+
+
+def test_init_missing_data_dir_fails(tmp_path, monkeypatch):
+    monkeypatch.setenv("SKARE3_TOOLS_DATA", str(tmp_path / "nonexistent"))
+    with pytest.raises(Exception, match="does not exist"):
+        config.init()
+
+
+def test_init_unwritable_data_dir_fails(tmp_path, monkeypatch):
+    # no config.json in the directory, so init needs to write one
+    tmp_path.chmod(0o500)
+    monkeypatch.setenv("SKARE3_TOOLS_DATA", str(tmp_path))
+    try:
+        with pytest.raises(Exception, match="not writable"):
+            config.init()
+    finally:
+        tmp_path.chmod(0o700)
 
 
 def test_init_leaves_current_config_alone(tmp_path, monkeypatch):

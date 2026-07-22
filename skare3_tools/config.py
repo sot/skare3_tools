@@ -8,14 +8,14 @@ the directory where to store cached data. This happens the first time this modul
 Normally, a user does not need to do anything except to add an environment variable with the
 standard password to conda channels called CONDA_PASSWORD.
 
-The configuration is saved in JSON format, in the location:
+The configuration is saved in JSON format, in the data directory:
 
 - specified by the SKARE3_TOOLS_DATA environmental variable,
-- or in the directory $SKA/data/skare3/skare3_data
-- or:
+- or $SKA/data/skare3/skare3_data.
 
-  - Linux/Mac OS: ~/.skare3
-  - windows: %LOCALAPPDATA%\\skare3
+The directory must already exist: it is operational data (on synced hosts it
+rides the $SKA/data sync). If it cannot be determined, does not exist, or
+needs to be written and is not writable, init fails with an error saying so.
 
 The default looks like this:
 
@@ -53,8 +53,7 @@ Cache Directory
 ---------------
 
 The cached data is stored in the same directory as the configuration, unless otherwise specified in
-the configuration itself (i.e.: one can have the config in ~/.skare3 and set 'data_dir' in this
-configuration to some other directory).
+the configuration itself (one can set 'data_dir' in the configuration to some other directory).
 
 Conda Channels
 ---------------
@@ -116,28 +115,15 @@ _OBSOLETE_KEYS = ("deprecated_repositories",)
 
 
 def _app_data_dir_():
-    home_dir = os.path.expanduser("~")
     if "SKARE3_TOOLS_DATA" in os.environ:
-        app_data_dir = os.environ["SKARE3_TOOLS_DATA"]
-    elif (
-        "SKA" in os.environ
-        and (
-            ska_data_dir := os.path.join(
-                os.environ["SKA"], "data", "skare3", "skare3_data"
-            )
-        )
-        and os.path.exists(ska_data_dir)
-    ):
-        app_data_dir = ska_data_dir
-    elif local_app_data_dir := os.getenv("LOCALAPPDATA"):
-        # this is the windows location
-        app_data_dir = os.path.join(local_app_data_dir, "skare3")
-    elif os.path.exists(home_dir) and os.access(home_dir, os.W_OK):
-        # can use this in linux and Mac OS
-        app_data_dir = os.path.join(home_dir, ".skare3")
-    else:
-        app_data_dir = None
-    return app_data_dir
+        return os.environ["SKARE3_TOOLS_DATA"]
+    if "SKA" in os.environ:
+        return os.path.join(os.environ["SKA"], "data", "skare3", "skare3_data")
+    raise Exception(
+        "Could not determine the skare3_tools data directory:\n"
+        "the SKA environment variable is not set.\n"
+        "Set SKA, or set SKARE3_TOOLS_DATA to the data directory directly."
+    )
 
 
 def init(config=None, reset=False):
@@ -152,12 +138,8 @@ def init(config=None, reset=False):
     """
     global CONFIG  # noqa: PLW0603
     app_data_dir = _app_data_dir_()
-    if app_data_dir is None:
-        raise Exception(
-            "Could not figure out the location of the skare3_tools configuration.\n"
-            "Either create the $SKA/data/skare3/skare3_data directory\n"
-            "or set the SKARE3_TOOLS_DATA environmental variable."
-        )
+    if not os.path.isdir(app_data_dir):
+        raise Exception(f"skare3_tools data directory does not exist: {app_data_dir}")
     config_file = os.path.join(app_data_dir, "config.json")
     exists = os.path.exists(config_file)
     upgraded = False
@@ -178,6 +160,10 @@ def init(config=None, reset=False):
     if config is not None:
         CONFIG.update(config)
     if config or reset or not exists or upgraded:
+        if not os.access(app_data_dir, os.W_OK):
+            raise Exception(
+                f"skare3_tools data directory is not writable: {app_data_dir}"
+            )
         if reset:
             CONFIG = _DEFAULT_CONFIG.copy()
         if "data_dir" not in CONFIG or not CONFIG["data_dir"]:
