@@ -8,21 +8,23 @@ the directory where to store cached data. This happens the first time this modul
 Normally, a user does not need to do anything except to add an environment variable with the
 standard password to conda channels called CONDA_PASSWORD.
 
-The configuration is saved in JSON format, in the location:
+The configuration is saved in JSON format, in the data directory:
 
 - specified by the SKARE3_TOOLS_DATA environmental variable,
-- or in the directory $SKA/data/skare3/skare3_data
-- or:
+- or $SKA/data/skare3/skare3_data.
 
-  - Linux/Mac OS: ~/.skare3
-  - windows: %LOCALAPPDATA%\\skare3
+The directory must already exist: it is operational data (on synced hosts it
+rides the $SKA/data sync). If it cannot be determined, does not exist, or
+needs to be written and is not writable, init fails with an error saying so.
+The one exception is a pending config-version upgrade on a read-only copy
+(e.g. a synced host): the upgraded config is kept in memory and not persisted.
 
 The default looks like this:
 
 .. code-block:: JSON
 
     {
-      "config_version": 1,
+      "config_version": 3,
       "repository": "https://github.com/sot/skare3",
       "conda_channels": {
         "masters": [
@@ -30,9 +32,6 @@ The default looks like this:
         ],
         "main": [
           "https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight"
-        ],
-        "dull": [
-          "https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight-2020.12"
         ],
         "test": [
           "https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight",
@@ -43,16 +42,20 @@ The default looks like this:
         "sot",
         "acisops"
       ],
+      "store_url": "https://cxc.cfa.harvard.edu/mta/ASPECT/skare3/dashboard",
       "data_dir": ""
     }
+
+Repository exclusions are not configuration: they live in ``repository_status.json``
+at the store root (see :mod:`skare3_tools.packages.store`), so they can change
+without a skare3_tools release.
 
 
 Cache Directory
 ---------------
 
 The cached data is stored in the same directory as the configuration, unless otherwise specified in
-the configuration itself (i.e.: one can have the config in ~/.skare3 and set 'data_dir' in this
-configuration to some other directory).
+the configuration itself (one can set 'data_dir' in the configuration to some other directory).
 
 Conda Channels
 ---------------
@@ -75,12 +78,14 @@ strings as values:
 """
 
 import json
+import logging
 import os
 
 # this is just a default config. This gets saved in a file which can be modified later on.
-# If the file exists, this will be ignored unless explicitly resetting.
+# If the file exists, its values win, but new default keys are merged in and
+# obsolete keys dropped when config_version is older (see init).
 _DEFAULT_CONFIG = {
-    "config_version": 1,
+    "config_version": 3,
     "repository": "https://github.com/sot/skare3",
     "conda_channels": {
         "masters": [
@@ -95,8 +100,14 @@ _DEFAULT_CONFIG = {
         ],
     },
     "organizations": ["sot", "acisops"],
+    # published data store location, for readers without a local copy
+    "store_url": "https://cxc.cfa.harvard.edu/mta/ASPECT/skare3/dashboard",
     "data_dir": "",
 }
+
+# keys removed from the config in later versions; dropped on upgrade
+# (v3: deprecated_repositories moved to <data_dir>/repository_status.json)
+_OBSOLETE_KEYS = ("deprecated_repositories",)
 
 
 # behavior that must be tested:
@@ -107,28 +118,15 @@ _DEFAULT_CONFIG = {
 
 
 def _app_data_dir_():
-    home_dir = os.path.expanduser("~")
     if "SKARE3_TOOLS_DATA" in os.environ:
-        app_data_dir = os.environ["SKARE3_TOOLS_DATA"]
-    elif (
-        "SKA" in os.environ
-        and (
-            ska_data_dir := os.path.join(
-                os.environ["SKA"], "data", "skare3", "skare3_data"
-            )
-        )
-        and os.path.exists(ska_data_dir)
-    ):
-        app_data_dir = ska_data_dir
-    elif local_app_data_dir := os.getenv("LOCALAPPDATA"):
-        # this is the windows location
-        app_data_dir = os.path.join(local_app_data_dir, "skare3")
-    elif os.path.exists(home_dir) and os.access(home_dir, os.W_OK):
-        # can use this in linux and Mac OS
-        app_data_dir = os.path.join(home_dir, ".skare3")
-    else:
-        app_data_dir = None
-    return app_data_dir
+        return os.environ["SKARE3_TOOLS_DATA"]
+    if "SKA" in os.environ:
+        return os.path.join(os.environ["SKA"], "data", "skare3", "skare3_data")
+    raise Exception(
+        "Could not determine the skare3_tools data directory:\n"
+        "the SKA environment variable is not set.\n"
+        "Set SKA, or set SKARE3_TOOLS_DATA to the data directory directly."
+    )
 
 
 def init(config=None, reset=False):
@@ -143,25 +141,43 @@ def init(config=None, reset=False):
     """
     global CONFIG  # noqa: PLW0603
     app_data_dir = _app_data_dir_()
-    if app_data_dir is None:
-        raise Exception(
-            "Could not figure out the location of the skare3_tools configuration.\n"
-            "Either create the $SKA/data/skare3/skare3_data directory\n"
-            "or set the SKARE3_TOOLS_DATA environmental variable."
-        )
+    if not os.path.isdir(app_data_dir):
+        raise Exception(f"skare3_tools data directory does not exist: {app_data_dir}")
     config_file = os.path.join(app_data_dir, "config.json")
     exists = os.path.exists(config_file)
+    upgraded = False
     if exists and not reset:
         with open(config_file) as f:
             CONFIG = json.load(f)
+        if CONFIG.get("config_version", 0) < _DEFAULT_CONFIG["config_version"]:
+            # merge in default keys added since the file was written
+            # (existing values win, except the version itself)
+            upgraded = True
+            merged = _DEFAULT_CONFIG.copy()
+            merged.update(CONFIG)
+            merged["config_version"] = _DEFAULT_CONFIG["config_version"]
+            for key in _OBSOLETE_KEYS:
+                merged.pop(key, None)
+            CONFIG = merged
 
     if config is not None:
         CONFIG.update(config)
-    if config or reset or not exists:
+    if config or reset or not exists or upgraded:
         if reset:
             CONFIG = _DEFAULT_CONFIG.copy()
         if "data_dir" not in CONFIG or not CONFIG["data_dir"]:
             CONFIG["data_dir"] = os.path.join(app_data_dir, "data")
+        if not os.access(app_data_dir, os.W_OK):
+            if config or reset or not exists:
+                raise Exception(
+                    f"skare3_tools data directory is not writable: {app_data_dir}"
+                )
+            # only the version upgrade needs persisting: a read-only copy
+            # (e.g. a synced host) keeps the upgraded config in memory
+            logging.getLogger("skare3.config").warning(
+                "config upgrade not persisted (%s is not writable)", app_data_dir
+            )
+            return
         if not os.path.exists(CONFIG["data_dir"]):
             os.makedirs(CONFIG["data_dir"])
         with open(config_file, "w") as f:

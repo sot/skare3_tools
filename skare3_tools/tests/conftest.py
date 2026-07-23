@@ -69,7 +69,10 @@ def fake_skare3_repo(monkeypatch, data_dir):
     if dest.exists():
         shutil.rmtree(dest)
     shutil.copytree(src, dest)
-    monkeypatch.setattr(packages, "_ensure_skare3_local_repo", lambda update=True: None)
+    # patch the defining module: packages is a subpackage re-exporting it
+    monkeypatch.setattr(
+        packages.packages, "_ensure_skare3_local_repo", lambda update=True: None
+    )
     return dest
 
 

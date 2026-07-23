@@ -11,6 +11,7 @@ SkaRE3 Tools
 
    github
    packages
+   data_service
    dash
    test_results
    scripts

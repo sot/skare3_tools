@@ -39,6 +39,7 @@ def _declared_scripts():
 # not declared in this branch's pyproject are simply never looked at.
 OPTIONAL_DEP_SCRIPTS = {
     "skare3-refresh",
+    "skare3-dashboard-update",
     "skare3-test-results",
     "skare3-test-report",
     "skare3-test-dashboard",

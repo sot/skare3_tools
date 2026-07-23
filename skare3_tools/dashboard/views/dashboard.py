@@ -1,32 +1,34 @@
 #!/usr/bin/env python
+"""
+Render the package dashboard from the data store.
+
+This view only reads (through :class:`~skare3_tools.packages.DataClient`)
+and renders: producing the data is ``skare3-refresh``'s job. Writing the
+JSON output is therefore just a copy of the store aggregate.
+"""
 
 import argparse
+import copy
 import datetime
 import json
 from pathlib import Path
 
-from skare3_tools import packages
-from skare3_tools import test_results as tr
 from skare3_tools.dashboard import get_template
+from skare3_tools.packages import DataClient
 
-package_name_map = packages.get_package_list()
 
-
-def dashboard(config=None, render=True):
+def dashboard(config=None, render=True, client=None):
     if config is None:
         config = {"static_dir": "static"}
+    if client is None:
+        client = DataClient()
 
-    exclude = ["skare"]
+    info = client.packages()
+    if not render:
+        return info
 
-    info = packages.get_repositories_info()
-    test_results = tr.get_latest(stream="ska3-masters")
-
-    repo2name = {p["repository"]: p["name"] for p in package_name_map}
-
-    info["packages"] = sorted(
-        [p for p in info["packages"] if p["name"] not in exclude],
-        key=lambda p: p["name"],
-    )
+    # cosmetic touch-up for the HTML table only: PR dates trimmed to days
+    info = copy.deepcopy(info)
     for p in info["packages"]:
         for pr in p["pull_requests"]:
             if pr["last_commit_date"] is None:
@@ -39,31 +41,6 @@ def dashboard(config=None, render=True):
                     .date()
                     .isoformat()
                 )
-        p["test_version"] = ""
-        p["test_status"] = ""
-        repo = "{owner}/{name}".format(**p)
-        if repo in repo2name:
-            package_tests = []
-            if "test_suites" in test_results:
-                package_tests = [
-                    ts
-                    for ts in test_results["test_suites"]
-                    if ts["package"] == repo2name[repo]
-                ]
-            if package_tests:
-                status = [
-                    tc["status"] for ts in package_tests for tc in ts["test_cases"]
-                ]
-                p["test_version"] = package_tests[0]["properties"]["package_version"]
-                if [s for s in status if s == "fail"]:
-                    p["test_status"] = "FAIL"
-                elif len(status) == len([s for s in status if s == "skipped"]):
-                    p["test_status"] = "SKIP"
-                else:
-                    p["test_status"] = "PASS"
-
-    if not render:
-        return info
 
     template = get_template("dashboard.html")
     return template.render(title="Skare3 Packages", info=info, config=config)
@@ -80,16 +57,26 @@ def get_parser():
         default="index.html",
         type=Path,
     )
+    parser.add_argument(
+        "--source",
+        choices=["auto", "local", "http", "github"],
+        default="auto",
+        help="Where to read the data from (default: auto)",
+    )
+    parser.add_argument(
+        "--data-dir", type=Path, help="Local store directory (with --source=local)"
+    )
     return parser
 
 
 def main():
     args = get_parser().parse_args()
+    client = DataClient(source=args.source, data_dir=args.data_dir)
     with open(args.o, "w") as out:
         if args.o.suffix == ".json":
-            json.dump(dashboard(render=False), out)
+            json.dump(dashboard(render=False, client=client), out)
         else:
-            out.write(dashboard())
+            out.write(dashboard(client=client))
 
 
 if __name__ == "__main__":
