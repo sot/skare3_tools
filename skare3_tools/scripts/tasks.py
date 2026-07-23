@@ -20,7 +20,10 @@ import sys
 from importlib import resources
 from pathlib import Path
 
-TASKS = {"dashboard": "dashboard.cfg"}
+TASKS = {
+    "dashboard": "dashboard.cfg",
+    "regression-test": "regression_test.cfg",
+}
 
 
 def ci_auth_env(path="~/.ci-auth"):
