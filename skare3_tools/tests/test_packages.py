@@ -104,3 +104,36 @@ def test_public_api_reexported():
 def test_get_repositories_info_is_deprecated():
     with pytest.warns(DeprecationWarning, match="DataClient"):
         packages.get_repositories_info(repositories=[])
+
+
+def test_channel_probe_retries_transient_timeouts(monkeypatch):
+    from skare3_tools.packages import packages as packages_module
+
+    calls = []
+
+    def flaky_get(url, timeout=None):
+        calls.append(url)
+        if len(calls) < 3:
+            raise packages_module.requests.ReadTimeout
+
+    monkeypatch.setattr(packages_module.requests, "get", flaky_get)
+    monkeypatch.setattr(packages_module.time, "sleep", lambda seconds: None)
+    assert packages_module._channel_is_reachable("https://u:p@example.org/channel")
+    assert len(calls) == 3
+
+
+def test_unreachable_channel_reported_without_credentials(monkeypatch):
+    from skare3_tools.packages import packages as packages_module
+
+    def timing_out_get(url, timeout=None):
+        raise packages_module.requests.ReadTimeout
+
+    monkeypatch.setattr(packages_module.requests, "get", timing_out_get)
+    monkeypatch.setattr(packages_module.time, "sleep", lambda seconds: None)
+    monkeypatch.setenv("CONDA_PASSWORD", "hunter2")
+    with pytest.raises(packages_module.NetworkException) as exc_info:
+        packages_module.get_conda_pkg_info(
+            "foo", conda_channel="https://ska:{CONDA_PASSWORD}@example.org/channel"
+        )
+    assert "example.org" in str(exc_info.value)
+    assert "hunter2" not in str(exc_info.value)

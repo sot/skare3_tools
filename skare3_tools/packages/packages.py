@@ -78,6 +78,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 import urllib
 import warnings
 from pathlib import Path
@@ -746,6 +747,35 @@ def _get_repository_info_v4(
     return repo_info
 
 
+def _strip_credentials(url):
+    parts = urllib.parse.urlparse(url)
+    return urllib.parse.urlunparse(parts._replace(netloc=parts.netloc.split("@")[-1]))
+
+
+def _channel_is_reachable(url, tries=4, timeout=5, wait=5):
+    """
+    Probe a channel URL, retrying transient network errors.
+
+    Read timeouts on cxc are not uncommon; give the server a few chances
+    before declaring the channel unreachable.
+    """
+    for attempt in range(1, tries + 1):
+        try:
+            requests.get(url, timeout=timeout)
+            return True
+        except (requests.Timeout, requests.ConnectionError):
+            # credentials stripped: the url embeds CONDA_PASSWORD
+            logging.getLogger("skare3").warning(
+                "channel %s not responding (attempt %d/%d)",
+                _strip_credentials(url),
+                attempt,
+                tries,
+            )
+            if attempt < tries:
+                time.sleep(wait)
+    return False
+
+
 def get_conda_pkg_info(conda_package, conda_channel=None):
     """
     Get information on a conda package.
@@ -772,26 +802,15 @@ def get_conda_pkg_info(conda_package, conda_channel=None):
     unreachable = []
     for c in conda_channels:
         try:
-            requests.get(c.format(**os.environ), timeout=2)
+            url = c.format(**os.environ)
         except KeyError as e:
-            # this clears the exception we just caugh and raises another one
+            # this clears the exception we just caught and raises another one
             raise Exception(
                 "Missing expected environmental variable: {e}".format(e=str(e))
             ) from None
-        except requests.ConnectTimeout:
-            c2 = urllib.parse.urlparse(c)
-            c2 = urllib.parse.urlunparse(
-                (
-                    c2.scheme,
-                    c2.netloc.split("@")[-1],
-                    c2.path,
-                    c2.params,
-                    c2.query,
-                    c2.fragment,
-                )
-            )
-            unreachable.append(c2)
-        cmd += ["--channel", c.format(**os.environ)]
+        if not _channel_is_reachable(url):
+            unreachable.append(_strip_credentials(url))
+        cmd += ["--channel", url]
 
     if unreachable:
         msg = "The following conda channels are not reachable:\n -"
