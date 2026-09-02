@@ -6,8 +6,11 @@ Behavior pinned:
   is readable there.
 - atomic_write_json leaves no temp file behind and replaces content whole.
 - StoreLock is exclusive: a second acquisition raises StoreLockedError.
-- StoreReader reads the store files and rejects a store written with a newer
-  schema than this code understands.
+- StoreReader rejects a store written by a *newer* schema (this code does not
+  know its layout) but reads an older one for whatever files it has, so a
+  caller can look elsewhere for just the missing ones. store_present agrees.
+- repository_entry picks one record out of the aggregate, which holds the only
+  copy, and fails loudly for an unknown repository.
 - repository_status returns {} when the file is absent and fails loudly on an
   unknown status value.
 """
@@ -27,6 +30,7 @@ def store_dir(data_dir):
     names = (
         "manifest.json",
         "packages.json",
+        "package_list.json",
         "test_results.json",
         "repository_status.json",
     )
@@ -75,20 +79,37 @@ def test_lock_is_exclusive(store_dir):
         pass
 
 
+AGGREGATE = {
+    "time": "2026-07-13T00:00:00",
+    "packages": [{"name": "kadi", "owner": "sot", "master_version": "7.1"}],
+}
+
+
 def test_reader_round_trip(store_dir):
     manifest = _write_manifest(store_dir)
+    store.atomic_write_json(store_dir / "packages.json", AGGREGATE)
     store.atomic_write_json(
-        store_dir / "packages.json", {"packages": [{"name": "kadi"}]}
+        store_dir / "package_list.json", {"package_list": [{"name": "kadi"}]}
     )
     store.atomic_write_json(store_dir / "test_results.json", {"test_suites": []})
-    store.atomic_write_json(
-        store_dir / "repos" / "sot" / "kadi.json", {"name": "kadi", "owner": "sot"}
-    )
     reader = store.StoreReader(store_dir)
     assert reader.manifest() == manifest
     assert reader.packages()["packages"][0]["name"] == "kadi"
+    assert reader.package_list() == [{"name": "kadi"}]
     assert reader.test_results() == {"test_suites": []}
-    assert reader.repository_info("sot/kadi")["owner"] == "sot"
+    # the aggregate is the only copy: a single-repository read comes from it,
+    # deployment-stage fields included
+    assert reader.repository_info("sot/kadi")["master_version"] == "7.1"
+
+
+def test_repository_entry_unknown_repository():
+    with pytest.raises(KeyError, match="sot/nope"):
+        store.repository_entry(AGGREGATE, "sot/nope")
+
+
+def test_generated_is_the_staleness_signal():
+    assert store.generated(AGGREGATE) == "2026-07-13T00:00:00"
+    assert store.generated({"packages": []}) == ""
 
 
 def test_reader_missing_store_raises(store_dir):
@@ -113,5 +134,23 @@ def test_repository_status_rejects_unknown_status(store_dir):
 
 def test_reader_rejects_newer_schema(store_dir):
     _write_manifest(store_dir, schema_version=store.SCHEMA_VERSION + 1)
-    with pytest.raises(store.StoreNotFoundError):
+    with pytest.raises(store.StoreNotFoundError, match="newer"):
         store.StoreReader(store_dir)
+
+
+def test_reader_reads_an_older_schema_for_what_it_has(store_dir):
+    """A layout change adds and removes files; the ones present are still good."""
+    _write_manifest(store_dir, schema_version=store.SCHEMA_VERSION - 1)
+    store.atomic_write_json(store_dir / "packages.json", AGGREGATE)
+    reader = store.StoreReader(store_dir)
+    assert reader.packages()["packages"][0]["name"] == "kadi"
+    # the file this layout does not have says so, per file
+    with pytest.raises(FileNotFoundError):
+        reader.package_list()
+
+
+def test_store_present_accepts_older_but_not_newer(store_dir):
+    _write_manifest(store_dir, schema_version=store.SCHEMA_VERSION - 1)
+    assert store.store_present(store_dir)
+    _write_manifest(store_dir, schema_version=store.SCHEMA_VERSION + 1)
+    assert not store.store_present(store_dir)

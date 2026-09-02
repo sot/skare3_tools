@@ -3,17 +3,25 @@
 
 One run brings the store (see :mod:`skare3_tools.packages.store`) up to date:
 
-1. refresh the package list (skare3 pkg_defs + org repositories), excluding
+1. refresh the package list (the skare3 recipes, fetched to a temporary
+   directory, plus the org repositories) into ``package_list.json``, and take
+   the working universe from it, excluding
    repositories listed in ``repository_status.json`` at the store root — an
    operator-edited file that refresh seeds once if missing and never overwrites,
 2. snapshot the conda channels once and resolve the four metapackages
    (ska3-aca/flight/matlab/perl) — failing loudly if any can't be resolved,
-3. detect changed repositories with one batched GraphQL query and fetch
-   detail only for those,
+3. detect changed repositories with one batched GraphQL query and fetch detail
+   only for those, carrying the rest over from the previous ``packages.json``
+   (the aggregate is the incremental cache as well as the output — there is no
+   second copy of a repository's record anywhere),
 4. rebuild ``packages.json`` (always — metapackage pins and channel versions
    can change without any repository push), digest the latest test results,
    and advance ``meta/state.json`` last, so an interrupted run only causes a
    refetch.
+
+If there is no readable test run, the tested versions already in the store are
+kept rather than blanked, and the run is reported as a failure: an aggregate
+claiming nothing was tested is indistinguishable from the truth once written.
 
 Authentication is entirely the github wrappers' business: a personal token
 (``GITHUB_API_TOKEN``/``GITHUB_TOKEN``) or, when ``SKARE3_GITHUB_APP_KEY`` is
@@ -163,12 +171,15 @@ def refresh(data_dir=None, full=False, stream="ska3-masters"):
         excluded = set(repository_status)
 
         state = _read_state(directory)
+        summary = {"written": [], "skipped": [], "failures": {}}
 
-        # the package universe: pkg_defs + org repos, minus excluded statuses
-        pkg_list = packages.get_package_list(update=True)
+        # the package universe: recipes + org repos, minus excluded statuses.
+        # the unfiltered list is what goes in the store: consumers resolving an
+        # old metapackage version need packages of deprecated repositories too
+        full_pkg_list, fetched_pkg_list = _package_list(directory, summary)
         pkg_list = [
             p
-            for p in pkg_list
+            for p in full_pkg_list
             if p["owner"] in organizations and p["repository"] not in excluded
         ]
         repo_package_map = {p["repository"]: p["package"] for p in pkg_list}
@@ -183,24 +194,29 @@ def refresh(data_dir=None, full=False, stream="ska3-masters"):
         # change detection: batched queries instead of per-repo round trips
         last_updated = graphql.get_last_updated(universe)
         state_repos = state.get("repos", {})
-        summary = {"written": [], "skipped": [], "failures": {}}
+        previous = _previous_records(directory)
+        records = {}
         for owner_repo in universe:
-            repo_file = _repo_file(directory, owner_repo)
+            cached = previous.get(owner_repo)
             if (
                 not full
-                and repo_file.exists()
+                and cached is not None
                 and last_updated.get(owner_repo) is not None
                 and state_repos.get(owner_repo) == last_updated[owner_repo]
             ):
+                records[owner_repo] = cached
                 summary["skipped"].append(owner_repo)
                 continue
             try:
-                info = packages._get_repository_info_v4(owner_repo)
+                records[owner_repo] = packages._get_repository_info_v4(owner_repo)
             except Exception as exc:
                 logger.error("failed to fetch %s: %s", owner_repo, exc)
                 summary["failures"][owner_repo] = str(exc)
+                if cached is not None:
+                    # keep the previous good record. state is not advanced, so
+                    # the next run retries this repository
+                    records[owner_repo] = cached
                 continue
-            store.atomic_write_json(_repo_file(directory, owner_repo), info)
             state_repos[owner_repo] = last_updated.get(owner_repo)
             summary["written"].append(owner_repo)
 
@@ -208,6 +224,14 @@ def refresh(data_dir=None, full=False, stream="ska3-masters"):
         # pins move without any repository push
         test_run = _latest_test_run(stream)
         tests = _test_summary(test_run, repo2name)
+        if not test_run:
+            # loudly: silently blanking the test status of every package looks
+            # exactly like "nothing has been tested", which is a lie the
+            # dashboard has no way to distinguish from the truth
+            summary["failures"][f"test results ({stream})"] = (
+                "no readable test run; the tested versions of every package are "
+                "left as they were"
+            )
         info = {
             "schema_version": store.SCHEMA_VERSION,
             "time": datetime.now(timezone.utc).isoformat(),
@@ -216,26 +240,53 @@ def refresh(data_dir=None, full=False, stream="ska3-masters"):
             "metapackages": {
                 name: metapackages[name]["version"] for name in METAPACKAGES
             },
+            "record_version": store.RECORD_VERSION,
+            "record_options": packages.record_options(),
             "packages": [],
         }
+        # every repository is enriched every run, including the ones skipped
+        # above: the deployment-stage fields (master/flight/matlab/aca and the
+        # test versions) move with the channels and the test runs, not with
+        # repository pushes. Do not fold this into the fetch loop -- that would
+        # freeze those fields for unchanged repositories. Reuse is safe only
+        # because every field below is assigned unconditionally -- with one
+        # deliberate exception, the test fields when there is no test run to
+        # read (see below).
         for owner_repo in universe:
-            repo_file = _repo_file(directory, owner_repo)
-            if not repo_file.exists():
+            if owner_repo not in records:
                 logger.warning("no data for %s, not in the aggregate", owner_repo)
                 continue
-            with open(repo_file) as fh:
-                pkg = json.load(fh)
+            pkg = dict(records[owner_repo])
             name = pkg["name"]
             masters_entry = conda_masters.get(name.lower())
             pkg["master_version"] = (
                 masters_entry[-1]["version"] if masters_entry else ""
             )
             pkg.update(_metapackage_fields(repo_package_map[owner_repo], metapackages))
-            pkg.update(tests.get(owner_repo, {"test_version": "", "test_status": ""}))
+            if test_run:
+                # a readable run: a package it does not mention was not tested
+                pkg.update(
+                    tests.get(owner_repo, {"test_version": "", "test_status": ""})
+                )
+            else:
+                # nothing readable to say what was tested: keep what the last
+                # run recorded rather than asserting "not tested" (reported in
+                # the summary above)
+                pkg.setdefault("test_version", "")
+                pkg.setdefault("test_status", "")
             info["packages"].append(pkg)
         info["packages"].sort(key=lambda p: p["name"])
 
         store.atomic_write_json(directory / "packages.json", info)
+        if fetched_pkg_list:
+            store.atomic_write_json(
+                directory / "package_list.json",
+                {
+                    "schema_version": store.SCHEMA_VERSION,
+                    "time": info["time"],
+                    "package_list": full_pkg_list,
+                },
+            )
         if test_run:
             from skare3_tools.dashboard.views.test_results import _get_results
 
@@ -267,9 +318,78 @@ def refresh(data_dir=None, full=False, stream="ska3-masters"):
     return summary
 
 
-def _repo_file(directory, owner_repo):
-    owner, name = owner_repo.split("/")
-    return directory / "repos" / owner / f"{name}.json"
+def _package_list(directory, summary):
+    """
+    The package universe, and whether it came from the recipes.
+
+    The recipes are the authority, but they need a network fetch. If that
+    fails, the store's own ``package_list.json`` is the parsed product of an
+    earlier fetch and stands in for them -- reported as a failure, so the run
+    is not quietly built on an older universe. With neither, there is no
+    universe and nothing worth writing.
+
+    :return: (list, bool). The package list, and True if it was just fetched.
+    """
+    try:
+        return packages._package_list_from_github(), True
+    except packages.RecipesUnavailable as exc:
+        stored = _previous_package_list(directory)
+        if stored is None:
+            raise RefreshError(f"{exc}, and the store has no package list") from None
+        logger.error("%s; falling back to the stored package list", exc)
+        summary["failures"]["package list"] = (
+            f"{exc}; used the package list already in the store"
+        )
+        return stored, False
+
+
+def _previous_package_list(directory):
+    """The package list in the store, or None if there is not one."""
+    try:
+        with open(directory / "package_list.json") as fh:
+            return json.load(fh)["package_list"]
+    except (OSError, json.JSONDecodeError, KeyError):
+        return None
+
+
+def _previous_records(directory):
+    """
+    The per-repository records of the existing aggregate, keyed "owner/name".
+
+    ``packages.json`` is both the output and the incremental cache: records of
+    repositories GitHub reports unchanged are carried over from it instead of
+    being refetched. A missing or unreadable aggregate yields {}, so everything
+    is fetched again.
+
+    What disqualifies the records is a change in their own shape -- a different
+    ``record_version`` or different ``record_options`` -- not the store's
+    layout. An aggregate written by an older ``schema_version`` is still a
+    perfectly good source of records, and refetching every repository because
+    the surrounding files moved would cost thousands of queries for nothing.
+    """
+    try:
+        with open(directory / "packages.json") as fh:
+            aggregate = json.load(fh)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    # aggregates written before the field existed carry record shape 1
+    version = aggregate.get("record_version", 1)
+    if version != store.RECORD_VERSION:
+        logger.info(
+            "aggregate holds record version %s, not %s: fetching every repository",
+            version,
+            store.RECORD_VERSION,
+        )
+        return {}
+    stored_options = aggregate.get("record_options")
+    if stored_options is not None and stored_options != packages.record_options():
+        logger.info(
+            "aggregate was made with %s, not %s: fetching every repository",
+            stored_options,
+            packages.record_options(),
+        )
+        return {}
+    return {f"{p['owner']}/{p['name']}": p for p in aggregate.get("packages", [])}
 
 
 def _producer_id():

@@ -1,12 +1,12 @@
 """
 Test bootstrap.
 
-Order matters: skare3_tools.config writes config.json at import, github.py
-creates a module-level GithubAPI at import (live GET if a token is present),
-and json_cache resolves its directory from CONFIG["data_dir"] at import.
+Order matters: skare3_tools.config writes config.json at import, and github.py
+creates a module-level GithubAPI at import (live GET if a token is present).
 So: set SKARE3_TOOLS_DATA and scrub tokens BEFORE the first skare3_tools import.
 """
 
+import contextlib
 import os
 import tempfile
 
@@ -62,17 +62,17 @@ def data_dir():
 
 
 @pytest.fixture()
-def fake_skare3_repo(monkeypatch, data_dir):
-    """Seed pkg_defs fixtures where packages.py expects the skare3 clone."""
-    src = Path(__file__).parent / "data" / "pkg_defs"
-    dest = data_dir / "skare3" / "pkg_defs"
-    if dest.exists():
-        shutil.rmtree(dest)
-    shutil.copytree(src, dest)
+def fake_skare3_repo(monkeypatch, tmp_path):
+    """Serve the pkg_defs fixtures instead of fetching the skare3 recipes."""
+    dest = tmp_path / "pkg_defs"
+    shutil.copytree(Path(__file__).parent / "data" / "pkg_defs", dest)
+
+    @contextlib.contextmanager
+    def fixture_recipes():
+        yield dest
+
     # patch the defining module: packages is a subpackage re-exporting it
-    monkeypatch.setattr(
-        packages.packages, "_ensure_skare3_local_repo", lambda update=True: None
-    )
+    monkeypatch.setattr(packages.packages, "_skare3_recipes", fixture_recipes)
     return dest
 
 

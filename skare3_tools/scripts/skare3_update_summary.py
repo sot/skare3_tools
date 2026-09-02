@@ -110,10 +110,12 @@ def repository_change_summary(
                             _clean_version(r["release_tag"]) for r in p["release_info"]
                         ]
                         if version_1 not in releases:
-                            # The default repository info looks back a limited number of releases.
-                            # If a version is missing, request a larger history
-                            # This is a hack, but the default works 99% of the time and is faster.
-                            p = packages.get_repository_info(full_name, since=100)
+                            # The stored repository info looks back a limited
+                            # number of releases. If the initial version is not
+                            # among them, ask Github for exactly the history
+                            # this summary needs: one query per release in the
+                            # range, and no more.
+                            p = packages.get_repository_info(full_name, since=version_1)
                             releases = [
                                 _clean_version(r["release_tag"])
                                 for r in p["release_info"]

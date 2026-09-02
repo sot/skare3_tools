@@ -9,13 +9,17 @@ rsync. Layout::
     <data_dir>/
     ├── manifest.json          # schema_version, generated, producer, excluded
     ├── repository_status.json # operator-edited: {owner/repo: "deprecated"|"ignored"}
-    ├── packages.json          # dashboard-compatible aggregate
+    ├── packages.json          # the per-repository records (the only copy) + channel state
+    ├── package_list.json      # the package universe (pkg_defs + org repos), unfiltered
     ├── test_results.json      # pre-digested latest test results
-    ├── repos/{owner}/{name}.json   # per-repository detail
     ├── test_logs/             # test-results runs (see test_results.py)
     └── meta/
-        ├── state.json         # producer bookkeeping (ETags, timestamps)
+        ├── state.json         # producer bookkeeping (last-updated timestamps)
         └── refresh.lock
+
+``packages.json`` holds each repository's record exactly once: there is no
+separate per-repository tree to drift out of sync with it. Single-repository
+reads pick the entry out of the aggregate (see :class:`StoreReader`).
 
 Every file is written atomically (temp file + ``os.replace``), so readers on
 rsync'd copies never see a half-written file. Readers never take the lock.
@@ -27,6 +31,7 @@ store. The first refresh seeds it if absent; after that it is never overwritten.
 
 import fcntl
 import json
+import logging
 import os
 import socket
 from datetime import datetime, timezone
@@ -34,11 +39,22 @@ from pathlib import Path
 
 from skare3_tools.config import CONFIG
 
-SCHEMA_VERSION = 2
+# the store layout: which files exist and how a reader finds things in them.
+# Bumping this makes readers of other versions decline the store.
+SCHEMA_VERSION = 3
+
+# the shape of a single repository record inside packages.json. Bump this when
+# the fields of a record change, which is what makes already-stored records
+# unusable and forces the producer to refetch them. It is deliberately separate
+# from SCHEMA_VERSION: rearranging which files the store has does not make the
+# records in it any less valid.
+RECORD_VERSION = 1
 
 # statuses an operator may assign in repository_status.json; any repo listed
 # (with either status) is excluded from the store
 REPOSITORY_STATUSES = ("deprecated", "ignored")
+
+logger = logging.getLogger("skare3.store")
 
 
 class StoreNotFoundError(Exception):
@@ -55,13 +71,20 @@ def store_dir():
 
 
 def store_present(directory=None):
-    """True if a store manifest is readable at ``directory``."""
+    """
+    True if there is a store at ``directory`` that this code can read.
+
+    A store written by a *newer* schema counts as absent: this code does not
+    know its layout. An older one counts as present -- a layout change adds and
+    removes files, so a reader takes what is there and looks elsewhere for the
+    rest.
+    """
     directory = Path(directory) if directory else store_dir()
     try:
-        _read_json(directory / "manifest.json")
+        manifest = _read_json(directory / "manifest.json")
     except (OSError, json.JSONDecodeError):
         return False
-    return True
+    return manifest.get("schema_version", 0) <= SCHEMA_VERSION
 
 
 def repository_status(directory=None):
@@ -155,6 +178,18 @@ class StoreReader:
                 f"store at {self.directory} has schema {version}, newer than "
                 f"this skare3_tools ({SCHEMA_VERSION}); update skare3_tools"
             )
+        if version < SCHEMA_VERSION:
+            # an older layout may be missing files this code reads, but the
+            # files it does have are still good: let each read decide. A
+            # missing one raises FileNotFoundError, which is what a caller
+            # needs to look elsewhere for that file alone.
+            logger.info(
+                "store at %s has schema %s, older than this skare3_tools (%s): "
+                "reading what it has",
+                self.directory,
+                version,
+                SCHEMA_VERSION,
+            )
 
     def manifest(self):
         return self._manifest
@@ -162,9 +197,39 @@ class StoreReader:
     def packages(self):
         return _read_json(self.directory / "packages.json")
 
+    def package_list(self):
+        """The package universe as ``get_package_list`` returns it (a list)."""
+        return _read_json(self.directory / "package_list.json")["package_list"]
+
     def test_results(self):
         return _read_json(self.directory / "test_results.json")
 
     def repository_info(self, owner_repo):
-        owner, name = owner_repo.split("/")
-        return _read_json(self.directory / "repos" / owner / f"{name}.json")
+        """One repository's record, taken from the aggregate (its only copy)."""
+        return repository_entry(self.packages(), owner_repo)
+
+
+def repository_entry(aggregate, owner_repo):
+    """
+    Pick one repository's record out of an aggregate (``packages.json``).
+
+    :param aggregate: dict. The parsed aggregate.
+    :param owner_repo: str. e.g. "sot/chandra_aca".
+    :raises KeyError: if the aggregate has no entry for that repository.
+    """
+    owner, name = owner_repo.split("/")
+    for pkg in aggregate["packages"]:
+        if pkg["owner"] == owner and pkg["name"] == name:
+            return pkg
+    raise KeyError(f"{owner_repo} is not in the package data")
+
+
+def generated(aggregate):
+    """
+    When the aggregate was produced (ISO string), or "" if it does not say.
+
+    This is the staleness signal available to every reader: ``manifest.json``
+    is deliberately not published, so the aggregate's own timestamp is all an
+    HTTP reader gets.
+    """
+    return aggregate.get("time", "")
