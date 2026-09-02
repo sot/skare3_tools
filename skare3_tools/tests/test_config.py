@@ -25,7 +25,7 @@ from skare3_tools import config
 
 
 def test_default_config_keys():
-    assert config._DEFAULT_CONFIG["config_version"] == 3
+    assert config._DEFAULT_CONFIG["config_version"] == 4
     assert "deprecated_repositories" not in config._DEFAULT_CONFIG
     assert config._DEFAULT_CONFIG["store_url"].startswith("https://")
 
@@ -42,13 +42,16 @@ def test_init_upgrades_old_config(tmp_path, monkeypatch):
     (tmp_path / "config.json").write_text(json.dumps(old))
     try:
         config.init()
-        assert config.CONFIG["config_version"] == 3
+        assert config.CONFIG["config_version"] == 4
         assert config.CONFIG["organizations"] == ["sot"]  # user value kept
         assert "deprecated_repositories" not in config.CONFIG  # obsolete key dropped
         assert "store_url" in config.CONFIG
         on_disk = json.loads((tmp_path / "config.json").read_text())
-        assert on_disk["config_version"] == 3  # upgrade persisted
+        assert on_disk["config_version"] == 4  # upgrade persisted
         assert "deprecated_repositories" not in on_disk  # the drop is persisted
+        # the derived location is not baked into the file (it travels with the data)
+        assert on_disk["data_dir"] == ""
+        assert config.CONFIG["data_dir"] == str(tmp_path / "data")
     finally:
         monkeypatch.undo()
         config.init(reset=True)
@@ -90,7 +93,7 @@ def test_init_upgrade_on_readonly_dir_stays_in_memory(tmp_path, monkeypatch):
     monkeypatch.setenv("SKARE3_TOOLS_DATA", str(tmp_path))
     try:
         config.init()
-        assert config.CONFIG["config_version"] == 3  # upgraded in memory
+        assert config.CONFIG["config_version"] == 4  # upgraded in memory
         assert "deprecated_repositories" not in config.CONFIG
         on_disk = json.loads((tmp_path / "config.json").read_text())
         assert on_disk["config_version"] == 2  # nothing persisted
@@ -107,6 +110,45 @@ def test_init_leaves_current_config_alone(tmp_path, monkeypatch):
     try:
         config.init()
         assert config.CONFIG == current
+    finally:
+        monkeypatch.undo()
+        config.init(reset=True)
+
+
+def test_init_ignores_a_data_dir_from_another_machine(tmp_path, monkeypatch):
+    """
+    config.json is rsynced with the store, so it can name the producer's paths.
+
+    This is exactly what a store copied from the ops machine looks like: the
+    file says /proj/sot/ska/... while SKA points somewhere else entirely.
+    """
+    monkeypatch.setenv("SKARE3_TOOLS_DATA", str(tmp_path))
+    (tmp_path / "config.json").write_text(
+        json.dumps(
+            dict(
+                config._DEFAULT_CONFIG,
+                data_dir="/proj/sot/ska/data/skare3/skare3_data/data",
+            )
+        )
+    )
+    try:
+        config.init()
+        assert config.CONFIG["data_dir"] == str(tmp_path / "data")
+    finally:
+        monkeypatch.undo()
+        config.init(reset=True)
+
+
+def test_init_keeps_a_deliberate_override_inside_the_data_root(tmp_path, monkeypatch):
+    """A store elsewhere *under* this data root is this machine's own choice."""
+    monkeypatch.setenv("SKARE3_TOOLS_DATA", str(tmp_path))
+    elsewhere = tmp_path / "somewhere_else"
+    (tmp_path / "config.json").write_text(
+        json.dumps(dict(config._DEFAULT_CONFIG, data_dir=str(elsewhere)))
+    )
+    try:
+        config.init()
+        assert config.CONFIG["data_dir"] == str(elsewhere)
     finally:
         monkeypatch.undo()
         config.init(reset=True)

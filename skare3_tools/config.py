@@ -51,11 +51,16 @@ at the store root (see :mod:`skare3_tools.packages.store`), so they can change
 without a skare3_tools release.
 
 
-Cache Directory
----------------
+Data Directory
+--------------
 
-The cached data is stored in the same directory as the configuration, unless otherwise specified in
-the configuration itself (one can set 'data_dir' in the configuration to some other directory).
+The data store lives in the ``data`` subdirectory of the configuration directory. That location is
+*derived* from the environment on every run, and stored empty in ``config.json``: the configuration
+file sits inside the store and is copied with it (the ``$SKA/data`` rsync), so a path written by the
+producing machine would otherwise follow the files onto every other machine. A ``data_dir`` found in
+the configuration that is not inside this machine's data root is ignored for that reason. To point
+skare3_tools at a different store, set ``SKARE3_TOOLS_DATA``, which does not travel with the data,
+or pass ``--data-dir`` to the commands that accept it.
 
 Conda Channels
 ---------------
@@ -85,7 +90,7 @@ import os
 # If the file exists, its values win, but new default keys are merged in and
 # obsolete keys dropped when config_version is older (see init).
 _DEFAULT_CONFIG = {
-    "config_version": 3,
+    "config_version": 4,
     "repository": "https://github.com/sot/skare3",
     "conda_channels": {
         "masters": [
@@ -129,6 +134,36 @@ def _app_data_dir_():
     )
 
 
+def _is_another_machines_data_dir(data_dir, app_data_dir):
+    """
+    Whether a configured ``data_dir`` came from a different machine.
+
+    The store's own configuration file is copied along with the store, so an
+    absolute path that is not inside this machine's data root cannot be about
+    this machine.
+    """
+    if not data_dir:
+        return False
+    root = os.path.abspath(app_data_dir)
+    path = os.path.abspath(data_dir)
+    return os.path.commonpath([root, path]) != root
+
+
+def _persistable(config, app_data_dir):
+    """
+    The configuration as it should be written out.
+
+    ``data_dir`` is stored empty when it is the default for this machine, so
+    the file stays valid wherever the store is copied. Only a deliberate
+    override -- a directory inside this data root that is not the default --
+    is written.
+    """
+    stored = dict(config)
+    if stored.get("data_dir") == os.path.join(app_data_dir, "data"):
+        stored["data_dir"] = ""
+    return stored
+
+
 def init(config=None, reset=False):
     """
     Initialize config.
@@ -160,13 +195,30 @@ def init(config=None, reset=False):
                 merged.pop(key, None)
             CONFIG = merged
 
+        if _is_another_machines_data_dir(CONFIG.get("data_dir"), app_data_dir):
+            # config.json lives *inside* the data directory and is rsynced with
+            # it, so an absolute path outside this machine's data root belongs
+            # to whichever machine produced the store. The environment decides
+            # where the data is; a per-machine override goes in
+            # SKARE3_TOOLS_DATA, which does not travel with the files.
+            logging.getLogger("skare3.config").info(
+                "ignoring data_dir '%s' from %s: not under %s",
+                CONFIG["data_dir"],
+                config_file,
+                app_data_dir,
+            )
+            CONFIG["data_dir"] = ""
+
     if config is not None:
         CONFIG.update(config)
+    if reset:
+        CONFIG = _DEFAULT_CONFIG.copy()
+    # the store location is derived, never taken on trust from a file that
+    # travels between machines. It is absolute in memory and stored empty
+    # (see _persistable), so it cannot be baked in again.
+    if not CONFIG.get("data_dir"):
+        CONFIG["data_dir"] = os.path.join(app_data_dir, "data")
     if config or reset or not exists or upgraded:
-        if reset:
-            CONFIG = _DEFAULT_CONFIG.copy()
-        if "data_dir" not in CONFIG or not CONFIG["data_dir"]:
-            CONFIG["data_dir"] = os.path.join(app_data_dir, "data")
         if not os.access(app_data_dir, os.W_OK):
             if config or reset or not exists:
                 raise Exception(
@@ -181,7 +233,7 @@ def init(config=None, reset=False):
         if not os.path.exists(CONFIG["data_dir"]):
             os.makedirs(CONFIG["data_dir"])
         with open(config_file, "w") as f:
-            json.dump(CONFIG, f, indent=2)
+            json.dump(_persistable(CONFIG, app_data_dir), f, indent=2)
 
 
 # this could be replaced by a lazy attribute in shiny
