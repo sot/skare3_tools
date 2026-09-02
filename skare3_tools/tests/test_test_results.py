@@ -7,6 +7,9 @@ Behavior pinned:
   import-time directory creation), so the producer can point it anywhere.
 - A duplicate add is refused; reading a store that was never written raises
   FileNotFoundError (callers treat that as "no results yet").
+- The index outlives the runs it references (remove_older_than prunes them, a
+  partial copy has fewer runs than entries), so a pruned run is skipped rather
+  than fatal, and get_latest reads only the newest readable run.
 """
 
 import json
@@ -81,3 +84,68 @@ def test_get_on_missing_store_raises(tmp_path, monkeypatch):
     monkeypatch.setitem(CONFIG, "data_dir", str(tmp_path / "nothing"))
     with pytest.raises(FileNotFoundError):
         tr.get()
+
+
+def _ingest(tmp_path, stream, date, package_version):
+    """Ingest one run, dated, and return its store directory."""
+    run_dir = tmp_path / f"run_{date}"
+    run_dir.mkdir()
+    run = json.loads(json.dumps(ALL_TESTS))
+    run["run_info"]["date"] = date
+    run["test_suites"][0]["properties"]["package_version"] = package_version
+    (run_dir / "all_tests.json").write_text(json.dumps(run))
+    tr.add(run_dir, stream=stream)
+    return next(
+        d
+        for d in (tmp_path / "test_logs").iterdir()
+        if d.is_dir() and date in d.name and not d.is_symlink()
+    )
+
+
+def test_get_latest_reads_only_the_newest_run(tmp_path, monkeypatch):
+    """Hundreds of indexed runs must not be parsed to answer "the latest"."""
+    monkeypatch.setitem(CONFIG, "data_dir", str(tmp_path))
+    _ingest(tmp_path, "ska3-masters", "2026-07-11T00:00:00", "1.0.0")
+    _ingest(tmp_path, "ska3-masters", "2026-07-12T00:00:00", "2.0.0")
+
+    reads = []
+    real_read = tr._read_run
+
+    def counting_read(entry):
+        reads.append(entry["destination"])
+        return real_read(entry)
+
+    monkeypatch.setattr(tr, "_read_run", counting_read)
+    latest = tr.get_latest(stream="ska3-masters")
+    version = latest["test_suites"][0]["properties"]["package_version"]
+    assert version == "2.0.0"
+    assert len(reads) == 1
+
+
+def test_get_latest_skips_a_pruned_newest_run(tmp_path, monkeypatch):
+    """A pruned run used to make this raise; now the next one down answers."""
+    monkeypatch.setitem(CONFIG, "data_dir", str(tmp_path))
+    _ingest(tmp_path, "ska3-masters", "2026-07-11T00:00:00", "1.0.0")
+    newest = _ingest(tmp_path, "ska3-masters", "2026-07-12T00:00:00", "2.0.0")
+    (newest / "all_tests.json").unlink()
+
+    latest = tr.get_latest(stream="ska3-masters")
+    assert latest["test_suites"][0]["properties"]["package_version"] == "1.0.0"
+
+
+def test_get_skips_pruned_runs(tmp_path, monkeypatch):
+    monkeypatch.setitem(CONFIG, "data_dir", str(tmp_path))
+    pruned = _ingest(tmp_path, "ska3-masters", "2026-07-11T00:00:00", "1.0.0")
+    _ingest(tmp_path, "ska3-masters", "2026-07-12T00:00:00", "2.0.0")
+    (pruned / "all_tests.json").unlink()
+
+    results = tr.get(stream="ska3-masters")
+    assert len(results) == 1
+    assert results[0]["test_suites"][0]["properties"]["package_version"] == "2.0.0"
+
+
+def test_get_latest_with_nothing_readable(tmp_path, monkeypatch):
+    monkeypatch.setitem(CONFIG, "data_dir", str(tmp_path))
+    only = _ingest(tmp_path, "ska3-masters", "2026-07-12T00:00:00", "1.0.0")
+    (only / "all_tests.json").unlink()
+    assert tr.get_latest(stream="ska3-masters") == {}

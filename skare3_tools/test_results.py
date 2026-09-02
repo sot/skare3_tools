@@ -250,9 +250,65 @@ def _ignore_unreadable(src, names):
     return [name for name in names if not os.access(os.path.join(src, name), os.R_OK)]
 
 
+def _matching_entries(stream=None, architecture=None, tag=None, system=None):
+    """The index entries matching the given filters, in index order."""
+    with open(_index_file(), "r") as f:
+        test_result_index = json.load(f)
+    return [
+        tr
+        for tr in test_result_index
+        if not (
+            (stream and stream not in tr["stream"])
+            or (architecture and architecture not in tr["architecture"])
+            or (tag and tag not in tr["tag"])
+            or (system and system not in tr["system"])
+        )
+    ]
+
+
+def _run_date(entry):
+    """
+    The run date of an index entry, taken from its directory name.
+
+    ``add`` builds the name as ``{stream}_{date}_{uid}``, so the date can be
+    read without opening the run itself. Dates are ISO-like and sort
+    lexicographically. An unrecognizable name sorts oldest.
+    """
+    name, prefix, suffix = (
+        entry["destination"],
+        entry["stream"] + "_",
+        "_" + entry["uid"],
+    )
+    if name.startswith(prefix) and name.endswith(suffix):
+        return name[len(prefix) : -len(suffix)]
+    return ""
+
+
+def _read_run(entry):
+    """
+    The test run an index entry points at, or None if it cannot be read.
+
+    The index outlives the runs it references: ``remove_older_than`` prunes
+    directories, and a partially copied store has fewer runs than entries. A
+    missing run is therefore an expected state, not an error.
+    """
+    all_test_log = _test_data_dir() / entry["destination"] / "all_tests.json"
+    try:
+        with open(all_test_log) as f:
+            run = json.load(f)
+    except (OSError, json.JSONDecodeError) as exc:
+        LOGGER.warning("skipping test run %s: %s", entry["destination"], exc)
+        return None
+    run.setdefault("run_info", {})
+    run["run_info"] = {**entry, **run["run_info"]}
+    return run
+
+
 def get(stream=None, architecture=None, tag=None, system=None):
     """
     Get all the test results for the given stream, architecture, tag and system sorted by date.
+
+    Index entries whose run is no longer on disk are skipped with a warning.
 
     :param stream: str
     :param architecture: str
@@ -260,26 +316,8 @@ def get(stream=None, architecture=None, tag=None, system=None):
     :param system: str
     :return: list
     """
-    with open(_index_file(), "r") as f:
-        test_result_index = json.load(f)
-
-    result = []
-    for tr in test_result_index:
-        if (
-            (stream and stream not in tr["stream"])
-            or (architecture and architecture not in tr["architecture"])
-            or (tag and tag not in tr["tag"])
-            or (system and system not in tr["system"])
-        ):
-            continue
-        directory = tr["destination"]
-        all_test_log = _test_data_dir() / directory / "all_tests.json"
-        with open(all_test_log) as f:
-            test_suites = json.load(f)
-            if "run_info" not in test_suites:
-                test_suites["run_info"] = {}
-            test_suites["run_info"] = {**tr, **test_suites["run_info"]}
-            result.append(test_suites)
+    entries = _matching_entries(stream, architecture, tag, system)
+    result = [run for run in (_read_run(tr) for tr in entries) if run is not None]
     return sorted(result, key=lambda r: r["run_info"]["date"])
 
 
@@ -287,15 +325,31 @@ def get_latest(stream=None, architecture=None, tag=None, system=None):
     """
     Get the latest test results for the given stream, architecture, tag and system.
 
+    Only the newest run is read. Reading every indexed run just to return one
+    is both slow (hundreds of files) and fragile: a single pruned run used to
+    make this fail entirely. Entries are tried newest first, so the answer is
+    the newest run that is actually readable, and {} if none is.
+
+    Note this is one run, not the latest result *per package*: testr run with
+    ``--include``/``--exclude`` produces runs covering only some packages, and
+    a package missing from the newest run reads as untested. That has always
+    been the behaviour here. Merging results across runs would need each one
+    to carry which run it came from and when, so that a stale pass is not
+    displayed as a current one -- without that, silently filling the gaps is
+    worse than leaving them visible.
+
     :param stream: str
     :param architecture: str
     :param tag: str
     :param system: str
     :return: dict
     """
-    test_results = get(stream=stream, architecture=architecture, tag=tag, system=system)
-    test_results = test_results[-1] if len(test_results) else {}
-    return test_results
+    entries = _matching_entries(stream, architecture, tag, system)
+    for entry in sorted(entries, key=_run_date, reverse=True):
+        run = _read_run(entry)
+        if run is not None:
+            return run
+    return {}
 
 
 def streams():
