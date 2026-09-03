@@ -73,7 +73,6 @@ of the :ref:`Configuration`, in which case one can do::
 
 """
 
-import argparse
 import contextlib
 import datetime
 import glob
@@ -1053,37 +1052,3 @@ def _repositories_info_from_github(repositories=None):
     info.update({"time": datetime.datetime.now().isoformat()})
 
     return info
-
-
-def get_parser():
-    description = """
-SkaRE3 Github information tool.
-
-This script queries Github and a few other sources to determine the status of all packages.
-"""
-
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument(
-        "-o",
-        default="repository_info.json",
-        help="Output file (default=repository_info.json)",
-    )
-    parser.add_argument(
-        "--token", help="Github token, or name of file that contains token"
-    )
-    return parser
-
-
-def main():
-    args = get_parser().parse_args()
-
-    github.init(token=args.token)
-
-    info = get_repositories_info(update=True)
-    if info:
-        with open(args.o, "w") as f:
-            json.dump(info, f, indent=2)
-
-
-if __name__ == "__main__":
-    main()

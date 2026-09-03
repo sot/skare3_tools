@@ -1,13 +1,16 @@
 """
-``skare3-refresh``: the single writer of the package-data store.
+The single writer of the package-data store.
+
+The command-line entry point is :mod:`skare3_tools.scripts.refresh`
+(``skare3-refresh``).
 
 One run brings the store (see :mod:`skare3_tools.packages.store`) up to date:
 
 1. refresh the package list (the skare3 recipes, fetched to a temporary
    directory, plus the org repositories) into ``package_list.json``, and take
-   the working universe from it, excluding
-   repositories listed in ``repository_status.json`` at the store root — an
-   operator-edited file that refresh seeds once if missing and never overwrites,
+   the working universe from it, excluding repositories listed in
+   ``repository_status.json`` at the store root — an operator-edited file that
+   refresh seeds once if missing and never overwrites,
 2. snapshot the conda channels once and resolve the four metapackages
    (ska3-aca/flight/matlab/perl) — failing loudly if any can't be resolved,
 3. detect changed repositories with one batched GraphQL query and fetch detail
@@ -29,10 +32,8 @@ set, per-organization App-77359 installation tokens minted transparently per
 request (see :mod:`skare3_tools.github.app_auth`).
 """
 
-import argparse
 import json
 import logging
-import sys
 from datetime import datetime, timezone
 from importlib import metadata
 from pathlib import Path
@@ -406,51 +407,3 @@ def _version():
         return metadata.version("skare3_tools")
     except metadata.PackageNotFoundError:
         return ""
-
-
-def get_parser():
-    parser = argparse.ArgumentParser(description=__doc__.split("\n")[1])
-    parser.add_argument(
-        "--data-dir", type=Path, help="Store directory (for scratch runs)"
-    )
-    parser.add_argument("--full", action="store_true", help="Refetch all repositories")
-    parser.add_argument("--stream", default="ska3-masters", help="Test-results stream")
-    parser.add_argument(
-        "--ingest-tests",
-        metavar="DIR",
-        type=Path,
-        help="Ingest a testr output directory before refreshing",
-    )
-    parser.add_argument("-v", "--verbose", action="store_true")
-    return parser
-
-
-def main():
-    args = get_parser().parse_args()
-    # verbosity applies to this logger only: at DEBUG level the github
-    # wrapper logs request headers, including the authorization token
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s"
-    )
-    if args.verbose:
-        logger.setLevel(logging.DEBUG)
-    if args.ingest_tests:
-        test_results.add(str(args.ingest_tests), stream=args.stream)
-    try:
-        summary = refresh(data_dir=args.data_dir, full=args.full, stream=args.stream)
-    except (RefreshError, store.StoreLockedError) as exc:
-        sys.exit(f"refresh failed: {exc}")
-    logger.info(
-        "refreshed: %s updated, %s unchanged",
-        len(summary["written"]),
-        len(summary["skipped"]),
-    )
-    if summary["failures"]:
-        sys.exit(
-            "failed to fetch:\n"
-            + "\n".join(f"  {k}: {v}" for k, v in summary["failures"].items())
-        )
-
-
-if __name__ == "__main__":
-    main()

@@ -99,8 +99,6 @@ def test_public_api_reexported():
         "record_options",
         "RecipesUnavailable",
         "NetworkException",
-        "get_parser",
-        "main",
         "_get_release_commit",  # used by github/scripts/release_merge_info.py
     ]:
         assert getattr(packages, name) is not None

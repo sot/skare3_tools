@@ -15,11 +15,9 @@ from .packages import (  # noqa: F401
     get_conda_pkg_dependencies,
     get_conda_pkg_info,
     get_package_list,
-    get_parser,
     get_repositories_info,
     get_repository_info,
     github,
-    main,
     record_options,
 )
 
