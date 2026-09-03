@@ -14,11 +14,7 @@ import json
 
 import pytest
 
-# the refresh import chain needs cxotime, which is not pip-installable
-# (unavailable in the PR workflow environment)
-pytest.importorskip("cxotime")
-
-from skare3_tools.scripts import dashboard_update  # noqa: E402
+from skare3_tools.scripts import dashboard_update
 
 
 @pytest.fixture()

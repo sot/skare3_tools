@@ -37,13 +37,9 @@ import json
 
 import pytest
 
-# the refresh import chain needs cxotime, which is not pip-installable
-# (unavailable in the PR workflow environment)
-pytest.importorskip("cxotime")
-
-from skare3_tools import test_results  # noqa: E402
-from skare3_tools.github import graphql  # noqa: E402
-from skare3_tools.packages import packages, refresh, store  # noqa: E402
+from skare3_tools import test_results
+from skare3_tools.github import graphql
+from skare3_tools.packages import packages, refresh, store
 
 V4_INFO = {
     "last_tag": "1.0.0",

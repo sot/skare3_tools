@@ -33,17 +33,11 @@ def _declared_scripts():
     }
 
 
-# These entry points import packages that are not in requirements.txt
-# (cxotime, ska_file, conda_build — conda/ska-environment deps), so they
-# are not imported in the minimal test environment. Scripts listed here but
-# not declared in this branch's pyproject are simply never looked at.
+# These entry points import packages that are not in requirements.txt, so they
+# are not imported in the minimal test environment: ska_file for the first two,
+# conda_build for the third. Scripts listed here but not declared in this
+# branch's pyproject are simply never looked at.
 OPTIONAL_DEP_SCRIPTS = {
-    "skare3-refresh",
-    "skare3-dashboard-update",
-    "skare3-test-results",
-    "skare3-test-report",
-    "skare3-test-dashboard",
-    "skare3-dashboard",
     "skare3-clone-git-repos",
     "skare3-fix-namespace-packages",
     "skare3-promote",

@@ -31,10 +31,8 @@ import logging
 import os
 import shutil
 import tempfile
+from datetime import datetime, timedelta
 from pathlib import Path
-
-from cxotime import CxoTime
-from cxotime import units as u
 
 from skare3_tools.config import CONFIG
 
@@ -91,7 +89,11 @@ def remove(uid=None, directory=None, uids=(), directories=()):
 
     for tr in rm:
         test_result_index.remove(tr)
-        shutil.rmtree(_test_data_dir() / tr["destination"])
+        # the index outlives the runs it references, so the directory can
+        # already be gone (see _read_run); the entry still goes
+        run_dir = _test_data_dir() / tr["destination"]
+        if run_dir.exists():
+            shutil.rmtree(run_dir)
 
     for drctry in directories:
         if drctry.exists():
@@ -106,18 +108,27 @@ def remove(uid=None, directory=None, uids=(), directories=()):
 
 
 def remove_older_than(days):
-    with open(_index_file(), "r") as fh:
-        test_result_index = json.load(fh)
+    """
+    Remove all the test results older than the given number of days.
 
-    for tr in test_result_index:
-        all_test_log = _test_data_dir() / tr["destination"] / "all_tests.json"
-        with open(all_test_log) as fh:
-            test_suites = json.load(fh)
-            date = CxoTime(test_suites["run_info"]["date"])
-            rm = []
-            if date < CxoTime() - days * u.day:
-                rm.append(tr["uid"])
-            remove(uids=rm)
+    The date comes from the index entry's directory name (see _run_date), so a
+    run that is no longer on disk still ages out of the index, and no run needs
+    to be read to prune it. An entry with no usable date is left alone: refusing
+    to prune is safe, deleting on a guess is not.
+    """
+    # testr writes local time, so the cutoff is local too
+    cutoff = datetime.now() - timedelta(days=days)
+
+    expired = []
+    for entry in _matching_entries():
+        date = _parse_run_date(_run_date(entry))
+        if date is None:
+            LOGGER.warning("not pruning %s: no date in its name", entry["destination"])
+        elif date < cutoff:
+            expired.append(entry["uid"])
+
+    if expired:
+        remove(uids=expired)
 
 
 def add(directory, stream, tags=(), properties=None):
@@ -282,6 +293,22 @@ def _run_date(entry):
     if name.startswith(prefix) and name.endswith(suffix):
         return name[len(prefix) : -len(suffix)]
     return ""
+
+
+# testr writes the run date as %Y:%m:%dT%H:%M:%S (testr/packages.py), which is
+# not ISO: the whole timestamp is colon-separated. ISO is accepted too, for runs
+# not written by testr.
+_RUN_DATE_FORMATS = ("%Y:%m:%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S")
+
+
+def _parse_run_date(date):
+    """The run date as a datetime, or None if it is in no format we know."""
+    for date_format in _RUN_DATE_FORMATS:
+        try:
+            return datetime.strptime(date, date_format)
+        except ValueError:
+            continue
+    return None
 
 
 def _read_run(entry):
