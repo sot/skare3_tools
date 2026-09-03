@@ -1,5 +1,5 @@
 """
-The dashboard-update publisher (skare3_tools/packages/dashboard_update.py).
+The dashboard-update publisher (skare3_tools/scripts/dashboard_update.py).
 
 Behavior pinned:
 - publish() copies every file in PUBLISHED_FILES (packages.json,
@@ -18,7 +18,7 @@ import pytest
 # (unavailable in the PR workflow environment)
 pytest.importorskip("cxotime")
 
-from skare3_tools.packages import dashboard_update  # noqa: E402
+from skare3_tools.scripts import dashboard_update  # noqa: E402
 
 
 @pytest.fixture()
