@@ -31,7 +31,7 @@ import logging
 import os
 import shutil
 import tempfile
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from skare3_tools.config import CONFIG
@@ -116,8 +116,9 @@ def remove_older_than(days):
     to be read to prune it. An entry with no usable date is left alone: refusing
     to prune is safe, deleting on a guess is not.
     """
-    # testr writes local time, so the cutoff is local too
-    cutoff = datetime.now() - timedelta(days=days)
+    # testr writes UTC (runs from before it did are off by a few hours, which a
+    # cutoff in days does not care about)
+    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
 
     expired = []
     for entry in _matching_entries():
@@ -282,8 +283,7 @@ def _run_date(entry):
     The run date of an index entry, taken from its directory name.
 
     ``add`` builds the name as ``{stream}_{date}_{uid}``, so the date can be
-    read without opening the run itself. Dates are ISO-like and sort
-    lexicographically. An unrecognizable name sorts oldest.
+    read without opening the run itself. An unrecognizable name gives "".
     """
     name, prefix, suffix = (
         entry["destination"],
@@ -295,10 +295,11 @@ def _run_date(entry):
     return ""
 
 
-# testr writes the run date as %Y:%m:%dT%H:%M:%S (testr/packages.py), which is
-# not ISO: the whole timestamp is colon-separated. ISO is accepted too, for runs
-# not written by testr.
-_RUN_DATE_FORMATS = ("%Y:%m:%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S")
+# testr writes ISO 8601. Until 2026-09 it wrote a colon-separated variant
+# (%Y:%m:%dT%H:%M:%S), which the runs already in the store still carry, so both
+# are read. The two do not sort the same way as text ("-" < ":"), which is why
+# runs are ordered by the parsed date and not by name.
+_RUN_DATE_FORMATS = ("%Y-%m-%dT%H:%M:%S", "%Y:%m:%dT%H:%M:%S")
 
 
 def _parse_run_date(date):
@@ -309,6 +310,11 @@ def _parse_run_date(date):
         except ValueError:
             continue
     return None
+
+
+def _sort_key(date):
+    """Order by parsed date, sorting anything undatable oldest."""
+    return _parse_run_date(date) or datetime.min
 
 
 def _read_run(entry):
@@ -345,7 +351,7 @@ def get(stream=None, architecture=None, tag=None, system=None):
     """
     entries = _matching_entries(stream, architecture, tag, system)
     result = [run for run in (_read_run(tr) for tr in entries) if run is not None]
-    return sorted(result, key=lambda r: r["run_info"]["date"])
+    return sorted(result, key=lambda r: _sort_key(r["run_info"]["date"]))
 
 
 def get_latest(stream=None, architecture=None, tag=None, system=None):
@@ -372,7 +378,9 @@ def get_latest(stream=None, architecture=None, tag=None, system=None):
     :return: dict
     """
     entries = _matching_entries(stream, architecture, tag, system)
-    for entry in sorted(entries, key=_run_date, reverse=True):
+    for entry in sorted(
+        entries, key=lambda entry: _sort_key(_run_date(entry)), reverse=True
+    ):
         run = _read_run(entry)
         if run is not None:
             return run

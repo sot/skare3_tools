@@ -10,9 +10,11 @@ Behavior pinned:
 - The index outlives the runs it references (remove_older_than prunes them, a
   partial copy has fewer runs than entries), so a pruned run is skipped rather
   than fatal, and get_latest reads only the newest readable run.
-- remove_older_than reads the date testr actually writes (%Y:%m:%dT%H:%M:%S,
-  the format used by the runs in the store), and prunes by index entry, so an
-  entry whose run is already gone still ages out.
+- Runs are ordered by their parsed date, so the ISO dates testr writes now and
+  the colon-separated ones it wrote before (still in the store) order together
+  -- as text they would not, since "-" sorts before ":".
+- remove_older_than prunes by index entry, so an entry whose run is already
+  gone still ages out, and an entry with no usable date is left alone.
 """
 
 import json
@@ -26,7 +28,7 @@ from skare3_tools.config import CONFIG
 
 ALL_TESTS = {
     "run_info": {
-        "date": "2026:07:12T00:00:00",
+        "date": "2026-07-12T00:00:00",
         "ska_version": "2026.5",
         "system": ["Linux"],
         "architecture": ["x86_64"],
@@ -106,8 +108,8 @@ def _ingest(tmp_path, stream, date, package_version):
 def test_get_latest_reads_only_the_newest_run(tmp_path, monkeypatch):
     """Hundreds of indexed runs must not be parsed to answer "the latest"."""
     monkeypatch.setitem(CONFIG, "data_dir", str(tmp_path))
-    _ingest(tmp_path, "ska3-masters", "2026:07:11T00:00:00", "1.0.0")
-    _ingest(tmp_path, "ska3-masters", "2026:07:12T00:00:00", "2.0.0")
+    _ingest(tmp_path, "ska3-masters", "2026-07-11T00:00:00", "1.0.0")
+    _ingest(tmp_path, "ska3-masters", "2026-07-12T00:00:00", "2.0.0")
 
     reads = []
     real_read = tr._read_run
@@ -126,8 +128,8 @@ def test_get_latest_reads_only_the_newest_run(tmp_path, monkeypatch):
 def test_get_latest_skips_a_pruned_newest_run(tmp_path, monkeypatch):
     """A pruned run used to make this raise; now the next one down answers."""
     monkeypatch.setitem(CONFIG, "data_dir", str(tmp_path))
-    _ingest(tmp_path, "ska3-masters", "2026:07:11T00:00:00", "1.0.0")
-    newest = _ingest(tmp_path, "ska3-masters", "2026:07:12T00:00:00", "2.0.0")
+    _ingest(tmp_path, "ska3-masters", "2026-07-11T00:00:00", "1.0.0")
+    newest = _ingest(tmp_path, "ska3-masters", "2026-07-12T00:00:00", "2.0.0")
     (newest / "all_tests.json").unlink()
 
     latest = tr.get_latest(stream="ska3-masters")
@@ -136,8 +138,8 @@ def test_get_latest_skips_a_pruned_newest_run(tmp_path, monkeypatch):
 
 def test_get_skips_pruned_runs(tmp_path, monkeypatch):
     monkeypatch.setitem(CONFIG, "data_dir", str(tmp_path))
-    pruned = _ingest(tmp_path, "ska3-masters", "2026:07:11T00:00:00", "1.0.0")
-    _ingest(tmp_path, "ska3-masters", "2026:07:12T00:00:00", "2.0.0")
+    pruned = _ingest(tmp_path, "ska3-masters", "2026-07-11T00:00:00", "1.0.0")
+    _ingest(tmp_path, "ska3-masters", "2026-07-12T00:00:00", "2.0.0")
     (pruned / "all_tests.json").unlink()
 
     results = tr.get(stream="ska3-masters")
@@ -147,17 +149,33 @@ def test_get_skips_pruned_runs(tmp_path, monkeypatch):
 
 def test_get_latest_with_nothing_readable(tmp_path, monkeypatch):
     monkeypatch.setitem(CONFIG, "data_dir", str(tmp_path))
-    only = _ingest(tmp_path, "ska3-masters", "2026:07:12T00:00:00", "1.0.0")
+    only = _ingest(tmp_path, "ska3-masters", "2026-07-12T00:00:00", "1.0.0")
     (only / "all_tests.json").unlink()
     assert tr.get_latest(stream="ska3-masters") == {}
 
 
+def test_runs_of_both_date_formats_order_by_date(tmp_path, monkeypatch):
+    """As text the older run sorts last, since "-" comes before ":"."""
+    monkeypatch.setitem(CONFIG, "data_dir", str(tmp_path))
+    _ingest(
+        tmp_path, "ska3-masters", "2026:07:11T00:00:00", "1.0.0"
+    )  # testr before 2026-09
+    _ingest(tmp_path, "ska3-masters", "2026-07-12T00:00:00", "2.0.0")  # testr now
+
+    results = tr.get(stream="ska3-masters")
+    versions = [r["test_suites"][0]["properties"]["package_version"] for r in results]
+    assert versions == ["1.0.0", "2.0.0"]
+
+    latest = tr.get_latest(stream="ska3-masters")
+    assert latest["test_suites"][0]["properties"]["package_version"] == "2.0.0"
+
+
 def _days_ago(days):
-    """A date as testr writes it, the given number of days in the past."""
-    return (datetime.now() - timedelta(days=days)).strftime("%Y:%m:%dT%H:%M:%S")
+    """A date in testr's format, the given number of days in the past."""
+    return (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S")
 
 
-def test_remove_older_than_prunes_by_the_testr_date(tmp_path, monkeypatch):
+def test_remove_older_than_prunes_by_date(tmp_path, monkeypatch):
     monkeypatch.setitem(CONFIG, "data_dir", str(tmp_path))
     old = _ingest(tmp_path, "ska3-masters", _days_ago(40), "1.0.0")
     recent = _ingest(tmp_path, "ska3-masters", _days_ago(2), "2.0.0")
