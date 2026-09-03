@@ -442,7 +442,7 @@ class Dict(dict):
 
 
 def get_all_nodes(
-    owner, name, path, query, query_2=None, at="", reverse=False, **kwargs
+    owner, name, path, query, *, query_2=None, at="", reverse=False, **kwargs
 ):
     if reverse:
         cursor = "startCursor"

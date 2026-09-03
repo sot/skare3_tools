@@ -312,6 +312,7 @@ class GithubAPI:
     def __call__(
         self,
         endpoint_str,
+        *,
         method="get",
         params=None,
         check=False,
