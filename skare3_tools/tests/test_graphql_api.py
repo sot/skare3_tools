@@ -6,11 +6,9 @@ Behavior pinned:
   ``{"query": ...}`` with an ``Authorization: token ...`` header.
 - ``__call__(query)`` returns the parsed JSON body.
 
-Adjust-to-reality note: the constructor *defers* the missing-token error -- with
-``token=None`` it swallows AuthException (graphql.py:367-371) so an uninitialized
-API can be created and used later. It is ``init()`` that raises AuthException when
-no token is available (graphql.py:398-404). The test pins both halves of that
-contract rather than asserting the constructor raises.
+- The constructor never accesses the network and never raises: it only resolves
+  credentials, swallowing the missing-token AuthException. It is ``init()``
+  (which checks the credentials) and the first call that raise.
 """
 
 import json
@@ -47,3 +45,17 @@ def test_graphql_no_token_raises(monkeypatch):
     # ...but init() surfaces it.
     with pytest.raises(graphql.AuthException):
         api.init(token=None)
+    # ...and so does using it.
+    with pytest.raises(graphql.AuthException):
+        api("{viewer {login}}")
+
+
+@responses.activate
+def test_creating_the_api_makes_no_requests(monkeypatch):
+    # no stub is registered: any request would raise ConnectionError. Creating
+    # the API must work offline (and with a stale token), so that importing
+    # skare3_tools does not depend on the network.
+    monkeypatch.setenv("GITHUB_API_TOKEN", "expired")
+    api = graphql.GithubAPI()
+    assert api.initialized
+    assert not responses.calls

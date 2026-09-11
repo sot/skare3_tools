@@ -8,6 +8,11 @@ given token::
     >>> from skare3_tools import github
     >>> github.init(token='c7hvg6pqi3fhqwv0wvlgp4mk9agwbqk1gxc331iz')  # this is optional
 
+Importing this module never accesses the network: credentials are only read from the
+environment, and they are checked when :func:`init` is called or when the API is used.
+A missing or stale token therefore does not stop a program that ends up not querying
+Github.
+
 .. _`authentication token`: https://docs.github.com/en/authentication
 """
 

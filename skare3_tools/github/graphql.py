@@ -74,8 +74,8 @@ import os
 
 import requests
 
+from skare3_tools.github.github import CREDENTIALS_HELP, resolve_token
 from skare3_tools.github.github import AuthException as _AuthException
-from skare3_tools.github.github import resolve_token
 
 
 class GithubException(Exception):
@@ -367,12 +367,11 @@ class GithubAPI:
         self._app_tokens = None
         self.api_url = "https://api.github.com/graphql"
         try:
-            self.init(token)
+            self._set_credentials(token)
         except _AuthException:
-            # the exception is not raised if we are creating the API with default args.
-            # An exception will be raised later, when one tries to use it.
-            if token is not None:
-                raise
+            # no credentials to be found. Creating the API is still fine: the
+            # error is raised later, when one tries to use it.
+            pass
 
     def __bool__(self):
         """
@@ -384,13 +383,12 @@ class GithubAPI:
 
     def init(self, token=None, force=True):
         """
-        Initialize the Github API.
+        Initialize the Github API and check the credentials against Github.
 
-        Credentials are tried in the same order as the REST client: token
-        argument, GITHUB_API_TOKEN, the skare3 GitHub App key, and finally
-        GITHUB_TOKEN (below App auth on purpose: in Actions it is scoped to
-        the calling repo, and it should not shadow App auth on hosts where
-        the App key is ambient).
+        Credentials are resolved as described in :meth:`_set_credentials` and
+        then checked, which requires network access. Creating a GithubAPI does
+        not check them: importing this module must work with no network and no
+        valid credentials, so a stale token only shows up when the API is used.
 
         :param token: str
         :param force: bool
@@ -399,6 +397,30 @@ class GithubAPI:
         if self.initialized and not force:
             return
 
+        self._set_credentials(token)
+        try:
+            self._check_credentials()
+        except Exception:
+            self._clear_credentials()
+            raise
+
+    def _clear_credentials(self):
+        self.headers = None
+        self._app_tokens = None
+        self.initialized = False
+
+    def _set_credentials(self, token=None):
+        """
+        Resolve the credentials to use. This does not access the network.
+
+        Credentials are tried in the same order as the REST client: token
+        argument, GITHUB_API_TOKEN, the skare3 GitHub App key, and finally
+        GITHUB_TOKEN (below App auth on purpose: in Actions it is scoped to
+        the calling repo, and it should not shadow App auth on hosts where
+        the App key is ambient).
+
+        :param token: str
+        """
         explicit_token = token is not None
         token = resolve_token(token)
         self._app_tokens = None
@@ -419,24 +441,14 @@ class GithubAPI:
                 auth_source = "token (GITHUB_TOKEN)"
                 headers = {"Authorization": f"token {os.environ['GITHUB_TOKEN']}"}
             else:
-                raise AuthException(
-                    "Bad credentials. "
-                    "Github credentials should be given as argument, "
-                    "set in the GITHUB_API_TOKEN or GITHUB_TOKEN "
-                    "environment variables, or provided by the skare3 GitHub "
-                    "App via SKARE3_GITHUB_APP_KEY"
-                )
+                raise AuthException("Bad credentials. " + CREDENTIALS_HELP)
         _logger.info("GitHub auth: %s", auth_source)
-        try:
-            self.initialized = True
-            self.headers = headers
-            response = self("{viewer {login}}")
-        except Exception:
-            self.headers = None
-            self._app_tokens = None
-            self.initialized = False
-            raise
+        self.headers = headers
+        self.initialized = True
 
+    def _check_credentials(self):
+        """Ask Github who we are, to fail early on bad credentials."""
+        response = self("{viewer {login}}")
         try:
             user = response["data"]["viewer"]["login"]
             _logger.debug(f"Github interface initialized (user={user})")
@@ -465,7 +477,10 @@ class GithubAPI:
         :return:
         """
         if not self.initialized:
-            raise Exception("GithubAPI authentication credentials are not initialized")
+            raise AuthException(
+                "GithubAPI authentication credentials are not initialized. "
+                + CREDENTIALS_HELP
+            )
 
         _headers = self.headers.copy()
         if self._app_tokens is not None:

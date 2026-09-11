@@ -104,6 +104,13 @@ class RestException(Exception):
     pass
 
 
+CREDENTIALS_HELP = (
+    "Github credentials should be given as argument, "
+    "set in the GITHUB_API_TOKEN or GITHUB_TOKEN "
+    "environment variables, or provided by the skare3 GitHub "
+    "App via SKARE3_GITHUB_APP_KEY"
+)
+
 _logger = logging.getLogger("github")
 
 
@@ -197,42 +204,19 @@ class GithubAPI:
         self.headers = None
         self._app_tokens = None
         self.api_url = "https://api.github.com"
-
-        try:
-            self.init(user, password, token)
-        except AuthException:
-            # the exception is not raised if we are creating the API with default args.
-            # An exception will be raised later, when one tries to use it.
-            if not (user is None and password is None and token is None):
-                raise
+        self._set_credentials(user, password, token)
 
     def __bool__(self):
         return self.initialized
 
     def init(self, user=None, password=None, token=None, force=True):
         """
-        Initialize the Github API.
+        Initialize the Github API and check the credentials against Github.
 
-        If no token is provided, it tries the following:
-        - look for GITHUB_API_TOKEN environmental variable
-        - use the skare3 GitHub App key if SKARE3_GITHUB_APP_KEY is set (tokens are
-          minted per organization; SKARE3_GITHUB_APP_ORG names the default organization)
-        - look for GITHUB_TOKEN environmental variable (below App auth on purpose:
-          in Actions it is scoped to the calling repo, and it should not shadow
-          App auth on hosts where the App key is ambient)
-
-        If that fails, try with user/password (deprecated)
-        If no user name is provided, it tries the following:
-
-        - look for GITHUB_USER environmental variable
-        - request in a command line prompt.
-
-        If no password is provided, it tries the following:
-
-        - look for GITHUB_PASSWORD environmental variable
-        - try getting it from the keyring (Keychain in Mac OS)
-
-        If user name or password can not be determined, an AuthException is raised.
+        Credentials are resolved as described in :meth:`_set_credentials`, and
+        then checked, which requires network access. Creating a GithubAPI does
+        not check them: importing this module must work with no network and no
+        valid credentials, so a stale token only shows up when the API is used.
 
         :param user: str (deprecated)
         :param password: str (deprecated)
@@ -243,6 +227,40 @@ class GithubAPI:
         if self.initialized and not force:
             return
 
+        self._set_credentials(user, password, token)
+        try:
+            self._check_credentials()
+        except Exception:
+            self._clear_credentials()
+            raise
+
+    def _clear_credentials(self):
+        self.auth = None
+        self.headers = None
+        self._app_tokens = None
+        self.initialized = False
+
+    def _set_credentials(self, user=None, password=None, token=None):
+        """
+        Resolve the credentials to use. This does not access the network.
+
+        If no token is provided, it tries the following:
+        - look for GITHUB_API_TOKEN environmental variable
+        - use the skare3 GitHub App key if SKARE3_GITHUB_APP_KEY is set (tokens are
+          minted per organization; SKARE3_GITHUB_APP_ORG names the default organization)
+        - look for GITHUB_TOKEN environmental variable (below App auth on purpose:
+          in Actions it is scoped to the calling repo, and it should not shadow
+          App auth on hosts where the App key is ambient)
+
+        If that fails, try with user/password (deprecated). If no user name is
+        provided, it looks for the GITHUB_USER environmental variable. If no
+        password is provided, it looks for the GITHUB_PASSWORD environmental
+        variable and then the keyring (Keychain in Mac OS).
+
+        :param user: str (deprecated)
+        :param password: str (deprecated)
+        :param token: str
+        """
         explicit_token = token is not None
         token = resolve_token(token)
 
@@ -274,35 +292,21 @@ class GithubAPI:
                 self.auth = HTTPBasicAuth(user, password)
                 self.headers = {"Accept": "application/json"}
         _logger.info("GitHub auth: %s", auth_source)
+        self.initialized = True
 
-        try:
-            self.initialized = True
-            r = self.get("")
-            if r.status_code == 401:
-                msg = r.json()["message"] + ". "
-                msg += (
-                    "Github credentials should be given as argument, "
-                    "set in the GITHUB_API_TOKEN or GITHUB_TOKEN "
-                    "environment variables, or provided by the skare3 GitHub "
-                    "App via SKARE3_GITHUB_APP_KEY"
-                )
-                raise AuthException(msg)
-            if not r.ok:
-                msg = r.json()["message"]
-                raise AuthException(msg)
+    def _check_credentials(self):
+        """Ask Github who we are, to fail early on bad credentials."""
+        r = self.get("")
+        if r.status_code == 401:
+            raise AuthException(r.json()["message"] + ". " + CREDENTIALS_HELP)
+        if not r.ok:
+            raise AuthException(r.json()["message"])
 
-            r = self("/user").json()
-            if "login" in r:
-                user = r["login"]
-                _logger.debug(f"Github interface initialized (user={user})")
-            else:
-                _logger.info(f"Github interface initialized: {r}")
-        except Exception:
-            self.auth = None
-            self.headers = None
-            self._app_tokens = None
-            self.initialized = False
-            raise
+        r = self("/user").json()
+        if "login" in r:
+            _logger.debug(f"Github interface initialized (user={r['login']})")
+        else:
+            _logger.info(f"Github interface initialized: {r}")
 
     @staticmethod
     def check(response):
@@ -322,7 +326,10 @@ class GithubAPI:
         **kwargs,
     ):
         if not self.initialized:
-            raise Exception("GithubAPI authentication credentials are not initialized")
+            raise AuthException(
+                "GithubAPI authentication credentials are not initialized. "
+                + CREDENTIALS_HELP
+            )
 
         endpoint_str = urllib.parse.urlparse(
             endpoint_str

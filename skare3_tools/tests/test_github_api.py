@@ -42,8 +42,20 @@ def test_bad_token_raises_auth_exception():
         json={"message": "Bad credentials"},
         status=401,
     )
+    api = github.GithubAPI(token="bad")  # creating the API does not check it
     with pytest.raises(github.AuthException):
-        github.GithubAPI(token="bad")
+        api.init(token="bad")
+
+
+@responses.activate
+def test_creating_the_api_makes_no_requests(monkeypatch):
+    # no stub is registered: any request would raise ConnectionError. Creating
+    # the API must work offline (and with a stale token), so that importing
+    # skare3_tools does not depend on the network.
+    monkeypatch.setenv("GITHUB_API_TOKEN", "expired")
+    api = github.GithubAPI()
+    assert api.initialized
+    assert not responses.calls
 
 
 def test_url_building(github_api):
