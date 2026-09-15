@@ -30,7 +30,8 @@ Behavior pinned:
   aggregate, is reported in the summary, and does not advance the change
   detection state, so the next run retries.
 - With no readable test run, the tested versions already in the store are kept
-  rather than blanked, and the run is reported as a failure.
+  rather than blanked (also for repositories refetched in that run), and the
+  run is reported as a failure.
 - A test that errored makes the package FAIL.
 """
 
@@ -511,3 +512,17 @@ def test_errored_tests_count_as_a_failure(fake_github, clean_store, monkeypatch)
     refresh.refresh()
     foo = store.StoreReader(clean_store).repository_info("sot/foo")
     assert foo["test_status"] == "FAIL"
+
+
+def test_unreadable_test_run_keeps_the_stored_versions_of_refetched_repos(
+    fake_github, clean_store, monkeypatch
+):
+    """A refetched record has no test fields: they come from the stored one."""
+    refresh.refresh()
+    _no_test_results(monkeypatch)
+    fake_github["v4"].clear()
+    refresh.refresh(full=True)
+    assert sorted(fake_github["v4"]) == ["sot/bar", "sot/foo"]
+    foo = store.StoreReader(clean_store).repository_info("sot/foo")
+    assert foo["test_status"] == "PASS"
+    assert foo["test_version"] == "1.0.0"

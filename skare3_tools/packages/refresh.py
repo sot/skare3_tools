@@ -249,9 +249,7 @@ def refresh(data_dir=None, full=False, stream="ska3-masters"):
         # test versions) move with the channels and the test runs, not with
         # repository pushes. Do not fold this into the fetch loop -- that would
         # freeze those fields for unchanged repositories. Reuse is safe only
-        # because every field below is assigned unconditionally -- with one
-        # deliberate exception, the test fields when there is no test run to
-        # read (see below).
+        # because every field below is assigned unconditionally.
         for owner_repo in universe:
             if owner_repo not in records:
                 logger.warning("no data for %s, not in the aggregate", owner_repo)
@@ -271,9 +269,11 @@ def refresh(data_dir=None, full=False, stream="ska3-masters"):
             else:
                 # nothing readable to say what was tested: keep what the last
                 # run recorded rather than asserting "not tested" (reported in
-                # the summary above)
-                pkg.setdefault("test_version", "")
-                pkg.setdefault("test_status", "")
+                # the summary above). They come from the stored record because
+                # a refetched one has no test fields at all
+                stored = previous.get(owner_repo, {})
+                pkg["test_version"] = stored.get("test_version", "")
+                pkg["test_status"] = stored.get("test_status", "")
             info["packages"].append(pkg)
         info["packages"].sort(key=lambda p: p["name"])
 
