@@ -63,6 +63,10 @@ INITIAL_REPOSITORY_STATUS = {
 }
 
 
+# the dashboard's spelling of test_results.summary_status
+_TEST_STATUS = {"pass": "PASS", "fail": "FAIL", "skipped": "SKIP"}
+
+
 class RefreshError(Exception):
     """The store could not be refreshed; nothing was written."""
 
@@ -105,8 +109,9 @@ def _test_summary(test_run, repo2name):
     """
     Per-repository test version/status from the latest test run.
 
-    Same logic the dashboard used to apply on the fly (PASS unless something
-    failed; SKIP when everything was skipped).
+    The status comes from the per-case statuses, not from the per-suite status
+    stored with the run: runs ingested by older versions of test_results.add()
+    carry a suite status that never says "fail".
     """
     summary = {}
     suites = test_run.get("test_suites", [])
@@ -115,15 +120,9 @@ def _test_summary(test_run, repo2name):
         if not package_tests:
             continue
         status = [tc["status"] for ts in package_tests for tc in ts["test_cases"]]
-        if any(s == "fail" for s in status):
-            test_status = "FAIL"
-        elif all(s == "skipped" for s in status):
-            test_status = "SKIP"
-        else:
-            test_status = "PASS"
         summary[repo] = {
             "test_version": package_tests[0]["properties"]["package_version"],
-            "test_status": test_status,
+            "test_status": _TEST_STATUS[test_results.summary_status(status)],
         }
     return summary
 

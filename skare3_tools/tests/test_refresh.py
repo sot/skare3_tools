@@ -31,6 +31,7 @@ Behavior pinned:
   detection state, so the next run retries.
 - With no readable test run, the tested versions already in the store are kept
   rather than blanked, and the run is reported as a failure.
+- A test that errored makes the package FAIL.
 """
 
 import json
@@ -498,3 +499,15 @@ def test_unavailable_recipes_with_no_stored_list_aborts(
     with pytest.raises(refresh.RefreshError, match="no package list"):
         refresh.refresh()
     assert not (clean_store / "packages.json").exists()
+
+
+def test_errored_tests_count_as_a_failure(fake_github, clean_store, monkeypatch):
+    """A test that errored did not pass."""
+    suite = dict(
+        TEST_RUN["test_suites"][0], test_cases=[{"status": "pass"}, {"status": "error"}]
+    )
+    run = dict(TEST_RUN, test_suites=[suite])
+    monkeypatch.setattr(test_results, "get_latest", lambda **kw: run)
+    refresh.refresh()
+    foo = store.StoreReader(clean_store).repository_info("sot/foo")
+    assert foo["test_status"] == "FAIL"

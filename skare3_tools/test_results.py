@@ -41,6 +41,31 @@ class TestResultException(Exception):
     pass
 
 
+# per-case statuses testr reports for a test that did not pass. An error means
+# the test could not run to the end (a broken fixture, a failed import), so it
+# counts as a failure.
+FAILED_STATUSES = ("fail", "error")
+
+
+def summary_status(case_statuses):
+    """
+    The status of a group of test cases: one of "pass", "fail" or "skipped".
+
+    This is the one place deciding what a test suite (or a package) passing
+    means: it fails if any case failed or errored, it is skipped if every case
+    was skipped, and it passes otherwise.
+
+    :param case_statuses: list of the per-case statuses testr reports
+        ("pass", "fail", "error" or "skipped").
+    :return: str
+    """
+    if any(s in FAILED_STATUSES for s in case_statuses):
+        return "fail"
+    if all(s == "skipped" for s in case_statuses):
+        return "skipped"
+    return "pass"
+
+
 def _test_data_dir():
     """The test-results store, resolved from the configuration at call time."""
     return Path(CONFIG["data_dir"]).absolute() / "test_logs"
@@ -193,14 +218,9 @@ def add(directory, stream, tags=(), properties=None):
         # sub-dicts only carry messages and are not present on passing cases)
         status = [tc.get("status") for tc in ts["test_cases"]]
         ts["n_skip"] = status.count("skipped")
-        ts["n_fail"] = status.count("fail") + status.count("error")
+        ts["n_fail"] = sum(status.count(s) for s in FAILED_STATUSES)
         ts["n_pass"] = status.count("pass")
-        if ts["n_skip"] == len(ts["test_cases"]):
-            ts["status"] = "skipped"
-        elif ts["n_fail"] > 0:
-            ts["status"] = "fail"
-        else:
-            ts["status"] = "pass"
+        ts["status"] = summary_status(status)
 
         ts["properties"].update(properties)
         ts["properties"]["tags"] = tags

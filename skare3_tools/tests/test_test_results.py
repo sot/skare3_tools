@@ -15,6 +15,8 @@ Behavior pinned:
   -- as text they would not, since "-" sorts before ":".
 - remove_older_than prunes by index entry, so an entry whose run is already
   gone still ages out, and an entry with no usable date is left alone.
+- summary_status is the one definition of a group of cases passing: an errored
+  case is a failure.
 """
 
 import json
@@ -212,3 +214,18 @@ def test_remove_older_than_leaves_an_undatable_entry_alone(tmp_path, monkeypatch
     tr.remove_older_than(30)
 
     assert json.loads(index_file.read_text()) == index
+
+
+@pytest.mark.parametrize(
+    ("statuses", "expected"),
+    [
+        (["pass", "skipped"], "pass"),
+        (["pass", "fail"], "fail"),
+        # an error means the test could not run to the end: it did not pass
+        (["pass", "error"], "fail"),
+        (["skipped", "error"], "fail"),
+        (["skipped", "skipped"], "skipped"),
+    ],
+)
+def test_summary_status(statuses, expected):
+    assert tr.summary_status(statuses) == expected

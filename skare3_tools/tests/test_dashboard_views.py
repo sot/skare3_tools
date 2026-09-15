@@ -131,3 +131,16 @@ def test_dashboard_render_handles_missing_test_results(tmp_path):
     store.atomic_write_json(tmp_path / "packages.json", aggregate)
     c = client.DataClient(data_dir=tmp_path)
     assert dashboard_view.dashboard(render=False, client=c) == aggregate
+
+
+def test_test_results_view_counts_errors_as_failures():
+    run = {
+        "test_suites": [
+            {"package": "foo", "test_cases": [{"status": "pass"}, {"status": "error"}]}
+        ]
+    }
+    suite = test_results_view._get_results(run, config=None, render=False)[
+        "test_suites"
+    ][0]
+    assert suite["status"] == "fail"
+    assert suite["fail"] == 1

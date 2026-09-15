@@ -7,6 +7,7 @@ from pathlib import Path
 
 from skare3_tools import dashboard
 from skare3_tools.packages import DataClient
+from skare3_tools.test_results import FAILED_STATUSES, summary_status
 
 
 def test_results(client=None):
@@ -35,18 +36,13 @@ def _get_results(tests, config, render=True):
                 tc["log"] = ts["log"]
             if tc["status"] == "pass":
                 n_pass += 1
-            elif tc["status"] == "fail":
+            elif tc["status"] in FAILED_STATUSES:
                 n_fail += 1
             elif tc["status"] == "skipped":
                 n_skipped += 1
             if "err_message" in tc:
                 tc["message"] = tc["err_message"]
-        if n_fail > 0:
-            ts["status"] = "fail"
-        elif n_pass == 0 and n_skipped > 0:
-            ts["status"] = "skipped"
-        else:
-            ts["status"] = "pass"
+        ts["status"] = summary_status([tc["status"] for tc in ts["test_cases"]])
         ts["skip"] = n_skipped
         ts["pass"] = n_pass
         ts["fail"] = n_fail
