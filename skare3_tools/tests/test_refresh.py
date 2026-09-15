@@ -33,11 +33,14 @@ Behavior pinned:
   rather than blanked (also for repositories refetched in that run), and the
   run is reported as a failure.
 - A test that errored makes the package FAIL.
+- If the conda channels or GitHub cannot be reached, the run aborts with
+  RefreshError before writing; any other error propagates as itself.
 """
 
 import json
 
 import pytest
+import requests
 
 from skare3_tools import test_results
 from skare3_tools.github import graphql
@@ -526,3 +529,48 @@ def test_unreadable_test_run_keeps_the_stored_versions_of_refetched_repos(
     foo = store.StoreReader(clean_store).repository_info("sot/foo")
     assert foo["test_status"] == "PASS"
     assert foo["test_version"] == "1.0.0"
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        requests.ConnectionError("no network"),
+        graphql.GithubException("Error: Unauthorized (401)"),
+        graphql.AuthException("GithubAPI authentication credentials are not set"),
+    ],
+)
+def test_unreachable_github_aborts_before_writing(
+    fake_github, clean_store, monkeypatch, error
+):
+    def unreachable(repos, **kwargs):
+        raise error
+
+    monkeypatch.setattr(graphql, "get_last_updated", unreachable)
+    with pytest.raises(refresh.RefreshError, match="changed repositories"):
+        refresh.refresh()
+    assert not (clean_store / "packages.json").exists()
+
+
+def test_a_bug_in_change_detection_is_not_disguised(
+    fake_github, clean_store, monkeypatch
+):
+    """Only an unreachable GitHub is a RefreshError: a bug keeps its traceback."""
+
+    def broken(repos, **kwargs):
+        raise KeyError("pushedAt")
+
+    monkeypatch.setattr(graphql, "get_last_updated", broken)
+    with pytest.raises(KeyError):
+        refresh.refresh()
+
+
+def test_unreachable_conda_channel_aborts_before_writing(
+    fake_github, clean_store, monkeypatch
+):
+    def unreachable(pattern, conda_channel=None):
+        raise packages.NetworkException("conda channels are not reachable")
+
+    monkeypatch.setattr(packages, "get_conda_pkg_info", unreachable)
+    with pytest.raises(refresh.RefreshError, match="not reachable"):
+        refresh.refresh()
+    assert not (clean_store / "packages.json").exists()

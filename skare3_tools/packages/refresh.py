@@ -26,6 +26,9 @@ If there is no readable test run, the tested versions already in the store are
 kept rather than blanked, and the run is reported as a failure: an aggregate
 claiming nothing was tested is indistinguishable from the truth once written.
 
+If the conda channels or GitHub cannot be reached at all, the run aborts with
+:class:`RefreshError` before writing anything: the store keeps the data it has.
+
 Authentication is entirely the github wrappers' business: a personal token
 (``GITHUB_API_TOKEN``/``GITHUB_TOKEN``) or, when ``SKARE3_GITHUB_APP_KEY`` is
 set, per-organization App-77359 installation tokens minted transparently per
@@ -38,9 +41,12 @@ from datetime import datetime, timezone
 from importlib import metadata
 from pathlib import Path
 
+import requests
+
 from skare3_tools import test_results
 from skare3_tools.config import CONFIG
 from skare3_tools.github import graphql
+from skare3_tools.github.github import AuthException
 from skare3_tools.packages import packages, store
 
 logger = logging.getLogger("skare3.refresh")
@@ -65,6 +71,14 @@ INITIAL_REPOSITORY_STATUS = {
 
 # the dashboard's spelling of test_results.summary_status
 _TEST_STATUS = {"pass": "PASS", "fail": "FAIL", "skipped": "SKIP"}
+
+# GitHub could not be asked: no network, or credentials that are missing or
+# refused. Anything else raised while talking to it is a bug, and propagates.
+_GITHUB_UNAVAILABLE = (
+    requests.RequestException,
+    graphql.GithubException,
+    AuthException,
+)
 
 
 class RefreshError(Exception):
@@ -187,12 +201,18 @@ def refresh(data_dir=None, full=False, stream="ska3-masters"):
         universe = sorted(repo_package_map)
 
         # one conda snapshot per channel; metapackages must resolve (loudly)
-        conda_main = packages.get_conda_pkg_info("*", conda_channel="main")
-        conda_masters = packages.get_conda_pkg_info("*", conda_channel="masters")
+        try:
+            conda_main = packages.get_conda_pkg_info("*", conda_channel="main")
+            conda_masters = packages.get_conda_pkg_info("*", conda_channel="masters")
+        except packages.NetworkException as exc:
+            raise RefreshError(str(exc)) from exc
         metapackages = resolve_metapackages(conda_main)
 
         # change detection: batched queries instead of per-repo round trips
-        last_updated = graphql.get_last_updated(universe)
+        try:
+            last_updated = graphql.get_last_updated(universe)
+        except _GITHUB_UNAVAILABLE as exc:
+            raise RefreshError(f"could not detect changed repositories: {exc}") from exc
         state_repos = state.get("repos", {})
         previous = _previous_records(directory)
         records = {}
