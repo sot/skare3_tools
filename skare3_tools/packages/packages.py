@@ -16,8 +16,9 @@ To assemble the package list, this module uses:
 - All skare3/pkg_defs/\*/meta.yaml files within the skare3 repository
 - the list of all repositories for a given list of organizations (sot, acisops)
 
-The package list is cached locally. The cache expires after one day.
-To use this module to get the package list, use :func:`~skare3_tools.packages.get_package_list`::
+The package list is produced by ``skare3-refresh`` and read from the data store, so getting it
+needs neither a Github token nor a conda query. To use this module to get the package list, use
+:func:`~skare3_tools.packages.get_package_list`::
 
     >>> from skare3_tools import packages
     >>> pkgs = packages.get_package_list()
@@ -30,10 +31,13 @@ To use this module to get the package list, use :func:`~skare3_tools.packages.ge
 Package Info
 ------------
 
-Some information about each package is cached locally. The cache expires whenever there is an
-"update" or a "push" to the associated Github repository. The information includes information such
-as the number of open pull requests, number of branches. It also includes versions available in
-conda channels.
+Information about each package is read from the data store, which ``skare3-refresh`` rebuilds
+hourly (see :mod:`skare3_tools.packages.store`). It includes information such as the number of open
+pull requests and the number of branches, and the versions installed at each deployment stage
+(``master_version``, ``flight``, ``matlab``, ``aca`` and the tested version).
+
+Passing ``update=True``, or any argument the store does not hold (such as a different ``since``),
+queries Github directly instead. That needs a token, and is much slower.
 
 To get the current information associated with a package using
 :func:`~skare3_tools.packages.get_repository_info`::
@@ -69,15 +73,20 @@ of the :ref:`Configuration`, in which case one can do::
 
 """
 
-import argparse
+import contextlib
 import datetime
 import glob
+import inspect
+import io
 import json
 import logging
 import os
 import re
 import subprocess
 import sys
+import tarfile
+import tempfile
+import time
 import urllib
 from pathlib import Path
 
@@ -94,6 +103,31 @@ class NetworkException(Exception):
     pass
 
 
+class RecipesUnavailable(Exception):
+    """The skare3 recipes, which define the package universe, could not be fetched."""
+
+
+_DEFAULT_CLIENT = None
+
+
+def _data_client():
+    """
+    The process-wide default reader for the data store.
+
+    One client is reused so repeated calls do not re-read -- or re-fetch over
+    HTTP -- the whole aggregate. It remembers what it read, so a long-lived
+    process that wants fresh data should build its own
+    :class:`~skare3_tools.packages.DataClient`.
+    """
+    global _DEFAULT_CLIENT  # noqa: PLW0603
+    if _DEFAULT_CLIENT is None:
+        # local import: client.py builds on this module
+        from skare3_tools.packages.client import DataClient
+
+        _DEFAULT_CLIENT = DataClient()
+    return _DEFAULT_CLIENT
+
+
 def dir_access_ok(path):
     """
     Returns true if the given path has write access or can be created.
@@ -107,140 +141,66 @@ def dir_access_ok(path):
     return False
 
 
-def json_cache(name, directory="", ignore=None, expires=None, update_policy=None):
-    r"""
-    Decorator to cache function results in json format.
-
-    This decorator adds an 'update' argument to decorated functions. update is False by default,
-    but one can set it to True to force-update the cache entry.
-
-    Data is saved in json files. The file names can include a special separator character to denote
-    the function arguments. Currently that character is ':'.
-
-    :param name:
-    :param directory: str
-        path where to save json file. Either absolute or relative to CONFIG['data_dir']
-    :param ignore: list
-        list of argument names to ignore in the cache entry identifier
-    :param expires: dict
-        a dictionary that can be given to datetime.timedelta(\*\*expires)
-        If the cache entry is older than this interval, it is updated.
-    :param update_policy: callable
-        A callable taking two arguments: (filename, result), which returns True if the cache entry
-        should be updated.
-    :return:
+@contextlib.contextmanager
+def _skare3_recipes():
     """
-    import inspect
-    from functools import wraps
+    The skare3 ``pkg_defs`` directory, fetched into a temporary directory.
 
-    directory = os.path.normpath(os.path.join(CONFIG["data_dir"], directory))
-    if not ignore:
-        ignore = []
-    if expires:
-        expires = datetime.timedelta(**expires)
+    The recipes define the package universe, and they are read once per run.
+    They used to live in a git checkout inside the data directory, which meant
+    a working tree in shared, rsynced storage: it could go stale, be clobbered
+    by anything else writing there, and a caller without write access to it
+    would silently ``git pull`` into nothing and carry on with whatever
+    happened to be on disk.
 
-    def decorator_cache(func, ignore_args=ignore, expiration=expires, name=name):
-        signature = inspect.signature(func)
-        name += "::"
+    A tarball of the default branch is one request and leaves nothing behind,
+    so every run reads a defined state and a failure to fetch is unmistakable.
 
-        @wraps(func)
-        def wrapper(*args, update=False, **kwargs):
-            s_args = signature.bind(*args, **kwargs).arguments
-            arg_str = "-".join(
-                [
-                    "{a}:{v}".format(a=a, v=s_args[a])
-                    for a in s_args
-                    if a not in ignore_args
-                ]
+    :yield: Path. The pkg_defs directory.
+    :raises RecipesUnavailable: if the recipes cannot be fetched or unpacked.
+    """
+    owner_repo = urllib.parse.urlparse(CONFIG["repository"]).path.strip("/")
+    with tempfile.TemporaryDirectory(prefix="skare3-recipes-") as tmp:
+        # no ref in the path: the API resolves the repository's default branch
+        try:
+            response = github.GITHUB_API_V3.get(f"/repos/{owner_repo}/tarball")
+        except Exception as exc:
+            # unreachable, unauthenticated, rate-limited: from here they are one
+            # condition, "the recipes are not available", and the caller needs
+            # to hear about it rather than get a traceback
+            raise RecipesUnavailable(
+                f"cannot fetch the {owner_repo} recipes: {exc}"
+            ) from exc
+        if not response.ok:
+            raise RecipesUnavailable(
+                f"cannot fetch the {owner_repo} recipes: "
+                f"{response.reason} ({response.status_code})"
             )
-            filename = "{name}{arg_str}.json".format(name=name, arg_str=arg_str)
-            # in an ideal world, filename would be completely sanitized... this world is not ideal.
-            filename = filename.replace(os.sep, "-")
-            filename = os.path.join(directory, filename)
-            if expiration is not None and os.path.exists(filename):
-                m_time = datetime.datetime.fromtimestamp(os.path.getmtime(filename))
-                update = update or (datetime.datetime.now() - m_time > expiration)
-            result = None
-            if os.path.exists(filename):
-                with open(filename) as file:
-                    result = json.load(file)
-            if update_policy is not None and result is not None:
-                update = update or update_policy(filename, result)
-            if not dir_access_ok(filename):
-                logging.getLogger("skare3").debug(
-                    f"No write access to cache file {filename}"
-                )
-                update = False
-            if result is None or update:
-                result = func(*args, **kwargs)
-                if update:
-                    directory_out = os.path.dirname(filename)
-                    if not os.path.exists(directory_out):
-                        os.makedirs(directory_out)
-                    with open(filename, "w") as file:
-                        json.dump(result, file)
-            return result
-
-        def clear_cache():
-            files = os.path.join(directory, "{name}*.json".format(name=name))
-            files = glob.glob(files)
-            if files:
-                subprocess.run(["rm"] + files, check=False)
-
-        wrapper.clear_cache = clear_cache
-
-        sig = inspect.signature(func)
-
-        def rm_cache_entry(*args, s=sig, **kwargs):
-            s_args = s.bind(*args, **kwargs).arguments
-            arg_str = "-".join(
-                [
-                    "{a}:{v}".format(a=a, v=s_args[a])
-                    for a in s_args
-                    if a not in ignore_args
-                ]
+        try:
+            with tarfile.open(fileobj=io.BytesIO(response.content), mode="r:gz") as tar:
+                tar.extractall(tmp, filter="data")
+        except (tarfile.TarError, OSError) as exc:
+            raise RecipesUnavailable(
+                f"cannot unpack the {owner_repo} recipes: {exc}"
+            ) from exc
+        # the tarball holds a single top-level directory, {owner}-{repo}-{sha}
+        roots = [path for path in Path(tmp).iterdir() if path.is_dir()]
+        recipes = roots[0] / "pkg_defs" if len(roots) == 1 else None
+        if recipes is None or not recipes.is_dir():
+            raise RecipesUnavailable(
+                f"the {owner_repo} tarball has no pkg_defs directory"
             )
-            filename = os.path.join(
-                directory, "{name}{arg_str}.json".format(name=name, arg_str=arg_str)
-            )
-            if os.path.exists(filename):
-                os.remove(filename)
-
-        wrapper.rm_cache_entry = rm_cache_entry
-        return wrapper
-
-    return decorator_cache
+        yield recipes
 
 
-def _ensure_skare3_local_repo(update=True):
-    repo_dir = os.path.join(CONFIG["data_dir"], "skare3")
-    parent = os.path.dirname(repo_dir)
-    if not os.path.exists(parent):
-        os.makedirs(parent)
-    if not os.path.exists(repo_dir):
-        _ = subprocess.run(
-            ["git", "clone", "https://github.com/sot/skare3", repo_dir],
-            cwd=CONFIG["data_dir"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-        )
-    elif update:
-        _ = subprocess.run(
-            ["git", "pull"],
-            cwd=repo_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-        )
-    assert os.path.exists(repo_dir)
+def _conda_package_list():
+    """The packages the skare3 recipes define."""
+    with _skare3_recipes() as recipes:
+        all_meta = sorted(glob.glob(os.path.join(recipes, "*", "meta.yaml")))
+        return _parse_recipes(all_meta)
 
 
-def _conda_package_list(update=True):
-    _ensure_skare3_local_repo(update)
-    all_meta = glob.glob(
-        os.path.join(CONFIG["data_dir"], "skare3", "pkg_defs", "*", "meta.yaml")
-    )
+def _parse_recipes(all_meta):
     all_info = []
     for f in all_meta:
         macro = "{% macro compiler(arg) %}{% endmacro %}\n"
@@ -285,13 +245,16 @@ def _conda_package_list(update=True):
     return all_info
 
 
-@json_cache("pkg_name_map", expires={"days": 1})
-def get_package_list():
+def _package_list_from_github():
     """
-    Return a list of dictionaries, one per package.
+    Assemble the package list from the skare3 recipes and the organizations.
 
-    :return: dict
-        Dictionary contains only basic information
+    This is the producer-side function: it pulls the local skare3 clone and
+    lists the organizations' repositories. Readers should use
+    :func:`get_package_list`, which reads the store.
+
+    :return: list of dict
+        Each dictionary contains only basic information.
     """
     all_packages = _conda_package_list()
     full_names = [p["repository"] for p in all_packages]
@@ -313,6 +276,24 @@ def get_package_list():
         key=lambda p: (str(p["repository"]) if p["repository"] else "", p["name"]),
     )
     return all_packages
+
+
+def get_package_list(update=False):
+    """
+    Return a list of dictionaries, one per package.
+
+    Read from the data store, which needs neither a Github token nor a conda
+    query. ``update=True`` assembles the list from the skare3 recipes and the
+    organizations instead.
+
+    :param update: bool
+        Assemble the list from Github instead of reading the store.
+    :return: list of dict
+        Each dictionary contains only basic information.
+    """
+    if update:
+        return _package_list_from_github()
+    return _data_client().package_list()
 
 
 def _get_tag_target(tag):
@@ -461,7 +442,7 @@ class Dict(dict):
 
 
 def get_all_nodes(
-    owner, name, path, query, query_2=None, at="", reverse=False, **kwargs
+    owner, name, path, query, *, query_2=None, at="", reverse=False, **kwargs
 ):
     if reverse:
         cursor = "startCursor"
@@ -745,6 +726,35 @@ def _get_repository_info_v4(
     return repo_info
 
 
+def _strip_credentials(url):
+    parts = urllib.parse.urlparse(url)
+    return urllib.parse.urlunparse(parts._replace(netloc=parts.netloc.split("@")[-1]))
+
+
+def _channel_is_reachable(url, tries=4, timeout=5, wait=5):
+    """
+    Probe a channel URL, retrying transient network errors.
+
+    Read timeouts on cxc are not uncommon; give the server a few chances
+    before declaring the channel unreachable.
+    """
+    for attempt in range(1, tries + 1):
+        try:
+            requests.get(url, timeout=timeout)
+            return True
+        except (requests.Timeout, requests.ConnectionError):
+            # credentials stripped: the url embeds CONDA_PASSWORD
+            logging.getLogger("skare3").warning(
+                "channel %s not responding (attempt %d/%d)",
+                _strip_credentials(url),
+                attempt,
+                tries,
+            )
+            if attempt < tries:
+                time.sleep(wait)
+    return False
+
+
 def get_conda_pkg_info(conda_package, conda_channel=None):
     """
     Get information on a conda package.
@@ -771,26 +781,15 @@ def get_conda_pkg_info(conda_package, conda_channel=None):
     unreachable = []
     for c in conda_channels:
         try:
-            requests.get(c.format(**os.environ), timeout=2)
+            url = c.format(**os.environ)
         except KeyError as e:
-            # this clears the exception we just caugh and raises another one
+            # this clears the exception we just caught and raises another one
             raise Exception(
                 "Missing expected environmental variable: {e}".format(e=str(e))
             ) from None
-        except requests.ConnectTimeout:
-            c2 = urllib.parse.urlparse(c)
-            c2 = urllib.parse.urlunparse(
-                (
-                    c2.scheme,
-                    c2.netloc.split("@")[-1],
-                    c2.path,
-                    c2.params,
-                    c2.query,
-                    c2.fragment,
-                )
-            )
-            unreachable.append(c2)
-        cmd += ["--channel", c.format(**os.environ)]
+        if not _channel_is_reachable(url):
+            unreachable.append(_strip_credentials(url))
+        cmd += ["--channel", url]
 
     if unreachable:
         msg = "The following conda channels are not reachable:\n -"
@@ -874,53 +873,42 @@ def _get_release_commit(repository, release_name):
     return obj
 
 
-_LAST_UPDATED_QUERY = jinja2.Template(
-    """
-{
-  repository(name: "{{ name }}", owner: "{{ owner }}") {
-    pushedAt
-    updatedAt
-    name
-    owner  {
-      id
-    }
-  }
+# derived from the signature, at import, so it cannot drift from it (and so a
+# test that fakes out _get_repository_info_v4 does not change what is recorded)
+_RECORD_OPTIONS = {
+    name: param.default
+    for name, param in inspect.signature(_get_repository_info_v4).parameters.items()
+    if param.default is not inspect.Parameter.empty
 }
-"""
-)
 
 
-def repository_info_is_outdated(_, pkg_info):
+def record_options():
     """
-    Cache update policy that returns True if the Github repository has been updated or pushed into.
+    The arguments the records in the data store are produced with.
 
-    If the calling user has not write access to the cache directory, this function returns False,
-    unless SKARE3_REPO_INFO_LATEST is set to "True".
+    ``skare3-refresh`` records these in the aggregate, and
+    :func:`get_repository_info` compares its arguments against the *recorded*
+    ones to decide whether the store can answer.
 
-    :param _:
-    :param pkg_info: dict. As returned from :func:`~skare3_tools.packages.get_repository_info`.
-    :return:
+    :return: dict
     """
-    update = os.environ.get("SKARE3_REPO_INFO_LATEST", "").lower() in ["true", "1"]
-    if not dir_access_ok(CONFIG["data_dir"]) and not update:
-        return False
-    result = github.GITHUB_API_V4(
-        _LAST_UPDATED_QUERY.render(**pkg_info), org=pkg_info["owner"]
-    )
-    result = result["data"]["repository"]
-    outdated = (
-        pkg_info["pushed_at"] < result["pushedAt"]
-        or pkg_info["updated_at"] < result["updatedAt"]
-    )
-    return outdated
+    return dict(_RECORD_OPTIONS)
 
 
-def get_repository_info(owner_repo, **kwargs):
+def get_repository_info(owner_repo, update=False, **kwargs):
     """
-    Get information about a Github repository
+    Get information about a Github repository.
+
+    By default this reads the data store, which needs no Github token (see
+    :class:`~skare3_tools.packages.DataClient`). The store holds one rendering
+    of each repository, so any argument asking for something else -- a
+    different ``since``, for instance -- queries Github instead, as does
+    ``update=True``.
 
     :param owner_repo: str
         the name of the repository, including owner, something like 'sot/skare3'.
+    :param update: bool
+        Query Github directly instead of reading the store.
     :param since: int or str
         the maximum number of releases to look back, or the release tag to look back to
         (not inclusive).
@@ -930,19 +918,35 @@ def get_repository_info(owner_repo, **kwargs):
         It is for backward compatibility with the dashboard.
     :param include_commits: bool
         whether to include commits in release_info.
-    :param update: bool
-        Force update of the cached info. By default updates only if pushed_at or updated_at change.
-    :return:
+    :return: dict
     """
-    return _get_repository_info(owner_repo, **kwargs)
+    if update:
+        return _repository_info_from_github(owner_repo, **kwargs)
+    client = _data_client()
+    if kwargs and not _store_holds(client.packages(), kwargs):
+        return _repository_info_from_github(owner_repo, **kwargs)
+    return client.repository_info(owner_repo)
 
 
-@json_cache(
-    "pkg_repository_info",
-    directory="pkg_info",
-    update_policy=repository_info_is_outdated,
-)
-def _get_repository_info(owner_repo, **kwargs):
+_MISSING = object()
+
+
+def _store_holds(aggregate, kwargs):
+    """
+    Whether the store's records were made with these arguments.
+
+    Compared against the options the *aggregate* records, not this module's
+    defaults: if refresh ever changes its window, the answer follows. An
+    aggregate that records nothing is not second-guessed.
+    """
+    stored = aggregate.get("record_options")
+    if stored is None:
+        return False
+    return all(stored.get(name, _MISSING) == value for name, value in kwargs.items())
+
+
+def _repository_info_from_github(owner_repo, **kwargs):
+    """Query Github (and the masters channel) for one repository's record."""
     owner, name = owner_repo.split("/")
 
     info = _get_repository_info_v4(owner_repo, **kwargs)
@@ -955,19 +959,47 @@ def _get_repository_info(owner_repo, **kwargs):
     return info
 
 
-get_repository_info.clear_cache = _get_repository_info.clear_cache
-get_repository_info.rm_cache_entry = _get_repository_info.rm_cache_entry
-
-
 def get_repositories_info(repositories=None, update=False):
+    """
+    Get information about many Github repositories.
+
+    By default this reads the data store (see
+    :class:`~skare3_tools.packages.DataClient`); ``update=True`` queries Github
+    directly instead, which needs a token and is much slower.
+
+    :param repositories: list of str
+        Repositories ("owner/name") to report on. Default: all of them.
+        Repositories the store does not know about are reported and skipped.
+    :param update: bool
+        Query Github directly instead of reading the store.
+    :return: dict
+    """
+    if update:
+        return _repositories_info_from_github(repositories)
+    info = _data_client().packages()
+    if repositories is None:
+        return info
+    wanted = list(repositories)
+    known = {f"{p['owner']}/{p['name']}": p for p in info["packages"]}
+    missing = [repo for repo in wanted if repo not in known]
+    if missing:
+        logging.getLogger("skare3").warning(
+            "no package data for %s (not in the store)", ", ".join(missing)
+        )
+    return dict(info, packages=[known[repo] for repo in wanted if repo in known])
+
+
+def _repositories_info_from_github(repositories=None):
+    """Query Github (and the conda channels) for every repository's record."""
+    package_list = _package_list_from_github()
     if repositories is None:
         repositories = [
             p["repository"]
-            for p in get_package_list()
+            for p in package_list
             if p["owner"] in CONFIG["organizations"]
         ]
     repo_package_map = {
-        p["repository"]: p["package"] for p in get_package_list() if p["repository"]
+        p["repository"]: p["package"] for p in package_list if p["repository"]
     }
 
     info = {"packages": []}
@@ -1001,11 +1033,17 @@ def get_repositories_info(repositories=None, update=False):
             logging.warning("Empty {pkg}: {t}: {e}".format(pkg=pkg, t=type(e), e=e))
 
     for owner_repo in repositories:
-        # print(owner_repo)
         try:
-            repo_info = get_repository_info(owner_repo, update=update)
+            repo_info = _repository_info_from_github(owner_repo)
             repo_info["matlab"] = meta_pkg_versions["ska3-matlab"][owner_repo]
             repo_info["flight"] = meta_pkg_versions["ska3-flight"][owner_repo]
+            # the store also carries these; keep the key set identical across
+            # sources so consumers (the dashboard template) never see them
+            # missing, only empty
+            repo_info.setdefault("aca", "")
+            repo_info.setdefault("perl", "")
+            repo_info.setdefault("test_version", "")
+            repo_info.setdefault("test_status", "")
             info["packages"].append(repo_info)
         except Exception as e:
             logging.warning("Failed to get info on %s: %s", owner_repo, e)
@@ -1014,37 +1052,3 @@ def get_repositories_info(repositories=None, update=False):
     info.update({"time": datetime.datetime.now().isoformat()})
 
     return info
-
-
-def get_parser():
-    description = """
-SkaRE3 Github information tool.
-
-This script queries Github and a few other sources to determine the status of all packages.
-"""
-
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument(
-        "-o",
-        default="repository_info.json",
-        help="Output file (default=repository_info.json)",
-    )
-    parser.add_argument(
-        "--token", help="Github token, or name of file that contains token"
-    )
-    return parser
-
-
-def main():
-    args = get_parser().parse_args()
-
-    github.init(token=args.token)
-
-    info = get_repositories_info()
-    if info:
-        with open(args.o, "w") as f:
-            json.dump(info, f, indent=2)
-
-
-if __name__ == "__main__":
-    main()

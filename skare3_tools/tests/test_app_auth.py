@@ -363,6 +363,7 @@ def test_rest_uses_per_org_tokens(app_key, monkeypatch):
         status=200,
     )
     api = github.GithubAPI()
+    api.init()
     assert api.initialized
     api.get("/repos/acisops/foo")
     auth_by_url = {
@@ -416,6 +417,7 @@ def test_rest_init_app_key_wins_over_github_token(app_key, monkeypatch, caplog):
     )
     with caplog.at_level(logging.INFO):
         api = github.GithubAPI()
+        api.init()
     assert api._app_tokens is not None
     assert "GitHub auth: GitHub App" in caplog.text
     for call in responses.calls:
@@ -458,6 +460,7 @@ def test_graphql_app_key_wins_over_github_token(app_key, monkeypatch):
         status=200,
     )
     api = graphql.GithubAPI()
+    api.init()
     assert api.initialized
     graphql_auth = [
         call.request.headers["Authorization"]
@@ -485,6 +488,7 @@ def test_graphql_app_mode_and_org_kwarg(app_key, monkeypatch):
         status=200,
     )
     api = graphql.GithubAPI()
+    api.init()
     assert api.initialized
     api('{repository(owner: "acisops", name: "foo") {id}}', org="acisops")
     graphql_calls = [
@@ -514,10 +518,11 @@ def test_graphql_pat_ignores_org(monkeypatch):
 
 
 @responses.activate
-def test_graphql_init_swallows_app_auth_errors(app_key, monkeypatch):
-    # the App is not installed on the default org: the init handshake fails
-    # with an auth error, which must not escape the constructor
-    from skare3_tools.github import graphql
+def test_graphql_app_auth_errors_surface_on_use(app_key, monkeypatch):
+    # the App is not installed on the default org: creating the API is still
+    # fine (it resolves credentials without using them) and the auth error
+    # comes when the API is used
+    from skare3_tools.github import github, graphql
 
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
     monkeypatch.delenv("GITHUB_API_TOKEN", raising=False)
@@ -541,18 +546,20 @@ def test_graphql_init_swallows_app_auth_errors(app_key, monkeypatch):
         json={"slug": "skare3", "name": "skare3"},
         status=200,
     )
-    api = graphql.GithubAPI()  # must not raise: degrade to uninitialized
-    assert not api.initialized
+    api = graphql.GithubAPI()  # must not raise
+    with pytest.raises(github.AuthException):
+        api("{viewer {login}}")
 
 
-def test_rest_init_swallows_missing_key_file(monkeypatch):
+def test_rest_missing_key_file_surfaces_on_use(monkeypatch):
     from skare3_tools.github import github
 
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
     monkeypatch.delenv("GITHUB_API_TOKEN", raising=False)
     monkeypatch.setenv("SKARE3_GITHUB_APP_KEY", "/nonexistent/key.pem")
-    api = github.GithubAPI()  # must not raise: degrade to uninitialized
-    assert not api.initialized
+    api = github.GithubAPI()  # must not raise
+    with pytest.raises(github.AuthException):
+        api.get("")
 
 
 @responses.activate

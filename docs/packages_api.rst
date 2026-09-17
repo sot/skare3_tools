@@ -11,10 +11,4 @@ Packages
 
 .. autofunction:: skare3_tools.packages.get_conda_pkg_dependencies
 
-
-Caching
-^^^^^^^
-
-.. autofunction:: skare3_tools.packages.json_cache
-
-.. autofunction:: skare3_tools.packages.repository_info_is_outdated
+.. autofunction:: skare3_tools.packages.record_options
