@@ -1,36 +1,36 @@
 <!DOCTYPE html>
 
-<html lang="en" data-content_root="../../">
+<html lang="en" data-content_root="../../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>skare3_tools.packages &#8212; SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="../../_static/bootstrap-astropy.css?v=f4f7060c" />
+    <title>skare3_tools.packages.packages &#8212; SkaRE3 Tools 1.8.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="../../_static/documentation_options.js?v=7a2fd62e"></script>
-    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
-    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script type="text/javascript" src="../../_static/sidebar.js"></script>
-    <script type="text/javascript" src="../../_static/copybutton.js"></script>
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
+    <script src="../../../_static/documentation_options.js?v=b51e6972"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
     <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,600' rel='stylesheet' type='text/css'/>
 
   </head><body>
 <div class="topbar">
-  <a class="brand" title="Documentation Home" href="../../index.html"><span id="logotext1">Ska! </span><span id="logotext2">SkaRE3</span><span id="logotext3">Tools</span></a>
+  <a class="brand" title="Documentation Home" href="../../../index.html"><span id="logotext1">Ska! </span><span id="logotext2">SkaRE3</span><span id="logotext3">Tools</span></a>
   <ul>
     
     <li><a class="home" title="Homepage" href="https://cxc.cfa.harvard.edu/mta/ASPECT/tool_doc">
         <span id="logotext1">ska</span><span id="logotext2">tools</span>
     </a></li>
-    <li><a title="General Index" href="../../genindex.html">Index</a></li>
-    <li><a title="Module Index" href="../../py-modindex.html">Modules</a></li>
+    <li><a title="General Index" href="../../../genindex.html">Index</a></li>
+    <li><a title="Module Index" href="../../../py-modindex.html">Modules</a></li>
     <li>
       
       
-<form action="../../search.html" method="get">
+<form action="../../../search.html" method="get">
   <input type="text" name="q" placeholder="Search" />
   <input type="hidden" name="check_keywords" value="yes" />
   <input type="hidden" name="area" value="default" />
@@ -44,10 +44,10 @@
     <h3>Navigation</h3>
     <ul>
       <li>
-	<a href="../../index.html">SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</a>
+	<a href="../../../index.html">SkaRE3 Tools 1.8.0 documentation</a>
 	 &#187;
       </li>
-      <li><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+      <li><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
       
        
     </ul>
@@ -59,7 +59,7 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <h1>Source code for skare3_tools.packages</h1><div class="highlight"><pre>
+  <h1>Source code for skare3_tools.packages.packages</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">A module to keep track of all package information (repository, conda package info, etc).</span>
@@ -78,8 +78,9 @@
 <span class="sd">- All skare3/pkg_defs/\*/meta.yaml files within the skare3 repository</span>
 <span class="sd">- the list of all repositories for a given list of organizations (sot, acisops)</span>
 
-<span class="sd">The package list is cached locally. The cache expires after one day.</span>
-<span class="sd">To use this module to get the package list, use :func:`~skare3_tools.packages.get_package_list`::</span>
+<span class="sd">The package list is produced by ``skare3-refresh`` and read from the data store, so getting it</span>
+<span class="sd">needs neither a Github token nor a conda query. To use this module to get the package list, use</span>
+<span class="sd">:func:`~skare3_tools.packages.get_package_list`::</span>
 
 <span class="sd">    &gt;&gt;&gt; from skare3_tools import packages</span>
 <span class="sd">    &gt;&gt;&gt; pkgs = packages.get_package_list()</span>
@@ -92,10 +93,13 @@
 <span class="sd">Package Info</span>
 <span class="sd">------------</span>
 
-<span class="sd">Some information about each package is cached locally. The cache expires whenever there is an</span>
-<span class="sd">&quot;update&quot; or a &quot;push&quot; to the associated Github repository. The information includes information such</span>
-<span class="sd">as the number of open pull requests, number of branches. It also includes versions available in</span>
-<span class="sd">conda channels.</span>
+<span class="sd">Information about each package is read from the data store, which ``skare3-refresh`` rebuilds</span>
+<span class="sd">hourly (see :mod:`skare3_tools.packages.store`). It includes information such as the number of open</span>
+<span class="sd">pull requests and the number of branches, and the versions installed at each deployment stage</span>
+<span class="sd">(``master_version``, ``flight``, ``matlab``, ``aca`` and the tested version).</span>
+
+<span class="sd">Passing ``update=True``, or any argument the store does not hold (such as a different ``since``),</span>
+<span class="sd">queries Github directly instead. That needs a token, and is much slower.</span>
 
 <span class="sd">To get the current information associated with a package using</span>
 <span class="sd">:func:`~skare3_tools.packages.get_repository_info`::</span>
@@ -131,15 +135,20 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tarfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">urllib</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
@@ -156,6 +165,31 @@
     <span class="k">pass</span>
 
 
+<span class="k">class</span><span class="w"> </span><span class="nc">RecipesUnavailable</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The skare3 recipes, which define the package universe, could not be fetched.&quot;&quot;&quot;</span>
+
+
+<span class="n">_DEFAULT_CLIENT</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_data_client</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The process-wide default reader for the data store.</span>
+
+<span class="sd">    One client is reused so repeated calls do not re-read -- or re-fetch over</span>
+<span class="sd">    HTTP -- the whole aggregate. It remembers what it read, so a long-lived</span>
+<span class="sd">    process that wants fresh data should build its own</span>
+<span class="sd">    :class:`~skare3_tools.packages.DataClient`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_DEFAULT_CLIENT</span>  <span class="c1"># noqa: PLW0603</span>
+    <span class="k">if</span> <span class="n">_DEFAULT_CLIENT</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># local import: client.py builds on this module</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools.packages.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataClient</span>
+
+        <span class="n">_DEFAULT_CLIENT</span> <span class="o">=</span> <span class="n">DataClient</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">_DEFAULT_CLIENT</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">dir_access_ok</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns true if the given path has write access or can be created.</span>
@@ -169,143 +203,66 @@
     <span class="k">return</span> <span class="kc">False</span>
 
 
-<div class="viewcode-block" id="json_cache">
-<a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.json_cache">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">json_cache</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">expires</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">update_policy</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Decorator to cache function results in json format.</span>
+<span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_skare3_recipes</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The skare3 ``pkg_defs`` directory, fetched into a temporary directory.</span>
 
-<span class="sd">    This decorator adds an &#39;update&#39; argument to decorated functions. update is False by default,</span>
-<span class="sd">    but one can set it to True to force-update the cache entry.</span>
+<span class="sd">    The recipes define the package universe, and they are read once per run.</span>
+<span class="sd">    They used to live in a git checkout inside the data directory, which meant</span>
+<span class="sd">    a working tree in shared, rsynced storage: it could go stale, be clobbered</span>
+<span class="sd">    by anything else writing there, and a caller without write access to it</span>
+<span class="sd">    would silently ``git pull`` into nothing and carry on with whatever</span>
+<span class="sd">    happened to be on disk.</span>
 
-<span class="sd">    Data is saved in json files. The file names can include a special separator character to denote</span>
-<span class="sd">    the function arguments. Currently that character is &#39;:&#39;.</span>
+<span class="sd">    A tarball of the default branch is one request and leaves nothing behind,</span>
+<span class="sd">    so every run reads a defined state and a failure to fetch is unmistakable.</span>
 
-<span class="sd">    :param name:</span>
-<span class="sd">    :param directory: str</span>
-<span class="sd">        path where to save json file. Either absolute or relative to CONFIG[&#39;data_dir&#39;]</span>
-<span class="sd">    :param ignore: list</span>
-<span class="sd">        list of argument names to ignore in the cache entry identifier</span>
-<span class="sd">    :param expires: dict</span>
-<span class="sd">        a dictionary that can be given to datetime.timedelta(\*\*expires)</span>
-<span class="sd">        If the cache entry is older than this interval, it is updated.</span>
-<span class="sd">    :param update_policy: callable</span>
-<span class="sd">        A callable taking two arguments: (filename, result), which returns True if the cache entry</span>
-<span class="sd">        should be updated.</span>
-<span class="sd">    :return:</span>
+<span class="sd">    :yield: Path. The pkg_defs directory.</span>
+<span class="sd">    :raises RecipesUnavailable: if the recipes cannot be fetched or unpacked.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
-
-    <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;data_dir&quot;</span><span class="p">],</span> <span class="n">directory</span><span class="p">))</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore</span><span class="p">:</span>
-        <span class="n">ignore</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">expires</span><span class="p">:</span>
-        <span class="n">expires</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="o">**</span><span class="n">expires</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">decorator_cache</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">ignore_args</span><span class="o">=</span><span class="n">ignore</span><span class="p">,</span> <span class="n">expiration</span><span class="o">=</span><span class="n">expires</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">):</span>
-        <span class="n">signature</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-        <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;::&quot;</span>
-
-        <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="n">s_args</span> <span class="o">=</span> <span class="n">signature</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">arguments</span>
-            <span class="n">arg_str</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="s2">&quot;</span><span class="si">{a}</span><span class="s2">:</span><span class="si">{v}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">s_args</span><span class="p">[</span><span class="n">a</span><span class="p">])</span>
-                    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">s_args</span>
-                    <span class="k">if</span> <span class="n">a</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_args</span>
-                <span class="p">]</span>
+    <span class="n">owner_repo</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;repository&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;skare3-recipes-&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+        <span class="c1"># no ref in the path: the API resolves the repository&#39;s default branch</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">GITHUB_API_V3</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;/repos/</span><span class="si">{</span><span class="n">owner_repo</span><span class="si">}</span><span class="s2">/tarball&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="c1"># unreachable, unauthenticated, rate-limited: from here they are one</span>
+            <span class="c1"># condition, &quot;the recipes are not available&quot;, and the caller needs</span>
+            <span class="c1"># to hear about it rather than get a traceback</span>
+            <span class="k">raise</span> <span class="n">RecipesUnavailable</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;cannot fetch the </span><span class="si">{</span><span class="n">owner_repo</span><span class="si">}</span><span class="s2"> recipes: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RecipesUnavailable</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;cannot fetch the </span><span class="si">{</span><span class="n">owner_repo</span><span class="si">}</span><span class="s2"> recipes: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">reason</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">)&quot;</span>
             <span class="p">)</span>
-            <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{name}{arg_str}</span><span class="s2">.json&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">arg_str</span><span class="o">=</span><span class="n">arg_str</span><span class="p">)</span>
-            <span class="c1"># in an ideal world, filename would be completely sanitized... this world is not ideal.</span>
-            <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span>
-            <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">expiration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-                <span class="n">m_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
-                <span class="n">update</span> <span class="o">=</span> <span class="n">update</span> <span class="ow">or</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">m_time</span> <span class="o">&gt;</span> <span class="n">expiration</span><span class="p">)</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-                    <span class="n">result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">update_policy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">update</span> <span class="o">=</span> <span class="n">update</span> <span class="ow">or</span> <span class="n">update_policy</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">dir_access_ok</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;skare3&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;No write access to cache file </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-                <span class="n">update</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">update</span><span class="p">:</span>
-                <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">update</span><span class="p">:</span>
-                    <span class="n">directory_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">directory_out</span><span class="p">):</span>
-                        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">directory_out</span><span class="p">)</span>
-                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-                        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">result</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">clear_cache</span><span class="p">():</span>
-            <span class="n">files</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">*.json&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">))</span>
-            <span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">files</span><span class="p">:</span>
-                <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;rm&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">files</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-        <span class="n">wrapper</span><span class="o">.</span><span class="n">clear_cache</span> <span class="o">=</span> <span class="n">clear_cache</span>
-
-        <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">rm_cache_entry</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">sig</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="n">s_args</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">arguments</span>
-            <span class="n">arg_str</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="s2">&quot;</span><span class="si">{a}</span><span class="s2">:</span><span class="si">{v}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">s_args</span><span class="p">[</span><span class="n">a</span><span class="p">])</span>
-                    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">s_args</span>
-                    <span class="k">if</span> <span class="n">a</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_args</span>
-                <span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fileobj</span><span class="o">=</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r:gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+                <span class="n">tar</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">tarfile</span><span class="o">.</span><span class="n">TarError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RecipesUnavailable</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;cannot unpack the </span><span class="si">{</span><span class="n">owner_repo</span><span class="si">}</span><span class="s2"> recipes: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="c1"># the tarball holds a single top-level directory, {owner}-{repo}-{sha}</span>
+        <span class="n">roots</span> <span class="o">=</span> <span class="p">[</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()]</span>
+        <span class="n">recipes</span> <span class="o">=</span> <span class="n">roots</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="s2">&quot;pkg_defs&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">roots</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">recipes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">recipes</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">RecipesUnavailable</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;the </span><span class="si">{</span><span class="n">owner_repo</span><span class="si">}</span><span class="s2"> tarball has no pkg_defs directory&quot;</span>
             <span class="p">)</span>
-            <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="n">directory</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{name}{arg_str}</span><span class="s2">.json&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">arg_str</span><span class="o">=</span><span class="n">arg_str</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-
-        <span class="n">wrapper</span><span class="o">.</span><span class="n">rm_cache_entry</span> <span class="o">=</span> <span class="n">rm_cache_entry</span>
-        <span class="k">return</span> <span class="n">wrapper</span>
-
-    <span class="k">return</span> <span class="n">decorator_cache</span></div>
+        <span class="k">yield</span> <span class="n">recipes</span>
 
 
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_ensure_skare3_local_repo</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="n">repo_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;data_dir&quot;</span><span class="p">],</span> <span class="s2">&quot;skare3&quot;</span><span class="p">)</span>
-    <span class="n">parent</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">repo_dir</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">parent</span><span class="p">):</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">repo_dir</span><span class="p">):</span>
-        <span class="n">_</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;clone&quot;</span><span class="p">,</span> <span class="s2">&quot;https://github.com/sot/skare3&quot;</span><span class="p">,</span> <span class="n">repo_dir</span><span class="p">],</span>
-            <span class="n">cwd</span><span class="o">=</span><span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;data_dir&quot;</span><span class="p">],</span>
-            <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
-            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
-            <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">update</span><span class="p">:</span>
-        <span class="n">_</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;pull&quot;</span><span class="p">],</span>
-            <span class="n">cwd</span><span class="o">=</span><span class="n">repo_dir</span><span class="p">,</span>
-            <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
-            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
-            <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">repo_dir</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_conda_package_list</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The packages the skare3 recipes define.&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">_skare3_recipes</span><span class="p">()</span> <span class="k">as</span> <span class="n">recipes</span><span class="p">:</span>
+        <span class="n">all_meta</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">recipes</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;meta.yaml&quot;</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">_parse_recipes</span><span class="p">(</span><span class="n">all_meta</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_conda_package_list</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="n">_ensure_skare3_local_repo</span><span class="p">(</span><span class="n">update</span><span class="p">)</span>
-    <span class="n">all_meta</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;data_dir&quot;</span><span class="p">],</span> <span class="s2">&quot;skare3&quot;</span><span class="p">,</span> <span class="s2">&quot;pkg_defs&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;meta.yaml&quot;</span><span class="p">)</span>
-    <span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_recipes</span><span class="p">(</span><span class="n">all_meta</span><span class="p">):</span>
     <span class="n">all_info</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">all_meta</span><span class="p">:</span>
         <span class="n">macro</span> <span class="o">=</span> <span class="s2">&quot;{% macro compiler(arg) %}{</span><span class="si">% e</span><span class="s2">ndmacro %}</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -350,15 +307,16 @@
     <span class="k">return</span> <span class="n">all_info</span>
 
 
-<div class="viewcode-block" id="get_package_list">
-<a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_package_list">[docs]</a>
-<span class="nd">@json_cache</span><span class="p">(</span><span class="s2">&quot;pkg_name_map&quot;</span><span class="p">,</span> <span class="n">expires</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;days&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_package_list</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_package_list_from_github</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Return a list of dictionaries, one per package.</span>
+<span class="sd">    Assemble the package list from the skare3 recipes and the organizations.</span>
 
-<span class="sd">    :return: dict</span>
-<span class="sd">        Dictionary contains only basic information</span>
+<span class="sd">    This is the producer-side function: it pulls the local skare3 clone and</span>
+<span class="sd">    lists the organizations&#39; repositories. Readers should use</span>
+<span class="sd">    :func:`get_package_list`, which reads the store.</span>
+
+<span class="sd">    :return: list of dict</span>
+<span class="sd">        Each dictionary contains only basic information.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">all_packages</span> <span class="o">=</span> <span class="n">_conda_package_list</span><span class="p">()</span>
     <span class="n">full_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="s2">&quot;repository&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">all_packages</span><span class="p">]</span>
@@ -379,7 +337,27 @@
         <span class="n">all_packages</span><span class="p">,</span>
         <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s2">&quot;repository&quot;</span><span class="p">])</span> <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;repository&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]),</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">all_packages</span></div>
+    <span class="k">return</span> <span class="n">all_packages</span>
+
+
+<div class="viewcode-block" id="get_package_list">
+<a class="viewcode-back" href="../../../packages_api.html#skare3_tools.packages.get_package_list">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_package_list</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a list of dictionaries, one per package.</span>
+
+<span class="sd">    Read from the data store, which needs neither a Github token nor a conda</span>
+<span class="sd">    query. ``update=True`` assembles the list from the skare3 recipes and the</span>
+<span class="sd">    organizations instead.</span>
+
+<span class="sd">    :param update: bool</span>
+<span class="sd">        Assemble the list from Github instead of reading the store.</span>
+<span class="sd">    :return: list of dict</span>
+<span class="sd">        Each dictionary contains only basic information.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">update</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_package_list_from_github</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">_data_client</span><span class="p">()</span><span class="o">.</span><span class="n">package_list</span><span class="p">()</span></div>
 
 
 
@@ -529,7 +507,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_all_nodes</span><span class="p">(</span>
-    <span class="n">owner</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">query_2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="n">owner</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">query_2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">):</span>
     <span class="k">if</span> <span class="n">reverse</span><span class="p">:</span>
         <span class="n">cursor</span> <span class="o">=</span> <span class="s2">&quot;startCursor&quot;</span>
@@ -539,7 +517,8 @@
         <span class="n">has_more</span> <span class="o">=</span> <span class="s2">&quot;hasNextPage&quot;</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">(</span>
         <span class="n">github</span><span class="o">.</span><span class="n">GITHUB_API_V4</span><span class="p">(</span>
-            <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span> <span class="n">cursor</span><span class="o">=</span><span class="n">at</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span> <span class="n">cursor</span><span class="o">=</span><span class="n">at</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+            <span class="n">org</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="p">)</span>
     <span class="n">check_api_errors</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
@@ -555,7 +534,8 @@
             <span class="n">github</span><span class="o">.</span><span class="n">GITHUB_API_V4</span><span class="p">(</span>
                 <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">query_2</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
                     <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span> <span class="n">cursor</span><span class="o">=</span><span class="n">at</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-                <span class="p">)</span>
+                <span class="p">),</span>
+                <span class="n">org</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
         <span class="n">check_api_errors</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
@@ -612,7 +592,10 @@
     <span class="n">owner</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">owner_repo</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
     <span class="n">api</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">GITHUB_API_V4</span>
     <span class="n">data_v4</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">(</span>
-        <span class="n">api</span><span class="p">(</span><span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">github</span><span class="o">.</span><span class="n">graphql</span><span class="o">.</span><span class="n">REPO_QUERY</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">))</span>
+        <span class="n">api</span><span class="p">(</span>
+            <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">github</span><span class="o">.</span><span class="n">graphql</span><span class="o">.</span><span class="n">REPO_QUERY</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">),</span>
+            <span class="n">org</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
+        <span class="p">)</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="s2">&quot;errors&quot;</span> <span class="ow">in</span> <span class="n">data_v4</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
@@ -808,8 +791,37 @@
     <span class="k">return</span> <span class="n">repo_info</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_strip_credentials</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlunparse</span><span class="p">(</span><span class="n">parts</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">netloc</span><span class="o">=</span><span class="n">parts</span><span class="o">.</span><span class="n">netloc</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_channel_is_reachable</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Probe a channel URL, retrying transient network errors.</span>
+
+<span class="sd">    Read timeouts on cxc are not uncommon; give the server a few chances</span>
+<span class="sd">    before declaring the channel unreachable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tries</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">Timeout</span><span class="p">,</span> <span class="n">requests</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">):</span>
+            <span class="c1"># credentials stripped: the url embeds CONDA_PASSWORD</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;skare3&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;channel </span><span class="si">%s</span><span class="s2"> not responding (attempt </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2">)&quot;</span><span class="p">,</span>
+                <span class="n">_strip_credentials</span><span class="p">(</span><span class="n">url</span><span class="p">),</span>
+                <span class="n">attempt</span><span class="p">,</span>
+                <span class="n">tries</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">attempt</span> <span class="o">&lt;</span> <span class="n">tries</span><span class="p">:</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">wait</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">False</span>
+
+
 <div class="viewcode-block" id="get_conda_pkg_info">
-<a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_conda_pkg_info">[docs]</a>
+<a class="viewcode-back" href="../../../packages_api.html#skare3_tools.packages.get_conda_pkg_info">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_conda_pkg_info</span><span class="p">(</span><span class="n">conda_package</span><span class="p">,</span> <span class="n">conda_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get information on a conda package.</span>
@@ -836,26 +848,15 @@
     <span class="n">unreachable</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">conda_channels</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="c1"># this clears the exception we just caugh and raises another one</span>
+            <span class="c1"># this clears the exception we just caught and raises another one</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
                 <span class="s2">&quot;Missing expected environmental variable: </span><span class="si">{e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
             <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
-        <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">ConnectTimeout</span><span class="p">:</span>
-            <span class="n">c2</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
-            <span class="n">c2</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urlunparse</span><span class="p">(</span>
-                <span class="p">(</span>
-                    <span class="n">c2</span><span class="o">.</span><span class="n">scheme</span><span class="p">,</span>
-                    <span class="n">c2</span><span class="o">.</span><span class="n">netloc</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                    <span class="n">c2</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
-                    <span class="n">c2</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
-                    <span class="n">c2</span><span class="o">.</span><span class="n">query</span><span class="p">,</span>
-                    <span class="n">c2</span><span class="o">.</span><span class="n">fragment</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">unreachable</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c2</span><span class="p">)</span>
-        <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;--channel&quot;</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_channel_is_reachable</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+            <span class="n">unreachable</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_strip_credentials</span><span class="p">(</span><span class="n">url</span><span class="p">))</span>
+        <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;--channel&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">unreachable</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The following conda channels are not reachable:</span><span class="se">\n</span><span class="s2"> -&quot;</span>
@@ -905,7 +906,7 @@
 
 
 <div class="viewcode-block" id="get_conda_pkg_dependencies">
-<a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_conda_pkg_dependencies">[docs]</a>
+<a class="viewcode-back" href="../../../packages_api.html#skare3_tools.packages.get_conda_pkg_dependencies">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_conda_pkg_dependencies</span><span class="p">(</span><span class="n">conda_package</span><span class="p">,</span> <span class="n">conda_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get dependencies of a conda package.</span>
@@ -943,56 +944,47 @@
     <span class="k">return</span> <span class="n">obj</span>
 
 
-<span class="n">_LAST_UPDATED_QUERY</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span>
+<span class="c1"># derived from the signature, at import, so it cannot drift from it (and so a</span>
+<span class="c1"># test that fakes out _get_repository_info_v4 does not change what is recorded)</span>
+<span class="n">_RECORD_OPTIONS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">_get_repository_info_v4</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="record_options">
+<a class="viewcode-back" href="../../../packages_api.html#skare3_tools.packages.record_options">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">record_options</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">{</span>
-<span class="sd">  repository(name: &quot;{{ name }}&quot;, owner: &quot;{{ owner }}&quot;) {</span>
-<span class="sd">    pushedAt</span>
-<span class="sd">    updatedAt</span>
-<span class="sd">    name</span>
-<span class="sd">    owner  {</span>
-<span class="sd">      id</span>
-<span class="sd">    }</span>
-<span class="sd">  }</span>
-<span class="sd">}</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="p">)</span>
+<span class="sd">    The arguments the records in the data store are produced with.</span>
 
+<span class="sd">    ``skare3-refresh`` records these in the aggregate, and</span>
+<span class="sd">    :func:`get_repository_info` compares its arguments against the *recorded*</span>
+<span class="sd">    ones to decide whether the store can answer.</span>
 
-<div class="viewcode-block" id="repository_info_is_outdated">
-<a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.repository_info_is_outdated">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">repository_info_is_outdated</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">pkg_info</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Cache update policy that returns True if the Github repository has been updated or pushed into.</span>
-
-<span class="sd">    If the calling user has not write access to the cache directory, this function returns False,</span>
-<span class="sd">    unless SKARE3_REPO_INFO_LATEST is set to &quot;True&quot;.</span>
-
-<span class="sd">    :param _:</span>
-<span class="sd">    :param pkg_info: dict. As returned from :func:`~skare3_tools.packages.get_repository_info`.</span>
-<span class="sd">    :return:</span>
+<span class="sd">    :return: dict</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">update</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SKARE3_REPO_INFO_LATEST&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;true&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">dir_access_ok</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;data_dir&quot;</span><span class="p">])</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">update</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">github</span><span class="o">.</span><span class="n">GITHUB_API_V4</span><span class="p">(</span><span class="n">_LAST_UPDATED_QUERY</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">pkg_info</span><span class="p">))</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;repository&quot;</span><span class="p">]</span>
-    <span class="n">outdated</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">pkg_info</span><span class="p">[</span><span class="s2">&quot;pushed_at&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;pushedAt&quot;</span><span class="p">]</span>
-        <span class="ow">or</span> <span class="n">pkg_info</span><span class="p">[</span><span class="s2">&quot;updated_at&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;updatedAt&quot;</span><span class="p">]</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">outdated</span></div>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_RECORD_OPTIONS</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="get_repository_info">
-<a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_repository_info">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_repository_info</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<a class="viewcode-back" href="../../../packages_api.html#skare3_tools.packages.get_repository_info">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_repository_info</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get information about a Github repository</span>
+<span class="sd">    Get information about a Github repository.</span>
+
+<span class="sd">    By default this reads the data store, which needs no Github token (see</span>
+<span class="sd">    :class:`~skare3_tools.packages.DataClient`). The store holds one rendering</span>
+<span class="sd">    of each repository, so any argument asking for something else -- a</span>
+<span class="sd">    different ``since``, for instance -- queries Github instead, as does</span>
+<span class="sd">    ``update=True``.</span>
 
 <span class="sd">    :param owner_repo: str</span>
 <span class="sd">        the name of the repository, including owner, something like &#39;sot/skare3&#39;.</span>
+<span class="sd">    :param update: bool</span>
+<span class="sd">        Query Github directly instead of reading the store.</span>
 <span class="sd">    :param since: int or str</span>
 <span class="sd">        the maximum number of releases to look back, or the release tag to look back to</span>
 <span class="sd">        (not inclusive).</span>
@@ -1002,20 +994,36 @@
 <span class="sd">        It is for backward compatibility with the dashboard.</span>
 <span class="sd">    :param include_commits: bool</span>
 <span class="sd">        whether to include commits in release_info.</span>
-<span class="sd">    :param update: bool</span>
-<span class="sd">        Force update of the cached info. By default updates only if pushed_at or updated_at change.</span>
-<span class="sd">    :return:</span>
+<span class="sd">    :return: dict</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_get_repository_info</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+    <span class="k">if</span> <span class="n">update</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_repository_info_from_github</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">_data_client</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_store_holds</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">packages</span><span class="p">(),</span> <span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_repository_info_from_github</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">client</span><span class="o">.</span><span class="n">repository_info</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">)</span></div>
 
 
 
-<span class="nd">@json_cache</span><span class="p">(</span>
-    <span class="s2">&quot;pkg_repository_info&quot;</span><span class="p">,</span>
-    <span class="n">directory</span><span class="o">=</span><span class="s2">&quot;pkg_info&quot;</span><span class="p">,</span>
-    <span class="n">update_policy</span><span class="o">=</span><span class="n">repository_info_is_outdated</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_get_repository_info</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="n">_MISSING</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_store_holds</span><span class="p">(</span><span class="n">aggregate</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Whether the store&#39;s records were made with these arguments.</span>
+
+<span class="sd">    Compared against the options the *aggregate* records, not this module&#39;s</span>
+<span class="sd">    defaults: if refresh ever changes its window, the answer follows. An</span>
+<span class="sd">    aggregate that records nothing is not second-guessed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stored</span> <span class="o">=</span> <span class="n">aggregate</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;record_options&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stored</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">stored</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">_MISSING</span><span class="p">)</span> <span class="o">==</span> <span class="n">value</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_repository_info_from_github</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Query Github (and the masters channel) for one repository&#39;s record.&quot;&quot;&quot;</span>
     <span class="n">owner</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">owner_repo</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
 
     <span class="n">info</span> <span class="o">=</span> <span class="n">_get_repository_info_v4</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1028,21 +1036,50 @@
     <span class="k">return</span> <span class="n">info</span>
 
 
-<span class="n">get_repository_info</span><span class="o">.</span><span class="n">clear_cache</span> <span class="o">=</span> <span class="n">_get_repository_info</span><span class="o">.</span><span class="n">clear_cache</span>
-<span class="n">get_repository_info</span><span class="o">.</span><span class="n">rm_cache_entry</span> <span class="o">=</span> <span class="n">_get_repository_info</span><span class="o">.</span><span class="n">rm_cache_entry</span>
-
-
 <div class="viewcode-block" id="get_repositories_info">
-<a class="viewcode-back" href="../../packages_api.html#skare3_tools.packages.get_repositories_info">[docs]</a>
+<a class="viewcode-back" href="../../../packages_api.html#skare3_tools.packages.get_repositories_info">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_repositories_info</span><span class="p">(</span><span class="n">repositories</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get information about many Github repositories.</span>
+
+<span class="sd">    By default this reads the data store (see</span>
+<span class="sd">    :class:`~skare3_tools.packages.DataClient`); ``update=True`` queries Github</span>
+<span class="sd">    directly instead, which needs a token and is much slower.</span>
+
+<span class="sd">    :param repositories: list of str</span>
+<span class="sd">        Repositories (&quot;owner/name&quot;) to report on. Default: all of them.</span>
+<span class="sd">        Repositories the store does not know about are reported and skipped.</span>
+<span class="sd">    :param update: bool</span>
+<span class="sd">        Query Github directly instead of reading the store.</span>
+<span class="sd">    :return: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">update</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_repositories_info_from_github</span><span class="p">(</span><span class="n">repositories</span><span class="p">)</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">_data_client</span><span class="p">()</span><span class="o">.</span><span class="n">packages</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">repositories</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">info</span>
+    <span class="n">wanted</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">repositories</span><span class="p">)</span>
+    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;owner&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;packages&quot;</span><span class="p">]}</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">repo</span> <span class="k">for</span> <span class="n">repo</span> <span class="ow">in</span> <span class="n">wanted</span> <span class="k">if</span> <span class="n">repo</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">known</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;skare3&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;no package data for </span><span class="si">%s</span><span class="s2"> (not in the store)&quot;</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">packages</span><span class="o">=</span><span class="p">[</span><span class="n">known</span><span class="p">[</span><span class="n">repo</span><span class="p">]</span> <span class="k">for</span> <span class="n">repo</span> <span class="ow">in</span> <span class="n">wanted</span> <span class="k">if</span> <span class="n">repo</span> <span class="ow">in</span> <span class="n">known</span><span class="p">])</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_repositories_info_from_github</span><span class="p">(</span><span class="n">repositories</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Query Github (and the conda channels) for every repository&#39;s record.&quot;&quot;&quot;</span>
+    <span class="n">package_list</span> <span class="o">=</span> <span class="n">_package_list_from_github</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">repositories</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">repositories</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">p</span><span class="p">[</span><span class="s2">&quot;repository&quot;</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">get_package_list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">package_list</span>
             <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;owner&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;organizations&quot;</span><span class="p">]</span>
         <span class="p">]</span>
     <span class="n">repo_package_map</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">p</span><span class="p">[</span><span class="s2">&quot;repository&quot;</span><span class="p">]:</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;package&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">get_package_list</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;repository&quot;</span><span class="p">]</span>
+        <span class="n">p</span><span class="p">[</span><span class="s2">&quot;repository&quot;</span><span class="p">]:</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;package&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">package_list</span> <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;repository&quot;</span><span class="p">]</span>
     <span class="p">}</span>
 
     <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;packages&quot;</span><span class="p">:</span> <span class="p">[]}</span>
@@ -1076,11 +1113,17 @@
             <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Empty </span><span class="si">{pkg}</span><span class="s2">: </span><span class="si">{t}</span><span class="s2">: </span><span class="si">{e}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pkg</span><span class="o">=</span><span class="n">pkg</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">e</span><span class="o">=</span><span class="n">e</span><span class="p">))</span>
 
     <span class="k">for</span> <span class="n">owner_repo</span> <span class="ow">in</span> <span class="n">repositories</span><span class="p">:</span>
-        <span class="c1"># print(owner_repo)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">repo_info</span> <span class="o">=</span> <span class="n">get_repository_info</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="n">update</span><span class="p">)</span>
+            <span class="n">repo_info</span> <span class="o">=</span> <span class="n">_repository_info_from_github</span><span class="p">(</span><span class="n">owner_repo</span><span class="p">)</span>
             <span class="n">repo_info</span><span class="p">[</span><span class="s2">&quot;matlab&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta_pkg_versions</span><span class="p">[</span><span class="s2">&quot;ska3-matlab&quot;</span><span class="p">][</span><span class="n">owner_repo</span><span class="p">]</span>
             <span class="n">repo_info</span><span class="p">[</span><span class="s2">&quot;flight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta_pkg_versions</span><span class="p">[</span><span class="s2">&quot;ska3-flight&quot;</span><span class="p">][</span><span class="n">owner_repo</span><span class="p">]</span>
+            <span class="c1"># the store also carries these; keep the key set identical across</span>
+            <span class="c1"># sources so consumers (the dashboard template) never see them</span>
+            <span class="c1"># missing, only empty</span>
+            <span class="n">repo_info</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;aca&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">repo_info</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;perl&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">repo_info</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;test_version&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">repo_info</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;test_status&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;packages&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">repo_info</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to get info on </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">owner_repo</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
@@ -1088,42 +1131,7 @@
 
     <span class="n">info</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()})</span>
 
-    <span class="k">return</span> <span class="n">info</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">get_parser</span><span class="p">():</span>
-    <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">SkaRE3 Github information tool.</span>
-
-<span class="s2">This script queries Github and a few other sources to determine the status of all packages.</span>
-<span class="s2">&quot;&quot;&quot;</span>
-
-    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;repository_info.json&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output file (default=repository_info.json)&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--token&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Github token, or name of file that contains token&quot;</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">parser</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-    <span class="n">args</span> <span class="o">=</span> <span class="n">get_parser</span><span class="p">()</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
-
-    <span class="n">github</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">token</span><span class="p">)</span>
-
-    <span class="n">info</span> <span class="o">=</span> <span class="n">get_repositories_info</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">info</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">o</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">main</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">info</span>
 </pre></div>
 
             <div class="clearer"></div>
@@ -1134,7 +1142,7 @@
         <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
 
 
-<form action="../../search.html" method="get">
+<form action="../../../search.html" method="get">
   <input type="text" name="q" placeholder="Search" />
   <input type="hidden" name="check_keywords" value="yes" />
   <input type="hidden" name="area" value="default" />

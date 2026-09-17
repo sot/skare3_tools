@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</title>
+    <title>Index &#8212; SkaRE3 Tools 1.8.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="_static/documentation_options.js?v=7a2fd62e"></script>
+    <script src="_static/documentation_options.js?v=b51e6972"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -44,7 +44,7 @@
     <h3>Navigation</h3>
     <ul>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.8.0 documentation</a>
 	 &#187;
       </li>
       
@@ -70,7 +70,6 @@
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#I"><strong>I</strong></a>
- | <a href="#J"><strong>J</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
@@ -141,6 +140,10 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="data_service.html#skare3_tools.packages.DataClient">DataClient (class in skare3_tools.packages)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="github_api.html#skare3_tools.github.github.DispatchEvent">DispatchEvent (class in skare3_tools.github.github)</a>
 </li>
   </ul></td>
@@ -173,16 +176,20 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="data_service.html#skare3_tools.packages.DataClient.generated">generated() (skare3_tools.packages.DataClient method)</a>
+</li>
       <li><a href="github_api.html#skare3_tools.github.github.GithubAPI.get">get() (skare3_tools.github.github.GithubAPI method)</a>
 </li>
       <li><a href="packages_api.html#skare3_tools.packages.get_conda_pkg_dependencies">get_conda_pkg_dependencies() (in module skare3_tools.packages)</a>
 </li>
       <li><a href="packages_api.html#skare3_tools.packages.get_conda_pkg_info">get_conda_pkg_info() (in module skare3_tools.packages)</a>
 </li>
-      <li><a href="packages_api.html#skare3_tools.packages.get_package_list">get_package_list() (in module skare3_tools.packages)</a>
+      <li><a href="github_api.html#skare3_tools.github.github.GithubAPI.get_conditional">get_conditional() (skare3_tools.github.github.GithubAPI method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="packages_api.html#skare3_tools.packages.get_package_list">get_package_list() (in module skare3_tools.packages)</a>
+</li>
       <li><a href="packages_api.html#skare3_tools.packages.get_repositories_info">get_repositories_info() (in module skare3_tools.packages)</a>
 </li>
       <li><a href="packages_api.html#skare3_tools.packages.get_repository_info">get_repository_info() (in module skare3_tools.packages)</a>
@@ -216,14 +223,6 @@
   </ul></td>
 </tr></table>
 
-<h2 id="J">J</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="packages_api.html#skare3_tools.packages.json_cache">json_cache() (in module skare3_tools.packages)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -247,6 +246,12 @@
 </li>
         <li><a href="packages.html#module-skare3_tools.packages">skare3_tools.packages</a>
 </li>
+        <li><a href="data_service.html#module-skare3_tools.packages.refresh">skare3_tools.packages.refresh</a>
+</li>
+        <li><a href="data_service.html#module-skare3_tools.packages.store">skare3_tools.packages.store</a>
+</li>
+        <li><a href="data_service.html#module-skare3_tools.scripts.dashboard_update">skare3_tools.scripts.dashboard_update</a>
+</li>
         <li><a href="test_results.html#module-skare3_tools.test_results">skare3_tools.test_results</a>
 </li>
       </ul></li>
@@ -256,12 +261,16 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="github_api.html#skare3_tools.github.github.GithubAPI.patch">patch() (skare3_tools.github.github.GithubAPI method)</a>
+      <li><a href="data_service.html#skare3_tools.packages.DataClient.package_list">package_list() (skare3_tools.packages.DataClient method)</a>
 </li>
-      <li><a href="github_api.html#skare3_tools.github.github.GithubAPI.post">post() (skare3_tools.github.github.GithubAPI method)</a>
+      <li><a href="data_service.html#skare3_tools.packages.DataClient.packages">packages() (skare3_tools.packages.DataClient method)</a>
+</li>
+      <li><a href="github_api.html#skare3_tools.github.github.GithubAPI.patch">patch() (skare3_tools.github.github.GithubAPI method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="github_api.html#skare3_tools.github.github.GithubAPI.post">post() (skare3_tools.github.github.GithubAPI method)</a>
+</li>
       <li><a href="github_api.html#skare3_tools.github.github.PullRequests">PullRequests (class in skare3_tools.github.github)</a>
 </li>
       <li><a href="github_api.html#skare3_tools.github.github.GithubAPI.put">put() (skare3_tools.github.github.GithubAPI method)</a>
@@ -272,13 +281,15 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="packages_api.html#skare3_tools.packages.record_options">record_options() (in module skare3_tools.packages)</a>
+</li>
       <li><a href="github_api.html#skare3_tools.github.github.Releases">Releases (class in skare3_tools.github.github)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="github_api.html#skare3_tools.github.github.Repository">Repository (class in skare3_tools.github.github)</a>
 </li>
-      <li><a href="packages_api.html#skare3_tools.packages.repository_info_is_outdated">repository_info_is_outdated() (in module skare3_tools.packages)</a>
+      <li><a href="data_service.html#skare3_tools.packages.DataClient.repository_info">repository_info() (skare3_tools.packages.DataClient method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -314,8 +325,6 @@
         <li><a href="github.html#module-skare3_tools.github">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     skare3_tools.github.github
 
@@ -330,11 +339,34 @@
         <li><a href="github.html#module-skare3_tools.github.graphql">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     skare3_tools.packages
 
       <ul>
         <li><a href="packages.html#module-skare3_tools.packages">module</a>
+</li>
+      </ul></li>
+      <li>
+    skare3_tools.packages.refresh
+
+      <ul>
+        <li><a href="data_service.html#module-skare3_tools.packages.refresh">module</a>
+</li>
+      </ul></li>
+      <li>
+    skare3_tools.packages.store
+
+      <ul>
+        <li><a href="data_service.html#module-skare3_tools.packages.store">module</a>
+</li>
+      </ul></li>
+      <li>
+    skare3_tools.scripts.dashboard_update
+
+      <ul>
+        <li><a href="data_service.html#module-skare3_tools.scripts.dashboard_update">module</a>
 </li>
       </ul></li>
       <li>
@@ -344,6 +376,8 @@
         <li><a href="test_results.html#module-skare3_tools.test_results">module</a>
 </li>
       </ul></li>
+      <li><a href="data_service.html#skare3_tools.packages.DataClient.sources">sources() (skare3_tools.packages.DataClient method)</a>
+</li>
       <li><a href="github_api.html#skare3_tools.github.github.PullRequests.status">status() (skare3_tools.github.github.PullRequests method)</a>
 </li>
   </ul></td>
@@ -353,6 +387,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="github_api.html#skare3_tools.github.github.Tags">Tags (class in skare3_tools.github.github)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="data_service.html#skare3_tools.packages.DataClient.test_results">test_results() (skare3_tools.packages.DataClient method)</a>
 </li>
   </ul></td>
 </tr></table>

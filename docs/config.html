@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Configuration &#8212; SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</title>
+    <title>Configuration &#8212; SkaRE3 Tools 1.8.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="_static/documentation_options.js?v=7a2fd62e"></script>
+    <script src="_static/documentation_options.js?v=b51e6972"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -58,7 +58,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.8.0 documentation</a>
 	 &#187;
       </li>
       
@@ -80,20 +80,19 @@ repository, the different conda channels used, the Github organizations who own 
 the directory where to store cached data. This happens the first time this module is imported.</p>
 <p>Normally, a user does not need to do anything except to add an environment variable with the
 standard password to conda channels called CONDA_PASSWORD.</p>
-<p>The configuration is saved in JSON format, in the location:</p>
+<p>The configuration is saved in JSON format, in the data directory:</p>
 <ul class="simple">
 <li><p>specified by the SKARE3_TOOLS_DATA environmental variable,</p></li>
-<li><p>or in the directory $SKA/data/skare3/skare3_data</p></li>
-<li><p>or:</p>
-<ul>
-<li><p>Linux/Mac OS: ~/.skare3</p></li>
-<li><p>windows: %LOCALAPPDATA%skare3</p></li>
+<li><p>or $SKA/data/skare3/skare3_data.</p></li>
 </ul>
-</li>
-</ul>
+<p>The directory must already exist: it is operational data (on synced hosts it
+rides the $SKA/data sync). If it cannot be determined, does not exist, or
+needs to be written and is not writable, init fails with an error saying so.
+The one exception is a pending config-version upgrade on a read-only copy
+(e.g. a synced host): the upgraded config is kept in memory and not persisted.</p>
 <p>The default looks like this:</p>
 <div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;config_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;config_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;repository&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://github.com/sot/skare3&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;conda_channels&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;masters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
@@ -101,9 +100,6 @@ standard password to conda channels called CONDA_PASSWORD.</p>
 <span class="w">    </span><span class="p">],</span>
 <span class="w">    </span><span class="nt">&quot;main&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">      </span><span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight&quot;</span>
-<span class="w">    </span><span class="p">],</span>
-<span class="w">    </span><span class="nt">&quot;dull&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">      </span><span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight-2020.12&quot;</span>
 <span class="w">    </span><span class="p">],</span>
 <span class="w">    </span><span class="nt">&quot;test&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">      </span><span class="s2">&quot;https://ska:{CONDA_PASSWORD}@cxc.cfa.harvard.edu/mta/ASPECT/ska3-conda/flight&quot;</span><span class="p">,</span>
@@ -114,15 +110,23 @@ standard password to conda channels called CONDA_PASSWORD.</p>
 <span class="w">    </span><span class="s2">&quot;sot&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s2">&quot;acisops&quot;</span>
 <span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;store_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://cxc.cfa.harvard.edu/mta/ASPECT/skare3/dashboard&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;data_dir&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<section id="cache-directory">
-<h2>Cache Directory<a class="headerlink" href="#cache-directory" title="Link to this heading">¶</a></h2>
-<p>The cached data is stored in the same directory as the configuration, unless otherwise specified in
-the configuration itself (i.e.: one can have the config in ~/.skare3 and set ‘data_dir’ in this
-configuration to some other directory).</p>
+<p>Repository exclusions are not configuration: they live in <code class="docutils literal notranslate"><span class="pre">repository_status.json</span></code>
+at the store root (see <a class="reference internal" href="data_service.html#module-skare3_tools.packages.store" title="skare3_tools.packages.store"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skare3_tools.packages.store</span></code></a>), so they can change
+without a skare3_tools release.</p>
+<section id="data-directory">
+<h2>Data Directory<a class="headerlink" href="#data-directory" title="Link to this heading">¶</a></h2>
+<p>The data store lives in the <code class="docutils literal notranslate"><span class="pre">data</span></code> subdirectory of the configuration directory. That location is
+<em>derived</em> from the environment on every run, and stored empty in <code class="docutils literal notranslate"><span class="pre">config.json</span></code>: the configuration
+file sits inside the store and is copied with it (the <code class="docutils literal notranslate"><span class="pre">$SKA/data</span></code> rsync), so a path written by the
+producing machine would otherwise follow the files onto every other machine. A <code class="docutils literal notranslate"><span class="pre">data_dir</span></code> found in
+the configuration that is not inside this machine’s data root is ignored for that reason. To point
+skare3_tools at a different store, set <code class="docutils literal notranslate"><span class="pre">SKARE3_TOOLS_DATA</span></code>, which does not travel with the data,
+or pass <code class="docutils literal notranslate"><span class="pre">--data-dir</span></code> to the commands that accept it.</p>
 </section>
 <section id="conda-channels">
 <h2>Conda Channels<a class="headerlink" href="#conda-channels" title="Link to this heading">¶</a></h2>
@@ -152,7 +156,7 @@ strings as values:</p>
         <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
 <ul>
 <li><a class="reference internal" href="#">Configuration</a><ul>
-<li><a class="reference internal" href="#cache-directory">Cache Directory</a></li>
+<li><a class="reference internal" href="#data-directory">Data Directory</a></li>
 <li><a class="reference internal" href="#conda-channels">Conda Channels</a></li>
 </ul>
 </li>

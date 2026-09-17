@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Github &#8212; SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</title>
+    <title>Github &#8212; SkaRE3 Tools 1.8.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="_static/documentation_options.js?v=7a2fd62e"></script>
+    <script src="_static/documentation_options.js?v=b51e6972"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -58,7 +58,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.8.0 documentation</a>
 	 &#187;
       </li>
       
@@ -82,6 +82,10 @@ given token:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">github</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="s1">&#39;c7hvg6pqi3fhqwv0wvlgp4mk9agwbqk1gxc331iz&#39;</span><span class="p">)</span>  <span class="c1"># this is optional</span>
 </pre></div>
 </div>
+<p>Importing this module never accesses the network: credentials are only read from the
+environment, and they are checked when <code class="xref py py-func docutils literal notranslate"><span class="pre">init</span></code> is called or when the API is used.
+A missing or stale token therefore does not stop a program that ends up not querying
+Github.</p>
 <section id="module-skare3_tools.github.github">
 <span id="rest-interface-v3"></span><h2>REST Interface (V3)<a class="headerlink" href="#module-skare3_tools.github.github" title="Link to this heading">¶</a></h2>
 <p>A thin wrapper for <a class="reference external" href="https://developer.github.com/v3/">Github’s REST API</a> (V3).</p>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Data Service &#8212; SkaRE3 Tools 1.8.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
+    
+    <script src="_static/documentation_options.js?v=b51e6972"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <script type="text/javascript" src="_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Dashboard" href="dash.html" />
+    <link rel="prev" title="Packages" href="packages.html" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,600' rel='stylesheet' type='text/css'/>
+
+  </head><body>
+<div class="topbar">
+  <a class="brand" title="Documentation Home" href="index.html"><span id="logotext1">Ska! </span><span id="logotext2">SkaRE3</span><span id="logotext3">Tools</span></a>
+  <ul>
+    
+    <li><a class="home" title="Homepage" href="https://cxc.cfa.harvard.edu/mta/ASPECT/tool_doc">
+        <span id="logotext1">ska</span><span id="logotext2">tools</span>
+    </a></li>
+    <li><a title="General Index" href="genindex.html">Index</a></li>
+    <li><a title="Module Index" href="py-modindex.html">Modules</a></li>
+    <li>
+      
+      
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+      
+    </li>
+  </ul>
+</div>
+
+<div class="related">
+    <h3>Navigation</h3>
+    <ul>
+      <li class="right">
+	<a href="dash.html" title="Dashboard">
+	  next &raquo;
+	</a>
+      </li>
+      <li class="right">
+	<a href="packages.html" title="Packages">
+	  &laquo; previous
+	</a>
+	 |
+      </li>
+      <li>
+	<a href="index.html">SkaRE3 Tools 1.8.0 documentation</a>
+	 &#187;
+      </li>
+      
+      <li>Data Service</li> 
+    </ul>
+</div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="data-service">
+<h1>Data Service<a class="headerlink" href="#data-service" title="Link to this heading">¶</a></h1>
+<p>Package and test-result data is consolidated in a single on-disk store,
+written by exactly one producer and read by everything else.</p>
+<section id="the-store">
+<h2>The store<a class="headerlink" href="#the-store" title="Link to this heading">¶</a></h2>
+<p>The store root is in <code class="docutils literal notranslate"><span class="pre">$SKA/data/skare3/skare3_data/data</span></code> (configured in skare3_tools via
+<code class="docutils literal notranslate"><span class="pre">CONFIG[&quot;data_dir&quot;]</span></code>). It holds:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> — schema version, generation time, producer identity, and
+the excluded repositories,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">repository_status.json</span></code> — operator-edited input mapping <code class="docutils literal notranslate"><span class="pre">owner/repo</span></code> to
+<code class="docutils literal notranslate"><span class="pre">&quot;deprecated&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;ignored&quot;</span></code> (both excluded from the store); seeded once
+by the first refresh, never overwritten,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">packages.json</span></code> — every repository’s record, plus the channel and
+metapackage versions; this is what the dashboards consume,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">package_list.json</span></code> — the package universe (skare3 recipes + organization
+repositories), unfiltered,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">test_results.json</span></code> — the digested latest regression-test results,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">test_logs/</span></code> — all test-results runs (see <span class="xref std std-ref">test_results</span>),</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">meta/</span></code> — producer bookkeeping (change-detection state, lock).</p></li>
+</ul>
+<p>Every file is written atomically, so readers (including rsync’d copies) never
+see a half-written file.</p>
+</section>
+<section id="one-copy-of-each-record">
+<h2>One copy of each record<a class="headerlink" href="#one-copy-of-each-record" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">packages.json</span></code> holds each repository’s record exactly once: there is no
+per-repository tree beside it that could drift out of sync. This file is incrementally
+updated by the <code class="docutils literal notranslate"><span class="pre">skare3-refresh</span></code> script.</p>
+<p>There are two different recorded versions in this file: <code class="docutils literal notranslate"><span class="pre">schema_version</span></code> and <code class="docutils literal notranslate"><span class="pre">record_version</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">schema_version</span></code> describes the store’s <em>layout</em>, specifying which files exist and how a reader
+finds things in them. A reader of another version declines the store rather than half-reading it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">record_version</span></code> (with <code class="docutils literal notranslate"><span class="pre">record_options</span></code>) describes the shape of one repository record. This is
+what decides whether the producer can reuse the already existing record.</p></li>
+</ul>
+<p>Keeping them apart matters: a layout change must not cost a refetch of every repository, which
+would be thousands of GraphQL queries for records that are not invalid.</p>
+</section>
+<section id="package-deployment-status">
+<h2>Package Deployment Status<a class="headerlink" href="#package-deployment-status" title="Link to this heading">¶</a></h2>
+<p>There are five fields related to the package’s deployment status:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">master_version</span></code> is the latest version in the <code class="docutils literal notranslate"><span class="pre">ska3-masters</span></code> channel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">flight</span></code> is the version pinned by the <code class="docutils literal notranslate"><span class="pre">ska3-flight</span></code> metapackage.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">matlab</span></code> is the version pinned by the <code class="docutils literal notranslate"><span class="pre">ska3-matlab</span></code> metapackage.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aca</span></code> is the version pinned by the <code class="docutils literal notranslate"><span class="pre">ska3-aca</span></code> metapackage.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">test_version</span></code> is the version used in the latest regression run.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">test_status</span></code> is the latest regression run result (pass or fail).</p></li>
+</ul>
+<p>These fields are not directly related to repository activity, so
+every refresh recomputes all of them for every repository — including the ones
+whose details were not refetched. A <code class="docutils literal notranslate"><span class="pre">master_version</span></code> that does not correspond
+to the master branch is a CI failure to investigate.</p>
+<p id="module-skare3_tools.packages.store">The consolidated package-data store.</p>
+<p>One producer (<code class="docutils literal notranslate"><span class="pre">skare3-refresh</span></code>) writes these files; everything else reads
+them. The store root is <code class="docutils literal notranslate"><span class="pre">CONFIG[&quot;data_dir&quot;]</span></code> — <code class="docutils literal notranslate"><span class="pre">$SKA/data/skare3/skare3_data/data</span></code>
+on synced hosts — which reaches every machine through the existing <code class="docutils literal notranslate"><span class="pre">$SKA/data</span></code>
+rsync. Layout:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>&lt;data_dir&gt;/
+├── manifest.json          # schema_version, generated, producer, excluded
+├── repository_status.json # operator-edited: {owner/repo: &quot;deprecated&quot;|&quot;ignored&quot;}
+├── packages.json          # the per-repository records (the only copy) + channel state
+├── package_list.json      # the package universe (pkg_defs + org repos), unfiltered
+├── test_results.json      # pre-digested latest test results
+├── test_logs/             # test-results runs (see test_results.py)
+└── meta/
+    ├── state.json         # producer bookkeeping (last-updated timestamps)
+    └── refresh.lock
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">packages.json</span></code> holds each repository’s record exactly once: there is no
+separate per-repository tree to drift out of sync with it. Single-repository
+reads pick the entry out of the aggregate (see <code class="xref py py-class docutils literal notranslate"><span class="pre">StoreReader</span></code>).</p>
+<p>Every file is written atomically (temp file + <code class="docutils literal notranslate"><span class="pre">os.replace</span></code>), so readers on
+rsync’d copies never see a half-written file. Readers never take the lock.</p>
+<p><code class="docutils literal notranslate"><span class="pre">repository_status.json</span></code> is the one file the producer reads rather than
+writes: repositories listed there (with either status) are excluded from the
+store. The first refresh seeds it if absent; after that it is never overwritten.</p>
+</section>
+<section id="the-recipes">
+<h2>The recipes<a class="headerlink" href="#the-recipes" title="Link to this heading">¶</a></h2>
+<p>The package universe comes from the skare3 recipes (<code class="docutils literal notranslate"><span class="pre">pkg_defs/*/meta.yaml</span></code>)
+plus the organizations’ repository listings. The recipes are fetched as a
+tarball of the default branch into a temporary directory, once per run, and
+nothing is left behind: there is deliberately no checkout in the data
+directory.</p>
+<p>If the fetch fails, the store’s own <code class="docutils literal notranslate"><span class="pre">package_list.json</span></code> is the parsed product
+of an earlier fetch and stands in for the recipes. The error is then reported in a summary.
+If the fetch fails and there is no <code class="docutils literal notranslate"><span class="pre">package_list.json</span></code>, the run aborts.</p>
+</section>
+<section id="module-skare3_tools.packages.refresh">
+<span id="the-producer-skare3-refresh"></span><h2>The producer: skare3-refresh<a class="headerlink" href="#module-skare3_tools.packages.refresh" title="Link to this heading">¶</a></h2>
+<p>The single writer of the package-data store.</p>
+<p>The command-line entry point is <code class="xref py py-mod docutils literal notranslate"><span class="pre">skare3_tools.scripts.refresh</span></code>
+(<code class="docutils literal notranslate"><span class="pre">skare3-refresh</span></code>).</p>
+<p>One run brings the store (see <a class="reference internal" href="#module-skare3_tools.packages.store" title="skare3_tools.packages.store"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skare3_tools.packages.store</span></code></a>) up to date:</p>
+<ol class="arabic simple">
+<li><p>refresh the package list (the skare3 recipes, fetched to a temporary
+directory, plus the org repositories) into <code class="docutils literal notranslate"><span class="pre">package_list.json</span></code>, and take
+the working universe from it, excluding repositories listed in
+<code class="docutils literal notranslate"><span class="pre">repository_status.json</span></code> at the store root — an operator-edited file that
+refresh seeds once if missing and never overwrites,</p></li>
+<li><p>snapshot the conda channels once and resolve the four metapackages
+(ska3-aca/flight/matlab/perl) — failing loudly if any can’t be resolved,</p></li>
+<li><p>detect changed repositories with one batched GraphQL query and fetch detail
+only for those, carrying the rest over from the previous <code class="docutils literal notranslate"><span class="pre">packages.json</span></code>
+(the aggregate is the incremental cache as well as the output — there is no
+second copy of a repository’s record anywhere),</p></li>
+<li><p>rebuild <code class="docutils literal notranslate"><span class="pre">packages.json</span></code> (always — metapackage pins and channel versions
+can change without any repository push), digest the latest test results,
+and advance <code class="docutils literal notranslate"><span class="pre">meta/state.json</span></code> last, so an interrupted run only causes a
+refetch.</p></li>
+</ol>
+<p>If there is no readable test run, the tested versions already in the store are
+kept rather than blanked, and the run is reported as a failure: an aggregate
+claiming nothing was tested is indistinguishable from the truth once written.</p>
+<p>If the conda channels or GitHub cannot be reached at all, the run aborts with
+<code class="xref py py-class docutils literal notranslate"><span class="pre">RefreshError</span></code> before writing anything: the store keeps the data it has.</p>
+<p>Authentication is entirely the github wrappers’ business: a personal token
+(<code class="docutils literal notranslate"><span class="pre">GITHUB_API_TOKEN</span></code>/<code class="docutils literal notranslate"><span class="pre">GITHUB_TOKEN</span></code>) or, when <code class="docutils literal notranslate"><span class="pre">SKARE3_GITHUB_APP_KEY</span></code> is
+set, per-organization App-77359 installation tokens minted transparently per
+request (see <code class="xref py py-mod docutils literal notranslate"><span class="pre">skare3_tools.github.app_auth</span></code>).</p>
+</section>
+<section id="publishing-skare3-dashboard-update">
+<h2>Publishing: skare3-dashboard-update<a class="headerlink" href="#publishing-skare3-dashboard-update" title="Link to this heading">¶</a></h2>
+<p>The hourly production job reduces to <code class="docutils literal notranslate"><span class="pre">skare3-refresh</span></code> followed by rendering, and “publishing”
+amounts to copying the JSON files into the public directory served over HTTP.</p>
+<p id="module-skare3_tools.scripts.dashboard_update">Publish the data store for HTTP readers.</p>
+<p><code class="docutils literal notranslate"><span class="pre">skare3-dashboard-update</span></code> is the hourly production entry point: refresh the
+store, then copy the published subset into the public dashboard directory —
+<code class="docutils literal notranslate"><span class="pre">packages.json</span></code> and <code class="docutils literal notranslate"><span class="pre">test_results.json</span></code> (fetched by the React dashboard),
+plus <code class="docutils literal notranslate"><span class="pre">package_list.json</span></code> and <code class="docutils literal notranslate"><span class="pre">repository_status.json</span></code> (the DataClient HTTP
+tier).</p>
+<p>The store’s <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> and <code class="docutils literal notranslate"><span class="pre">meta/</span></code> are never published: the manifest
+name collides with the React app’s own <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> at the public root
+(and the HTTP tier does not read it), and <code class="docutils literal notranslate"><span class="pre">meta/</span></code> is producer bookkeeping.</p>
+<p>Files are copied via a temp name + <code class="docutils literal notranslate"><span class="pre">os.replace</span></code> so HTTP readers see the old
+or the new content, never a partial file.</p>
+</section>
+<section id="reading-the-data-dataclient">
+<h2>Reading the data: DataClient<a class="headerlink" href="#reading-the-data-dataclient" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="skare3_tools.packages.DataClient">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">DataClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/client.html#DataClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.DataClient" title="Link to this definition">¶</a></dt>
+<dd><p>Read package data from the best available source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> – “auto”, “local”, “http” or “github”.</p></li>
+<li><p><strong>data_dir</strong> – local store directory (default: the configured root).</p></li>
+<li><p><strong>url</strong> – published store URL (default: CONFIG[“store_url”]).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="skare3_tools.packages.DataClient.generated">
+<span class="sig-name descname"><span class="pre">generated</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/client.html#DataClient.generated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.DataClient.generated" title="Link to this definition">¶</a></dt>
+<dd><p>When the data was produced (ISO string), or “” if it does not say.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skare3_tools.packages.DataClient.package_list">
+<span class="sig-name descname"><span class="pre">package_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/client.html#DataClient.package_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.DataClient.package_list" title="Link to this definition">¶</a></dt>
+<dd><p>The package universe, as <a class="reference internal" href="packages_api.html#skare3_tools.packages.get_package_list" title="skare3_tools.packages.get_package_list"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_package_list</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skare3_tools.packages.DataClient.packages">
+<span class="sig-name descname"><span class="pre">packages</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/client.html#DataClient.packages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.DataClient.packages" title="Link to this definition">¶</a></dt>
+<dd><p>The aggregate: every repository’s record, plus the channel versions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skare3_tools.packages.DataClient.repository_info">
+<span class="sig-name descname"><span class="pre">repository_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner_repo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/client.html#DataClient.repository_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.DataClient.repository_info" title="Link to this definition">¶</a></dt>
+<dd><p>Detailed information for one repository.</p>
+<p>The aggregate holds the only copy of each record, so this picks the
+entry out of it – identically for every source.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skare3_tools.packages.DataClient.sources">
+<span class="sig-name descname"><span class="pre">sources</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/client.html#DataClient.sources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.DataClient.sources" title="Link to this definition">¶</a></dt>
+<dd><p>The sources to try, in order, for this client’s configured source.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="skare3_tools.packages.DataClient.test_results">
+<span class="sig-name descname"><span class="pre">test_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/client.html#DataClient.test_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.DataClient.test_results" title="Link to this definition">¶</a></dt>
+<dd><p>The digested latest test results (test_results.json).</p>
+</dd></dl>
+
+</dd></dl>
+
+<p>Falling back is decided per file, not once per client: a store or a published
+location can be missing one file and be authoritative for the rest — which is
+exactly what a store written by an older layout looks like. One absent file
+must not send every other read to Github.</p>
+<p>The public functions of <a class="reference internal" href="packages.html#module-skare3_tools.packages" title="skare3_tools.packages"><code class="xref py py-mod docutils literal notranslate"><span class="pre">skare3_tools.packages</span></code></a>
+(<a class="reference internal" href="packages_api.html#skare3_tools.packages.get_repository_info" title="skare3_tools.packages.get_repository_info"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_repository_info</span></code></a>,
+<a class="reference internal" href="packages_api.html#skare3_tools.packages.get_repositories_info" title="skare3_tools.packages.get_repositories_info"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_repositories_info</span></code></a> and
+<a class="reference internal" href="packages_api.html#skare3_tools.packages.get_package_list" title="skare3_tools.packages.get_package_list"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_package_list</span></code></a>) read the store through this
+client, so they need no Github token. They query Github only when asked for
+something the store does not hold — a different <code class="docutils literal notranslate"><span class="pre">since</span></code>, say — or with
+<code class="docutils literal notranslate"><span class="pre">update=True</span></code>. What the store’s records were produced with is recorded in
+the aggregate itself, and reported by
+<a class="reference internal" href="packages_api.html#skare3_tools.packages.record_options" title="skare3_tools.packages.record_options"><code class="xref py py-func docutils literal notranslate"><span class="pre">record_options</span></code></a>.</p>
+<p>The dashboard views (<code class="docutils literal notranslate"><span class="pre">skare3-dashboard</span></code>, <code class="docutils literal notranslate"><span class="pre">skare3-test-dashboard</span></code>) are plain renderers of this
+data: they read it through this client, and do not query Github themselves.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
+<ul>
+<li><a class="reference internal" href="#">Data Service</a><ul>
+<li><a class="reference internal" href="#the-store">The store</a></li>
+<li><a class="reference internal" href="#one-copy-of-each-record">One copy of each record</a></li>
+<li><a class="reference internal" href="#package-deployment-status">Package Deployment Status</a></li>
+<li><a class="reference internal" href="#the-recipes">The recipes</a></li>
+<li><a class="reference internal" href="#module-skare3_tools.packages.refresh">The producer: skare3-refresh</a></li>
+<li><a class="reference internal" href="#publishing-skare3-dashboard-update">Publishing: skare3-dashboard-update</a></li>
+<li><a class="reference internal" href="#reading-the-data-dataclient">Reading the data: DataClient</a><ul>
+<li><a class="reference internal" href="#skare3_tools.packages.DataClient"><code class="docutils literal notranslate"><span class="pre">DataClient</span></code></a><ul>
+<li><a class="reference internal" href="#skare3_tools.packages.DataClient.generated"><code class="docutils literal notranslate"><span class="pre">DataClient.generated</span></code></a></li>
+<li><a class="reference internal" href="#skare3_tools.packages.DataClient.package_list"><code class="docutils literal notranslate"><span class="pre">DataClient.package_list</span></code></a></li>
+<li><a class="reference internal" href="#skare3_tools.packages.DataClient.packages"><code class="docutils literal notranslate"><span class="pre">DataClient.packages</span></code></a></li>
+<li><a class="reference internal" href="#skare3_tools.packages.DataClient.repository_info"><code class="docutils literal notranslate"><span class="pre">DataClient.repository_info</span></code></a></li>
+<li><a class="reference internal" href="#skare3_tools.packages.DataClient.sources"><code class="docutils literal notranslate"><span class="pre">DataClient.sources</span></code></a></li>
+<li><a class="reference internal" href="#skare3_tools.packages.DataClient.test_results"><code class="docutils literal notranslate"><span class="pre">DataClient.test_results</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="packages.html"
+                          title="previous chapter">Packages</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="dash.html"
+                          title="next chapter">Dashboard</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/data_service.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<form action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<footer class="footer">
+  <p class="pull-right">
+    <a href="_sources/data_service.rst.txt"
+       rel="nofollow">Page Source</a> &nbsp;
+    <a href="#">Back to Top</a></p>
+  <p>
+    &copy; Copyright 2020, Javier Gonzalez.<br/>
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 9.1.0. &nbsp;
+  </p>
+</footer>
+  </body>
+</html>

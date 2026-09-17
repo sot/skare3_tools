@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Github REST &#8212; SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</title>
+    <title>Github REST &#8212; SkaRE3 Tools 1.8.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="_static/documentation_options.js?v=7a2fd62e"></script>
+    <script src="_static/documentation_options.js?v=b51e6972"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -58,7 +58,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.8.0 documentation</a>
 	 &#187;
       </li>
       <li><a href="api.html" accesskey="U">API</a> &#187;</li>
@@ -105,24 +105,35 @@ override a previously initialized API</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="skare3_tools.github.github.GithubAPI.get_conditional">
+<span class="sig-name descname"><span class="pre">get_conditional</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#GithubAPI.get_conditional"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.github.github.GithubAPI.get_conditional" title="Link to this definition">¶</a></dt>
+<dd><p>Get all items of a paginated listing using conditional requests.</p>
+<p>Each page is requested with <code class="docutils literal notranslate"><span class="pre">If-None-Match</span></code> when a previous ETag is
+known; on a 304 the page body cached in <code class="docutils literal notranslate"><span class="pre">state</span></code> is reused. <code class="docutils literal notranslate"><span class="pre">state</span></code>
+is a caller-owned dict, updated in place, meant to be persisted
+between runs (e.g. in a refresh state file).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> – str. The endpoint path, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;/orgs/:owner/repos&quot;</span></code>.</p></li>
+<li><p><strong>state</strong> – dict. Maps a page key to <code class="docutils literal notranslate"><span class="pre">{&quot;etag&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;body&quot;:</span> <span class="pre">[...]}</span></code>.</p></li>
+<li><p><strong>params</strong> – dict. Extra query parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of all items.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="skare3_tools.github.github.GithubAPI.init">
 <span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/github.html#GithubAPI.init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.github.github.GithubAPI.init" title="Link to this definition">¶</a></dt>
-<dd><p>Initialize the Github API.</p>
-<p>If not token is provided, it tries the following:
-- look for GITHUB_API_TOKEN environmental variable
-- look for GITHUB_TOKEN environmental variable</p>
-<p>If that fails, try with user/password (deprecated)
-If no user name is provided, it tries the following:</p>
-<ul class="simple">
-<li><p>look for GITHUB_USER environmental variable</p></li>
-<li><p>request in a command line prompt.</p></li>
-</ul>
-<p>If no password is provided, it tries the following:</p>
-<ul class="simple">
-<li><p>look for GITHUB_PASSWORD environmental variable</p></li>
-<li><p>try getting it from the keyring (Keychain in Mac OS)</p></li>
-</ul>
-<p>If user name or password can not be determined, an AuthException is raised.</p>
+<dd><p>Initialize the Github API and check the credentials against Github.</p>
+<p>Credentials are resolved as described in <code class="xref py py-meth docutils literal notranslate"><span class="pre">_set_credentials</span></code>, and
+then checked, which requires network access. Creating a GithubAPI does
+not check them: importing this module must work with no network and no
+valid credentials, so a stale token only shows up when the API is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -752,7 +763,11 @@ override a previously initialized API</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="skare3_tools.github.graphql.GithubAPI.init">
 <span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/github/graphql.html#GithubAPI.init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.github.graphql.GithubAPI.init" title="Link to this definition">¶</a></dt>
-<dd><p>Initialize the Github API.</p>
+<dd><p>Initialize the Github API and check the credentials against Github.</p>
+<p>Credentials are resolved as described in <code class="xref py py-meth docutils literal notranslate"><span class="pre">_set_credentials</span></code> and
+then checked, which requires network access. Creating a GithubAPI does
+not check them: importing this module must work with no network and no
+valid credentials, so a stale token only shows up when the API is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -782,6 +797,7 @@ override a previously initialized API</p></li>
 <li><a class="reference internal" href="#skare3_tools.github.github.init"><code class="docutils literal notranslate"><span class="pre">init</span></code></a></li>
 <li><a class="reference internal" href="#skare3_tools.github.github.GithubAPI"><code class="docutils literal notranslate"><span class="pre">GithubAPI</span></code></a><ul>
 <li><a class="reference internal" href="#skare3_tools.github.github.GithubAPI.get"><code class="docutils literal notranslate"><span class="pre">GithubAPI.get</span></code></a></li>
+<li><a class="reference internal" href="#skare3_tools.github.github.GithubAPI.get_conditional"><code class="docutils literal notranslate"><span class="pre">GithubAPI.get_conditional</span></code></a></li>
 <li><a class="reference internal" href="#skare3_tools.github.github.GithubAPI.init"><code class="docutils literal notranslate"><span class="pre">GithubAPI.init</span></code></a></li>
 <li><a class="reference internal" href="#skare3_tools.github.github.GithubAPI.patch"><code class="docutils literal notranslate"><span class="pre">GithubAPI.patch</span></code></a></li>
 <li><a class="reference internal" href="#skare3_tools.github.github.GithubAPI.post"><code class="docutils literal notranslate"><span class="pre">GithubAPI.post</span></code></a></li>

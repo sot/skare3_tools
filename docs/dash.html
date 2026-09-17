@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Dashboard &#8212; SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</title>
+    <title>Dashboard &#8212; SkaRE3 Tools 1.8.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="_static/documentation_options.js?v=7a2fd62e"></script>
+    <script src="_static/documentation_options.js?v=b51e6972"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -17,7 +17,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Test Results" href="test_results.html" />
-    <link rel="prev" title="Packages" href="packages.html" />
+    <link rel="prev" title="Data Service" href="data_service.html" />
     <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,600' rel='stylesheet' type='text/css'/>
 
   </head><body>
@@ -52,13 +52,13 @@
 	</a>
       </li>
       <li class="right">
-	<a href="packages.html" title="Packages">
+	<a href="data_service.html" title="Data Service">
 	  &laquo; previous
 	</a>
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.8.0 documentation</a>
 	 &#187;
       </li>
       
@@ -96,7 +96,8 @@ Only available on web server.</p></li>
 <span id="id1"></span><h3><a class="reference internal" href="#skare3-dashboard"><span class="std std-ref">skare3-dashboard</span></a><a class="headerlink" href="#skare3-dashboard" title="Link to this heading">¶</a></h3>
 <p><p>Produce a single html page with package information</p>
 </p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">dashboard</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">FILENAME</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">dashboard</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">FILENAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">source</span> <span class="p">{</span><span class="n">auto</span><span class="p">,</span><span class="n">local</span><span class="p">,</span><span class="n">http</span><span class="p">,</span><span class="n">github</span><span class="p">}]</span>
+                        <span class="p">[</span><span class="o">--</span><span class="n">data</span><span class="o">-</span><span class="nb">dir</span> <span class="n">DATA_DIR</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="skare3_tools.dashboard.views.dashboard-get_parser-named-arguments">
@@ -105,6 +106,14 @@ Only available on web server.</p></li>
 <dt><kbd>-o</kbd></dt>
 <dd><p>Output file (default: index.html)</p>
 <p>Default: <code class="docutils literal notranslate"><span class="pre">index.html</span></code></p>
+</dd>
+<dt><kbd>--source</kbd></dt>
+<dd><p>Possible choices: auto, local, http, github</p>
+<p>Where to read the data from (default: auto)</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'auto'</span></code></p>
+</dd>
+<dt><kbd>--data-dir</kbd></dt>
+<dd><p>Local store directory (with –source=local)</p>
 </dd>
 </dl>
 </section>
@@ -171,8 +180,8 @@ Only available on web server.</p></li>
 
   <div>
     <h4>Previous topic</h4>
-    <p class="topless"><a href="packages.html"
-                          title="previous chapter">Packages</a></p>
+    <p class="topless"><a href="data_service.html"
+                          title="previous chapter">Data Service</a></p>
   </div>
   <div>
     <h4>Next topic</h4>

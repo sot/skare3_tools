@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>skare3_tools.packages.client &#8212; SkaRE3 Tools 1.8.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/bootstrap-astropy.css?v=f4f7060c" />
+    
+    <script src="../../../_static/documentation_options.js?v=b51e6972"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,600' rel='stylesheet' type='text/css'/>
+
+  </head><body>
+<div class="topbar">
+  <a class="brand" title="Documentation Home" href="../../../index.html"><span id="logotext1">Ska! </span><span id="logotext2">SkaRE3</span><span id="logotext3">Tools</span></a>
+  <ul>
+    
+    <li><a class="home" title="Homepage" href="https://cxc.cfa.harvard.edu/mta/ASPECT/tool_doc">
+        <span id="logotext1">ska</span><span id="logotext2">tools</span>
+    </a></li>
+    <li><a title="General Index" href="../../../genindex.html">Index</a></li>
+    <li><a title="Module Index" href="../../../py-modindex.html">Modules</a></li>
+    <li>
+      
+      
+<form action="../../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+      
+    </li>
+  </ul>
+</div>
+
+<div class="related">
+    <h3>Navigation</h3>
+    <ul>
+      <li>
+	<a href="../../../index.html">SkaRE3 Tools 1.8.0 documentation</a>
+	 &#187;
+      </li>
+      <li><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+      
+       
+    </ul>
+</div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for skare3_tools.packages.client</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Read access to the package data for every consumer.</span>
+
+<span class="sd">``DataClient`` hides where the data comes from:</span>
+
+<span class="sd">- ``local`` — the store on disk (``$SKA/data`` sync; no network, no token),</span>
+<span class="sd">- ``http`` — the published store (``CONFIG[&quot;store_url&quot;]``),</span>
+<span class="sd">- ``github`` — direct queries through the legacy API (needs a token; slow),</span>
+<span class="sd">- ``auto`` (default) — local if a store is present, else http, falling back</span>
+<span class="sd">  to github only if the published data is unreachable.</span>
+
+<span class="sd">Falling back is decided per file, not once for the client: a store or a</span>
+<span class="sd">published location can be missing one file and authoritative for the rest,</span>
+<span class="sd">which is exactly what a store written by an older layout looks like. Getting</span>
+<span class="sd">this wrong is expensive — one absent file would send every other read to</span>
+<span class="sd">GitHub.</span>
+
+<span class="sd">What a client reads is remembered for its lifetime, so picking many</span>
+<span class="sd">repositories out of the aggregate costs one read. Build a new client to see</span>
+<span class="sd">newer data.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CONFIG</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skare3_tools.packages</span><span class="w"> </span><span class="kn">import</span> <span class="n">packages</span><span class="p">,</span> <span class="n">store</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;skare3.client&quot;</span><span class="p">)</span>
+
+<span class="c1"># a source that raises one of these has not got the file (missing, unreadable</span>
+<span class="c1"># or corrupt); try the next one. Anything else is a real error and propagates.</span>
+<span class="n">_NOT_AVAILABLE</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="ne">OSError</span><span class="p">,</span>
+    <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">,</span>
+    <span class="n">store</span><span class="o">.</span><span class="n">StoreNotFoundError</span><span class="p">,</span>
+    <span class="n">requests</span><span class="o">.</span><span class="n">RequestException</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="DataClient">
+<a class="viewcode-back" href="../../../data_service.html#skare3_tools.packages.DataClient">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DataClient</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read package data from the best available source.</span>
+
+<span class="sd">    :param source: &quot;auto&quot;, &quot;local&quot;, &quot;http&quot; or &quot;github&quot;.</span>
+<span class="sd">    :param data_dir: local store directory (default: the configured root).</span>
+<span class="sd">    :param url: published store URL (default: CONFIG[&quot;store_url&quot;]).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">data_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span> <span class="ow">or</span> <span class="n">CONFIG</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;store_url&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_read</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;reading package data from source=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DataClient.packages">
+<a class="viewcode-back" href="../../../data_service.html#skare3_tools.packages.DataClient.packages">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">packages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The aggregate: every repository&#39;s record, plus the channel versions.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_once</span><span class="p">(</span>
+            <span class="s2">&quot;packages.json&quot;</span><span class="p">,</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;local&quot;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">store</span><span class="o">.</span><span class="n">StoreReader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">)</span><span class="o">.</span><span class="n">packages</span><span class="p">(),</span>
+                <span class="s2">&quot;http&quot;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span><span class="s2">&quot;packages.json&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;github&quot;</span><span class="p">:</span> <span class="n">packages</span><span class="o">.</span><span class="n">_repositories_info_from_github</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DataClient.package_list">
+<a class="viewcode-back" href="../../../data_service.html#skare3_tools.packages.DataClient.package_list">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">package_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The package universe, as :func:`~skare3_tools.packages.get_package_list`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_once</span><span class="p">(</span>
+            <span class="s2">&quot;package_list.json&quot;</span><span class="p">,</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;local&quot;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">store</span><span class="o">.</span><span class="n">StoreReader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">)</span><span class="o">.</span><span class="n">package_list</span><span class="p">(),</span>
+                <span class="s2">&quot;http&quot;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span><span class="s2">&quot;package_list.json&quot;</span><span class="p">)[</span><span class="s2">&quot;package_list&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;github&quot;</span><span class="p">:</span> <span class="n">packages</span><span class="o">.</span><span class="n">_package_list_from_github</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DataClient.test_results">
+<a class="viewcode-back" href="../../../data_service.html#skare3_tools.packages.DataClient.test_results">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The digested latest test results (test_results.json).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_once</span><span class="p">(</span>
+            <span class="s2">&quot;test_results.json&quot;</span><span class="p">,</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;local&quot;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">store</span><span class="o">.</span><span class="n">StoreReader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">)</span><span class="o">.</span><span class="n">test_results</span><span class="p">(),</span>
+                <span class="s2">&quot;http&quot;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span><span class="s2">&quot;test_results.json&quot;</span><span class="p">),</span>
+                <span class="c1"># no github entry: test results exist only in the store, so the</span>
+                <span class="c1"># chain ends at http and its error is the one worth reporting</span>
+            <span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DataClient.repository_info">
+<a class="viewcode-back" href="../../../data_service.html#skare3_tools.packages.DataClient.repository_info">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">repository_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner_repo</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Detailed information for one repository.</span>
+
+<span class="sd">        The aggregate holds the only copy of each record, so this picks the</span>
+<span class="sd">        entry out of it -- identically for every source.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">store</span><span class="o">.</span><span class="n">repository_entry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">packages</span><span class="p">(),</span> <span class="n">owner_repo</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DataClient.generated">
+<a class="viewcode-back" href="../../../data_service.html#skare3_tools.packages.DataClient.generated">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;When the data was produced (ISO string), or &quot;&quot; if it does not say.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">store</span><span class="o">.</span><span class="n">generated</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">packages</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="DataClient.sources">
+<a class="viewcode-back" href="../../../data_service.html#skare3_tools.packages.DataClient.sources">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The sources to try, in order, for this client&#39;s configured source.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">store</span><span class="o">.</span><span class="n">store_present</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;local&quot;</span><span class="p">,</span> <span class="s2">&quot;http&quot;</span><span class="p">,</span> <span class="s2">&quot;github&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;http&quot;</span><span class="p">,</span> <span class="s2">&quot;github&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="s2">&quot;http&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;http&quot;</span><span class="p">,</span> <span class="s2">&quot;github&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">readers</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read ``name`` from the first source that has it.&quot;&quot;&quot;</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">source</span> <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">()</span> <span class="k">if</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">readers</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sources</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">store</span><span class="o">.</span><span class="n">StoreNotFoundError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> cannot be read from source=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">following</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">sources</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">readers</span><span class="p">[</span><span class="n">source</span><span class="p">]()</span>
+            <span class="k">except</span> <span class="n">_NOT_AVAILABLE</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;no </span><span class="si">%s</span><span class="s2"> from source=</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">); trying </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">following</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">readers</span><span class="p">[</span><span class="n">sources</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_once</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">readers</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_read</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">readers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="c1"># a misconfigured location can serve an error page with status 200</span>
+            <span class="k">raise</span> <span class="n">requests</span><span class="o">.</span><span class="n">RequestException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not JSON&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper"><h3>Page Contents</h3>
+
+
+<form action="../../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<footer class="footer">
+  <p class="pull-right"> &nbsp;
+    <a href="#">Back to Top</a></p>
+  <p>
+    &copy; Copyright 2020, Javier Gonzalez.<br/>
+    Created using <a href="http://www.sphinx-doc.org/en/stable/">Sphinx</a> 9.1.0. &nbsp;
+  </p>
+</footer>
+  </body>
+</html>

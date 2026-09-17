@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Packages &#8212; SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</title>
+    <title>Packages &#8212; SkaRE3 Tools 1.8.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="_static/documentation_options.js?v=7a2fd62e"></script>
+    <script src="_static/documentation_options.js?v=b51e6972"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -52,7 +52,7 @@
 	
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.7.1.dev18+g4abc26dd8 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.8.0 documentation</a>
 	 &#187;
       </li>
       <li><a href="api.html" accesskey="U">API</a> &#187;</li>
@@ -71,25 +71,39 @@
 <h1>Packages<a class="headerlink" href="#packages" title="Link to this heading">¶</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="skare3_tools.packages.get_package_list">
-<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_package_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_package_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_package_list" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_package_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">update</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/packages.html#get_package_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_package_list" title="Link to this definition">¶</a></dt>
 <dd><p>Return a list of dictionaries, one per package.</p>
+<p>Read from the data store, which needs neither a Github token nor a conda
+query. <code class="docutils literal notranslate"><span class="pre">update=True</span></code> assembles the list from the skare3 recipes and the
+organizations instead.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict
-Dictionary contains only basic information</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>update</strong> – bool
+Assemble the list from Github instead of reading the store.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of dict
+Each dictionary contains only basic information.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="skare3_tools.packages.get_repository_info">
-<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_repository_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner_repo</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_repository_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_repository_info" title="Link to this definition">¶</a></dt>
-<dd><p>Get information about a Github repository</p>
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_repository_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner_repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/packages.html#get_repository_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_repository_info" title="Link to this definition">¶</a></dt>
+<dd><p>Get information about a Github repository.</p>
+<p>By default this reads the data store, which needs no Github token (see
+<a class="reference internal" href="data_service.html#skare3_tools.packages.DataClient" title="skare3_tools.packages.DataClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataClient</span></code></a>). The store holds one rendering
+of each repository, so any argument asking for something else – a
+different <code class="docutils literal notranslate"><span class="pre">since</span></code>, for instance – queries Github instead, as does
+<code class="docutils literal notranslate"><span class="pre">update=True</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>owner_repo</strong> – str
 the name of the repository, including owner, something like ‘sot/skare3’.</p></li>
+<li><p><strong>update</strong> – bool
+Query Github directly instead of reading the store.</p></li>
 <li><p><strong>since</strong> – int or str
 the maximum number of releases to look back, or the release tag to look back to
 (not inclusive).</p></li>
@@ -99,24 +113,40 @@ This affects only top-level entries ‘commits’, ‘merges’, ‘merge_info�
 It is for backward compatibility with the dashboard.</p></li>
 <li><p><strong>include_commits</strong> – bool
 whether to include commits in release_info.</p></li>
-<li><p><strong>update</strong> – bool
-Force update of the cached info. By default updates only if pushed_at or updated_at change.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="skare3_tools.packages.get_repositories_info">
-<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_repositories_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repositories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_repositories_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_repositories_info" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_repositories_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repositories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/packages.html#get_repositories_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_repositories_info" title="Link to this definition">¶</a></dt>
+<dd><p>Get information about many Github repositories.</p>
+<p>By default this reads the data store (see
+<a class="reference internal" href="data_service.html#skare3_tools.packages.DataClient" title="skare3_tools.packages.DataClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataClient</span></code></a>); <code class="docutils literal notranslate"><span class="pre">update=True</span></code> queries Github
+directly instead, which needs a token and is much slower.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>repositories</strong> – list of str
+Repositories (“owner/name”) to report on. Default: all of them.
+Repositories the store does not know about are reported and skipped.</p></li>
+<li><p><strong>update</strong> – bool
+Query Github directly instead of reading the store.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="skare3_tools.packages.get_conda_pkg_info">
-<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_conda_pkg_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conda_package</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conda_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_conda_pkg_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_conda_pkg_info" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_conda_pkg_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conda_package</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conda_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/packages.html#get_conda_pkg_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_conda_pkg_info" title="Link to this definition">¶</a></dt>
 <dd><p>Get information on a conda package.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -135,7 +165,7 @@ url of the channel</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="skare3_tools.packages.get_conda_pkg_dependencies">
-<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_conda_pkg_dependencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conda_package</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conda_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#get_conda_pkg_dependencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_conda_pkg_dependencies" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_conda_pkg_dependencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conda_package</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conda_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/packages.html#get_conda_pkg_dependencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_conda_pkg_dependencies" title="Link to this definition">¶</a></dt>
 <dd><p>Get dependencies of a conda package.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -152,58 +182,20 @@ url of the channel</p></li>
 </dl>
 </dd></dl>
 
-<section id="caching">
-<h2>Caching<a class="headerlink" href="#caching" title="Link to this heading">¶</a></h2>
 <dl class="py function">
-<dt class="sig sig-object py" id="skare3_tools.packages.json_cache">
-<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">json_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expires</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#json_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.json_cache" title="Link to this definition">¶</a></dt>
-<dd><p>Decorator to cache function results in json format.</p>
-<p>This decorator adds an ‘update’ argument to decorated functions. update is False by default,
-but one can set it to True to force-update the cache entry.</p>
-<p>Data is saved in json files. The file names can include a special separator character to denote
-the function arguments. Currently that character is ‘:’.</p>
+<dt class="sig sig-object py" id="skare3_tools.packages.record_options">
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">record_options</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/packages.html#record_options"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.record_options" title="Link to this definition">¶</a></dt>
+<dd><p>The arguments the records in the data store are produced with.</p>
+<p><code class="docutils literal notranslate"><span class="pre">skare3-refresh</span></code> records these in the aggregate, and
+<a class="reference internal" href="#skare3_tools.packages.get_repository_info" title="skare3_tools.packages.get_repository_info"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_repository_info</span></code></a> compares its arguments against the <em>recorded</em>
+ones to decide whether the store can answer.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong></p></li>
-<li><p><strong>directory</strong> – str
-path where to save json file. Either absolute or relative to CONFIG[‘data_dir’]</p></li>
-<li><p><strong>ignore</strong> – list
-list of argument names to ignore in the cache entry identifier</p></li>
-<li><p><strong>expires</strong> – dict
-a dictionary that can be given to datetime.timedelta(**expires)
-If the cache entry is older than this interval, it is updated.</p></li>
-<li><p><strong>update_policy</strong> – callable
-A callable taking two arguments: (filename, result), which returns True if the cache entry
-should be updated.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="skare3_tools.packages.repository_info_is_outdated">
-<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">repository_info_is_outdated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pkg_info</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages.html#repository_info_is_outdated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.repository_info_is_outdated" title="Link to this definition">¶</a></dt>
-<dd><p>Cache update policy that returns True if the Github repository has been updated or pushed into.</p>
-<p>If the calling user has not write access to the cache directory, this function returns False,
-unless SKARE3_REPO_INFO_LATEST is set to “True”.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>_</strong></p></li>
-<li><p><strong>pkg_info</strong> – dict. As returned from <a class="reference internal" href="#skare3_tools.packages.get_repository_info" title="skare3_tools.packages.get_repository_info"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_repository_info</span></code></a>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
 </section>
 
 
@@ -220,11 +212,7 @@ unless SKARE3_REPO_INFO_LATEST is set to “True”.</p>
 <li><a class="reference internal" href="#skare3_tools.packages.get_repositories_info"><code class="docutils literal notranslate"><span class="pre">get_repositories_info</span></code></a></li>
 <li><a class="reference internal" href="#skare3_tools.packages.get_conda_pkg_info"><code class="docutils literal notranslate"><span class="pre">get_conda_pkg_info</span></code></a></li>
 <li><a class="reference internal" href="#skare3_tools.packages.get_conda_pkg_dependencies"><code class="docutils literal notranslate"><span class="pre">get_conda_pkg_dependencies</span></code></a></li>
-<li><a class="reference internal" href="#caching">Caching</a><ul>
-<li><a class="reference internal" href="#skare3_tools.packages.json_cache"><code class="docutils literal notranslate"><span class="pre">json_cache</span></code></a></li>
-<li><a class="reference internal" href="#skare3_tools.packages.repository_info_is_outdated"><code class="docutils literal notranslate"><span class="pre">repository_info_is_outdated</span></code></a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#skare3_tools.packages.record_options"><code class="docutils literal notranslate"><span class="pre">record_options</span></code></a></li>
 </ul>
 </li>
 </ul>
