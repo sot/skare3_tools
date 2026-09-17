@@ -34,7 +34,7 @@ import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from skare3_tools.config import CONFIG
+from skare3_tools import config
 
 
 class TestResultException(Exception):
@@ -68,7 +68,7 @@ def summary_status(case_statuses):
 
 def _test_data_dir():
     """The test-results store, resolved from the configuration at call time."""
-    return Path(CONFIG["data_dir"]).absolute() / "test_logs"
+    return Path(config.data_dir()).absolute() / "test_logs"
 
 
 def _index_file():

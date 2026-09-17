@@ -15,9 +15,13 @@ The configuration is saved in JSON format, in the data directory:
 
 The directory must already exist: it is operational data (on synced hosts it
 rides the $SKA/data sync). If it cannot be determined, does not exist, or
-needs to be written and is not writable, init fails with an error saying so.
+needs to be written and is not writable, init fails with a DataDirError saying so.
 The one exception is a pending config-version upgrade on a read-only copy
 (e.g. a synced host): the upgraded config is kept in memory and not persisted.
+
+Importing this module does not fail for lack of a data directory: commands that only query
+Github (e.g. the release scripts on GitHub-hosted runners) do not need one. The configuration
+then keeps its defaults, and :func:`data_dir` raises the DataDirError when the store is needed.
 
 The default looks like this:
 
@@ -122,12 +126,16 @@ _OBSOLETE_KEYS = ("deprecated_repositories",)
 # - subsequent calls to init
 
 
+class DataDirError(Exception):
+    """The skare3_tools data directory is not set, does not exist, or is not writable."""
+
+
 def _app_data_dir_():
     if "SKARE3_TOOLS_DATA" in os.environ:
         return os.environ["SKARE3_TOOLS_DATA"]
     if "SKA" in os.environ:
         return os.path.join(os.environ["SKA"], "data", "skare3", "skare3_data")
-    raise Exception(
+    raise DataDirError(
         "Could not determine the skare3_tools data directory:\n"
         "the SKA environment variable is not set.\n"
         "Set SKA, or set SKARE3_TOOLS_DATA to the data directory directly."
@@ -164,6 +172,27 @@ def _persistable(config, app_data_dir):
     return stored
 
 
+def _replace_config(new_config):
+    """
+    Replace the contents of CONFIG.
+
+    CONFIG is updated in place, never rebound, because other modules import it by name.
+    """
+    CONFIG.clear()
+    CONFIG.update(new_config)
+
+
+def data_dir():
+    """
+    The data store directory.
+
+    :raises DataDirError: if there is no data directory (the message says why).
+    """
+    if not CONFIG.get("data_dir"):
+        raise _data_dir_error or DataDirError("skare3_tools data directory is not set")
+    return CONFIG["data_dir"]
+
+
 def init(config=None, reset=False):
     """
     Initialize config.
@@ -174,16 +203,17 @@ def init(config=None, reset=False):
         Flag to "reset" the configuration (from defaults).
     :return:
     """
-    global CONFIG  # noqa: PLW0603
     app_data_dir = _app_data_dir_()
     if not os.path.isdir(app_data_dir):
-        raise Exception(f"skare3_tools data directory does not exist: {app_data_dir}")
+        raise DataDirError(
+            f"skare3_tools data directory does not exist: {app_data_dir}"
+        )
     config_file = os.path.join(app_data_dir, "config.json")
     exists = os.path.exists(config_file)
     upgraded = False
     if exists and not reset:
         with open(config_file) as f:
-            CONFIG = json.load(f)
+            _replace_config(json.load(f))
         if CONFIG.get("config_version", 0) < _DEFAULT_CONFIG["config_version"]:
             # merge in default keys added since the file was written
             # (existing values win, except the version itself)
@@ -193,7 +223,7 @@ def init(config=None, reset=False):
             merged["config_version"] = _DEFAULT_CONFIG["config_version"]
             for key in _OBSOLETE_KEYS:
                 merged.pop(key, None)
-            CONFIG = merged
+            _replace_config(merged)
 
         if _is_another_machines_data_dir(CONFIG.get("data_dir"), app_data_dir):
             # config.json lives *inside* the data directory and is rsynced with
@@ -212,7 +242,7 @@ def init(config=None, reset=False):
     if config is not None:
         CONFIG.update(config)
     if reset:
-        CONFIG = _DEFAULT_CONFIG.copy()
+        _replace_config(_DEFAULT_CONFIG)
     # the store location is derived, never taken on trust from a file that
     # travels between machines. It is absolute in memory and stored empty
     # (see _persistable), so it cannot be baked in again.
@@ -221,7 +251,7 @@ def init(config=None, reset=False):
     if config or reset or not exists or upgraded:
         if not os.access(app_data_dir, os.W_OK):
             if config or reset or not exists:
-                raise Exception(
+                raise DataDirError(
                     f"skare3_tools data directory is not writable: {app_data_dir}"
                 )
             # only the version upgrade needs persisting: a read-only copy
@@ -236,7 +266,13 @@ def init(config=None, reset=False):
             json.dump(_persistable(CONFIG, app_data_dir), f, indent=2)
 
 
-# this could be replaced by a lazy attribute in shiny
-# (https://www.python.org/dev/peps/pep-0562/)
 CONFIG = _DEFAULT_CONFIG.copy()
-init()
+
+# Commands that only query Github have no data directory, so importing must not fail for
+# lack of one. The error is kept, and data_dir() raises it when the store is needed.
+_data_dir_error = None
+try:
+    init()
+except DataDirError as error:
+    _data_dir_error = error
+    _replace_config(_DEFAULT_CONFIG)

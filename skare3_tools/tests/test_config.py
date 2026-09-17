@@ -15,13 +15,26 @@ Behavior pinned:
   init needs to write. Each failure gets its own informative error.
 - Exception: a pending version upgrade on a read-only directory (a synced
   host) is kept in memory, not persisted — readers must keep working there.
+- Importing never fails for lack of a data directory: commands that only query
+  GitHub (release scripts on GitHub-hosted runners) have none. The error is
+  raised by ``config.data_dir()``, when the store is actually needed.
+- ``init()`` updates CONFIG in place, so modules that imported it by name see
+  the change.
 """
 
 import json
+import os
+import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
+import skare3_tools
 from skare3_tools import config
+from skare3_tools.packages import store
+
+REPO_ROOT = Path(skare3_tools.__file__).parent.parent
 
 
 def test_default_config_keys():
@@ -149,6 +162,53 @@ def test_init_keeps_a_deliberate_override_inside_the_data_root(tmp_path, monkeyp
     try:
         config.init()
         assert config.CONFIG["data_dir"] == str(elsewhere)
+    finally:
+        monkeypatch.undo()
+        config.init(reset=True)
+
+
+def test_import_without_data_dir():
+    """A GitHub-only script imports, and the store accessor says what is missing."""
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if key not in ("SKA", "SKARE3_TOOLS_DATA")
+    }
+    code = (
+        "import skare3_tools.github.scripts.release_merge_info\n"
+        "from skare3_tools import config\n"
+        "try:\n"
+        "    config.data_dir()\n"
+        "except config.DataDirError as error:\n"
+        "    print(error)\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "SKA environment variable" in result.stdout
+
+
+def test_no_data_dir_means_no_local_store(monkeypatch):
+    monkeypatch.setitem(config.CONFIG, "data_dir", "")
+    monkeypatch.setattr(config, "_data_dir_error", config.DataDirError("no SKA"))
+    with pytest.raises(config.DataDirError, match="no SKA"):
+        config.data_dir()
+    assert not store.store_present()
+
+
+def test_init_updates_config_in_place(tmp_path, monkeypatch):
+    monkeypatch.setenv("SKARE3_TOOLS_DATA", str(tmp_path))
+    before = config.CONFIG
+    try:
+        config.init(reset=True)
+        assert config.CONFIG is before
+        assert before["data_dir"] == str(tmp_path / "data")
     finally:
         monkeypatch.undo()
         config.init(reset=True)

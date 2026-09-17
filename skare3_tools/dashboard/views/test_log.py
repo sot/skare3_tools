@@ -91,7 +91,7 @@ def test_log(path):
             title="404 Error", message="Run {run_id} not found".format(run_id=run_id)
         )
     filename = os.path.join(
-        config.CONFIG["data_dir"],
+        config.data_dir(),
         "test_logs",
         test_runs[0]["run_info"]["destination"],
         filename,

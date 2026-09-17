@@ -37,7 +37,7 @@ import socket
 from datetime import datetime, timezone
 from pathlib import Path
 
-from skare3_tools.config import CONFIG
+from skare3_tools import config
 
 # the store layout: which files exist and how a reader finds things in them.
 # Bumping this makes readers of other versions decline the store.
@@ -66,8 +66,8 @@ class StoreLockedError(Exception):
 
 
 def store_dir():
-    """The store root: CONFIG["data_dir"]."""
-    return Path(CONFIG["data_dir"])
+    """The store root: the configured data directory (see :func:`skare3_tools.config.data_dir`)."""
+    return Path(config.data_dir())
 
 
 def store_present(directory=None):
@@ -79,10 +79,10 @@ def store_present(directory=None):
     removes files, so a reader takes what is there and looks elsewhere for the
     rest.
     """
-    directory = Path(directory) if directory else store_dir()
     try:
+        directory = Path(directory) if directory else store_dir()
         manifest = _read_json(directory / "manifest.json")
-    except (OSError, json.JSONDecodeError):
+    except (config.DataDirError, OSError, json.JSONDecodeError):
         return False
     return manifest.get("schema_version", 0) <= SCHEMA_VERSION
 
