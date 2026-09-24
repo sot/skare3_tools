@@ -7,6 +7,8 @@ The sets of versions can be specified in a few ways: 1. one string of flight, ma
 containing a dictionary of versions indexed by package names (which can be created doing
 "conda search --info --json ska3-flight", for example).
 
+The changes are listed for each platform. Platforms with the same changes are listed together.
+
 This script requires CONDA_PASSWORD to be defined.
 """
 
@@ -20,6 +22,8 @@ from packaging.version import Version
 
 from skare3_tools import github, packages
 from skare3_tools.config import CONFIG
+
+PLATFORMS = ["linux-64", "osx-arm64", "win-64"]
 
 
 class ArgumentException(Exception):
@@ -207,10 +211,67 @@ def write_conda_pkg_change_summary(change_summary):
         the summary returned by :any:`repository_change_summary`.
     :return:
     """
+    print(render_conda_pkg_change_summary(change_summary))
+
+
+def render_conda_pkg_change_summary(change_summary):
+    """
+    Render conda package change summary in markdown format.
+
+    :param change_summary: dict
+        the summary returned by :any:`repository_change_summary`.
+    :return: str
+    """
     import jinja2
 
     template = jinja2.Template(PKG_SUMMARY_MD)
-    print(template.render(summary=change_summary))
+    return template.render(summary=change_summary)
+
+
+def write_platform_change_summaries(summaries):
+    """
+    Write the change summaries of a meta-package for several platforms in markdown format.
+
+    The meta-package and its versions are written in a header. Below it, platforms with the same
+    summary are grouped, and each group is written in a collapsible ``<details>`` block. If all
+    platforms have the same summary, there is one block labeled "all platforms".
+
+    The meta-package versions are the same for all platforms, because :any:`changes` is given one
+    initial and one final version.
+
+    :param summaries: dict
+        Dictionary of the form {platform: summary}, as returned by :any:`changes`.
+    """
+    first = next(iter(summaries.values()))
+    print(
+        f"## {first['package']} ({first['initial_version']} -> {first['final_version']})\n"
+    )
+    groups = _group_platforms(summaries)
+    for platforms, summary in groups.items():
+        label = "all platforms" if len(groups) == 1 else ", ".join(platforms)
+        print(f"<details>\n<summary>{label}</summary>\n")
+        print(render_conda_pkg_change_summary(summary))
+        print("</details>\n")
+
+
+def _group_platforms(summaries):
+    """
+    Group the platforms that have the same summary.
+
+    :param summaries: dict
+        Dictionary of the form {platform: summary}
+    :return: dict
+        Dictionary of the form {(platform, ...): summary}
+    """
+    groups = []
+    for platform, summary in summaries.items():
+        for platforms, group_summary in groups:
+            if group_summary == summary:
+                platforms.append(platform)
+                break
+        else:
+            groups.append(([platform], summary))
+    return {tuple(platforms): summary for platforms, summary in groups}
 
 
 """
@@ -230,8 +291,6 @@ summary = {
 
 
 PKG_SUMMARY_MD = """
-## {{ summary.package }} changes ({{ summary.initial_version }} -> {{ summary.final_version }})
-
 {% if summary.new|length > 0 -%}### New Packages
 
 {% for package in summary.new -%}
@@ -286,6 +345,12 @@ def parser():
             "Conda channel where info for the final version of the meta-package can be found."
             "The default is to use the test channel."
         ),
+    )
+    parse.add_argument(
+        "--platform",
+        default=None,
+        action="append",
+        help=f"Conda platform to summarize. Default is all of: {', '.join(PLATFORMS)}.",
     )
     parse.add_argument(
         "--token", help="Github token, or name of file that contains token"
@@ -370,42 +435,56 @@ def _get_versions(version, repository_info, conda_info):
     return version
 
 
-def changes(meta_package, initial_version, final_version, conda_channel):
+def changes(
+    meta_package, initial_version, final_version, conda_channel, platforms=PLATFORMS
+):
     """
-    Write a change summary between two versions of a meta-package (a list of PRs for each package).
+    Get change summaries between two versions of a meta-package, one for each platform.
 
-    Example:
+    Each summary is a list of PRs for each package. Example:
 
         from skare3_tools.scripts import skare3_update_summary
-        skare3_update_summary.changes('ska3-flight', '2022.6', '2022.7rc4', 'test')
+        summaries = skare3_update_summary.changes('ska3-flight', '2022.6', '2022.7rc4', 'test')
+        skare3_update_summary.write_platform_change_summaries(summaries)
 
+    :return: dict
+        Dictionary of the form {platform: summary}
     """
     repository_info = packages.get_repositories_info()
 
-    conda_info = packages.get_conda_pkg_info(meta_package, conda_channel=conda_channel)
-    conda_info = collections.OrderedDict(
-        [(i["version"], i) for i in conda_info[meta_package]]
-    )
+    summaries = {}
+    # noarch meta-packages have the same versions on all platforms. Summarize them only once.
+    summaries_by_versions = {}
+    for platform in platforms:
+        conda_info = packages.get_conda_pkg_info(
+            meta_package, conda_channel=conda_channel, subdir=platform
+        )
+        conda_info = collections.OrderedDict(
+            [(i["version"], i) for i in conda_info[meta_package]]
+        )
 
-    # get the version sets (they can come from file, from repository_info or conda_info)
-    initial_versions = _get_versions(initial_version, repository_info, conda_info)
+        # get the version sets (they can come from file, from repository_info or conda_info)
+        initial_versions = _get_versions(initial_version, repository_info, conda_info)
+        final_versions = _get_versions(final_version, repository_info, conda_info)
 
-    final_versions = _get_versions(final_version, repository_info, conda_info)
+        key = json.dumps([initial_versions, final_versions], sort_keys=True)
+        if key not in summaries_by_versions:
+            change_summary = repository_change_summary(
+                repository_info["packages"],
+                initial_versions=initial_versions,
+                final_versions=final_versions,
+            )
+            change_summary.update(
+                {
+                    "package": meta_package,
+                    "initial_version": initial_version,
+                    "final_version": final_version,
+                }
+            )
+            summaries_by_versions[key] = change_summary
+        summaries[platform] = summaries_by_versions[key]
 
-    change_summary = repository_change_summary(
-        repository_info["packages"],
-        initial_versions=initial_versions,
-        final_versions=final_versions,
-    )
-    change_summary.update(
-        {
-            "package": meta_package,
-            "initial_version": initial_version,
-            "final_version": final_version,
-        }
-    )
-
-    write_conda_pkg_change_summary(change_summary)
+    return summaries
 
 
 def process_args(args):
@@ -480,6 +559,7 @@ def process_args(args):
                 "final_version": final_version,
                 "meta_package": name,
                 "conda_channel": args.conda_channel,
+                "platforms": args.platform or PLATFORMS,
             }
         )
 
@@ -498,7 +578,7 @@ def main():
     try:
         args_2 = process_args(args)
         for a in args_2:
-            changes(**a)
+            write_platform_change_summaries(changes(**a))
     except ArgumentException as e:
         parse.exit(1, f"{e}\n")
     except CondaException as e:
