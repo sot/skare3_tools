@@ -19,6 +19,7 @@ import os
 from packaging.version import Version
 
 from skare3_tools import github, packages
+from skare3_tools.config import CONFIG
 
 
 class ArgumentException(Exception):
@@ -109,12 +110,12 @@ def repository_change_summary(
                         releases = [
                             _clean_version(r["release_tag"]) for r in p["release_info"]
                         ]
-                        if version_1 not in releases:
+                        if version_1 not in releases or version_2 not in releases:
                             # The stored repository info looks back a limited
-                            # number of releases. If the initial version is not
-                            # among them, ask Github for exactly the history
-                            # this summary needs: one query per release in the
-                            # range, and no more.
+                            # number of releases, and it can be older than the
+                            # final version. If either version is missing, ask
+                            # Github for exactly the history this summary needs:
+                            # one query per release in the range, and no more.
                             p = packages.get_repository_info(full_name, since=version_1)
                             releases = [
                                 _clean_version(r["release_tag"])
@@ -127,6 +128,16 @@ def repository_change_summary(
                             )
                         if len(releases) == 1 and releases[0] == "":
                             logging.warning(f"Package {p['name']} has no releases?")
+                            continue
+                        if version_2 not in releases:
+                            logging.warning(
+                                f" - Final version of {full_name} is not a release on Github:"
+                                f" {version_2}, {releases}"
+                            )
+                            update_info.update(
+                                {"versions": [version_1, version_2], "merges": []}
+                            )
+                            summary["updates"].append(update_info)
                             continue
 
                         if version_1 in releases and version_1:
@@ -409,7 +420,7 @@ def process_args(args):
     channel = sum(
         [
             ["-c", c.format(CONDA_PASSWORD=CONDA_PASSWORD)]
-            for c in packages.CONFIG["conda_channels"][args.conda_channel]
+            for c in CONFIG["conda_channels"][args.conda_channel]
         ],
         [],
     )
