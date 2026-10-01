@@ -8,8 +8,13 @@ host-side installation::
     0 * * * * /path/to/env/bin/skare skare3-tasks dashboard
 
 The harness supplies what cron does not: the secrets exported by
-``~/.ci-auth``, and the PATH of the environment this script is installed in,
-so the config's exec lines resolve to the same environment.
+``~/.ci-auth`` (``CONDA_PASSWORD`` for the conda channels and
+``SKARE3_GITHUB_APP_KEY`` for the Github App), and the PATH of the environment
+this script is installed in, so the config's exec lines resolve to the same
+environment.
+
+Both are required, so a missing or unreadable secrets file stops the task with
+a one-line message rather than a traceback: cron mails it to the operator.
 """
 
 import argparse
@@ -26,15 +31,33 @@ TASKS = {
 }
 
 
+class TaskError(Exception):
+    """The task cannot be launched."""
+
+
 def ci_auth_env(path="~/.ci-auth"):
-    """The environment after sourcing ``path`` in bash (a la ska_shell.getenv)."""
+    """
+    The environment after sourcing ``path`` in bash (a la ska_shell.getenv).
+
+    :raises TaskError: if the file is missing or bash cannot source it.
+    """
+    path = Path(path).expanduser()
+    if not path.exists():
+        raise TaskError(
+            f"missing secrets file {path}; skare3 tasks need the CONDA_PASSWORD and "
+            "SKARE3_GITHUB_APP_KEY it exports, which cron does not provide"
+        )
     dump = f'{sys.executable} -c "import os, json; print(json.dumps(dict(os.environ)))"'
-    out = subprocess.run(
-        ["bash", "-c", f"source {Path(path).expanduser()} && exec {dump}"],
+    result = subprocess.run(
+        ["bash", "-c", f"source {path} && exec {dump}"],
         capture_output=True,
-        check=True,
-    ).stdout
-    return json.loads(out)
+        check=False,
+    )
+    if result.returncode:
+        raise TaskError(
+            f"could not read secrets from {path}: {result.stderr.decode().strip()}"
+        )
+    return json.loads(result.stdout)
 
 
 def run_task(name):
@@ -58,7 +81,10 @@ def get_parser():
 
 def main():
     args = get_parser().parse_args()
-    sys.exit(run_task(args.task))
+    try:
+        sys.exit(run_task(args.task))
+    except TaskError as error:
+        sys.exit(f"skare3-tasks {args.task}: {error}")
 
 
 if __name__ == "__main__":
