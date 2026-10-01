@@ -1,0 +1,8 @@
+The ska3 release for 2026_060 will be 2026.13. This is the corresponding PR: [https://github.com/sot/skare3/pull/1733]
+
+This release includes:
+* fot-matlab: Adds a kadi-based, ORV-compatible starting configuration generator, and uses SCS-85 for the HRC 2S2ONST state.
+* kadi:
+** Events database updates no longer cause NFS issues.
+** Add function {{get_observation}} to get a single observation.
+* cheta: ACA L0 image telemetry is now available from the cheta archive ([cheta#291|https://github.com/sot/cheta/pull/291]).

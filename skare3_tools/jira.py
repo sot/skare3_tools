@@ -1,5 +1,5 @@
 """
-Minimal client for the OCC Jira server (FSDS project).
+Minimal client for the OCC Jira server (FSDS and MATLAB projects).
 
 Authentication uses a Jira Personal Access Token, created once at
 https://occ-cfa.cfa.harvard.edu (avatar -> Profile -> Personal Access Tokens).

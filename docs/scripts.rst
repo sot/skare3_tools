@@ -55,6 +55,15 @@ Scripts
    :ref: skare3_tools.scripts.fsds_issue.parser
    :prog: skare3-fsds-issue
 
+.. _`skare3-matlab-issue`:
+
+:ref:`skare3-matlab-issue`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+   :ref: skare3_tools.scripts.matlab_issue.parser
+   :prog: skare3-matlab-issue
+
 .. _`skare3-git-pass`:
 
 :ref:`skare3-git-pass`
