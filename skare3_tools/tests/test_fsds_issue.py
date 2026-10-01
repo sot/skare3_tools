@@ -324,3 +324,11 @@ def test_main_ambiguous_pr_exits(monkeypatch, capsys):
         fsds_issue.main()
     assert excinfo.value.code != 0
     assert "1700" in capsys.readouterr().err
+
+
+@responses.activate
+@pytest.mark.parametrize("version,number", [("2026.1", 1690), ("2026.13", 1733)])
+def test_find_pr_matches_whole_version(version, number):
+    _stub_github(responses, [_pr(1733, "2026.13"), _pr(1690, "ska3-flight 2026.1")])
+    fsds_issue.github.init(token="test-token")
+    assert fsds_issue.find_pr(version)["number"] == number

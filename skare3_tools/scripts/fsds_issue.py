@@ -182,7 +182,8 @@ def find_pr(version, pr_number=None):
     Find the release PR in sot/skare3.
 
     With `pr_number`, fetch that PR directly. Otherwise, search the open PRs
-    for exactly one whose title contains the version.
+    for exactly one whose title contains the version (as a whole version, so
+    "2026.1" does not match "2026.13").
     """
     repository = github.Repository(SKARE3_REPO)
     if pr_number is not None:
@@ -191,7 +192,8 @@ def find_pr(version, pr_number=None):
             sys.exit(f"Could not get PR #{pr_number} from {SKARE3_REPO}: {result}")
         return result[0]
     prs = repository.pull_requests(state="open")
-    matches = [pr for pr in prs if version in pr["title"]]
+    version_in_title = re.compile(rf"(?<![\d.]){re.escape(version)}(?![\d])")
+    matches = [pr for pr in prs if version_in_title.search(pr["title"])]
     if not matches:
         sys.exit(f"No open PR in {SKARE3_REPO} with '{version}' in the title")
     if len(matches) > 1:
@@ -202,7 +204,9 @@ def find_pr(version, pr_number=None):
 
 
 def parser():
-    parse = argparse.ArgumentParser(description=__doc__)
+    parse = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parse.add_argument("version", help="Release version (e.g. 2026.9)")
     parse.add_argument(
         "--pr", type=int, help="PR number in sot/skare3 (skips the title search)"
@@ -210,7 +214,11 @@ def parser():
     parse.add_argument(
         "--token",
         "-t",
-        help="Jira Personal Access Token, or name of file that contains the token",
+        help=(
+            "Jira Personal Access Token, or name of file that contains the token."
+            " Default: the FSDS_JIRA_TOKEN environment variable."
+            " Create the token in Jira (avatar -> Profile -> Personal Access Tokens)"
+        ),
     )
     parse.add_argument("--github-token", help="Github token")
     parse.add_argument("--jira-url", default=jira.JIRA_URL, help=argparse.SUPPRESS)
