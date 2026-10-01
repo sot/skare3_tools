@@ -18,7 +18,11 @@ authenticated user is set as the issue's Developer.
 Jira authentication uses a Personal Access Token, created once at
 https://occ-cfa.cfa.harvard.edu (avatar -> Profile -> Personal Access Tokens)
 and passed with --token or the FSDS_JIRA_TOKEN environment variable.
-Use --dry-run to review the issue content without creating anything.
+
+If the issue for the release already exists, the script shows how it differs
+from the release PR. Use --update to update it (unless it is Resolved or
+Withdrawn, in which case --force is also needed), and --dry-run to review the
+issue content without creating or updating anything.
 """
 
 import argparse
@@ -43,6 +47,9 @@ INTRO = (
     "The ska3 release for {matlab_release} will be {version}. "
     "This is the corresponding PR: [{url}]"
 )
+
+# Issues in these statuses are only updated with --force.
+LOCKED_STATUSES = ("Resolved", "Withdrawn")
 
 # "2026.13 (MATLAB 2026_060)", "2026.13" or "MATLAB 2026_060"
 MILESTONE_TITLE = re.compile(
@@ -119,7 +126,9 @@ def find_milestone(version, matlab_release=None, pr=None):
             matlab_release is not None and title_matlab_release == matlab_release
         ):
             matches.append(milestone["title"])
-    wanted = f"'{version}'" + (f" or 'MATLAB {matlab_release}'" if matlab_release else "")
+    wanted = f"'{version}'" + (
+        f" or 'MATLAB {matlab_release}'" if matlab_release else ""
+    )
     if not matches:
         sys.exit(f"No milestone in {SKARE3_REPO} matches {wanted}")
     if len(matches) > 1:
@@ -199,35 +208,63 @@ def parser():
     parse.add_argument("--github-token", help="Github token")
     parse.add_argument("--jira-url", default=jira.JIRA_URL, help=argparse.SUPPRESS)
     parse.add_argument(
+        "--update",
+        action="store_true",
+        help="Update the issue for this release if it already exists",
+    )
+    parse.add_argument(
+        "--force",
+        action="store_true",
+        help="With --update, update the issue whatever its status (Resolved or Withdrawn)",
+    )
+    parse.add_argument(
         "--dry-run",
         action="store_true",
-        help="Print the issue fields without creating anything",
+        help=(
+            "Print the issue fields and, if there is a Jira token, how they differ"
+            " from the existing issue. Nothing is created or updated"
+        ),
     )
     return parse
 
 
 def main():
-    # print() carries the tool's output (the dry-run payload and the created
-    # issue URL); logging carries status and diagnostics (to stderr).
+    # print() carries the tool's output (the dry-run payload and the issue
+    # URL); logging carries status and diagnostics (to stderr).
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     args = parser().parse_args()
     github.init(token=args.github_token)
     pr = find_pr(args.version, args.pr)
     matlab_release = get_matlab_release(args.version, args.matlab_release, pr)
-    if args.dry_run:
-        fields = build_fields(args.version, matlab_release, pr)
-        print(fields["description"])
-        print(json.dumps(fields, indent=2))
-        return
+    # a dry run without a Jira token only prints the fields
+    check_jira = not args.dry_run or jira.resolve_token(args.token) is not None
     try:
-        session = jira.get_session(token=args.token)
-        user = jira.verify(session, url=args.jira_url)
-        logger.info("Authenticated as %s", user.get("displayName", user.get("name")))
-        fields = build_fields(args.version, matlab_release, pr, developer=user["name"])
-        result = jira.create_issue(session, fields, url=args.jira_url)
+        session = developer = None
+        if check_jira:
+            session = jira.get_session(token=args.token)
+            user = jira.verify(session, url=args.jira_url)
+            logger.info(
+                "Authenticated as %s", user.get("displayName", user.get("name"))
+            )
+            developer = user["name"]
+        fields = build_fields(args.version, matlab_release, pr, developer=developer)
+        if args.dry_run:
+            print(fields["description"])
+            print(json.dumps(fields, indent=2))
+        if not check_jira:
+            logger.info("No Jira token: not checking for an existing issue")
+            return
+        jira.create_or_update_issue(
+            session,
+            fields,
+            locked_statuses=LOCKED_STATUSES,
+            update=args.update,
+            force=args.force,
+            dry_run=args.dry_run,
+            url=args.jira_url,
+        )
     except jira.JiraError as error:
         sys.exit(str(error))
-    print(f"Created {result['key']}: {args.jira_url}/browse/{result['key']}")
 
 
 if __name__ == "__main__":

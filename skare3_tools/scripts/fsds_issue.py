@@ -13,7 +13,11 @@ section, converted from GitHub markdown to Jira wiki markup.
 Jira authentication uses a Personal Access Token, created once at
 https://occ-cfa.cfa.harvard.edu (avatar -> Profile -> Personal Access Tokens)
 and passed with --token or the FSDS_JIRA_TOKEN environment variable.
-Use --dry-run to review the issue content without creating anything.
+
+If the issue for the release already exists, the script shows how it differs
+from the release PR. Use --update to update it (only while it is In
+Development, unless --force is given), and --dry-run to review the issue
+content without creating or updating anything.
 """
 
 import argparse
@@ -35,6 +39,10 @@ TESTING = (
     "Testing is detailed in the Description below and in individual pull requests."
 )
 INTERFACE_IMPACTS = "Interface impacts are detailed in the Description below."
+
+# Once a change request is submitted for review, its content is what reviewers
+# see, so it is only updated with --force.
+LOCKED_STATUSES = ("Under Review", "Approved", "Withdrawn")
 
 HEADING = re.compile(r"^#{1,6}\s")
 
@@ -223,16 +231,29 @@ def parser():
     parse.add_argument("--github-token", help="Github token")
     parse.add_argument("--jira-url", default=jira.JIRA_URL, help=argparse.SUPPRESS)
     parse.add_argument(
+        "--update",
+        action="store_true",
+        help="Update the issue for this release if it already exists",
+    )
+    parse.add_argument(
+        "--force",
+        action="store_true",
+        help="With --update, update the issue whatever its status (Under Review, Approved or Withdrawn)",
+    )
+    parse.add_argument(
         "--dry-run",
         action="store_true",
-        help="Print the issue fields without creating anything",
+        help=(
+            "Print the issue fields and, if there is a Jira token, how they differ"
+            " from the existing issue. Nothing is created or updated"
+        ),
     )
     return parse
 
 
 def main():
-    # print() carries the tool's output (the dry-run payload and the created
-    # issue URL); logging carries status and diagnostics (to stderr).
+    # print() carries the tool's output (the dry-run payload and the issue
+    # URL); logging carries status and diagnostics (to stderr).
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     args = parser().parse_args()
     github.init(token=args.github_token)
@@ -241,15 +262,24 @@ def main():
     if args.dry_run:
         print(fields["description"])
         print(json.dumps(fields, indent=2))
-        return
+        if jira.resolve_token(args.token) is None:
+            logger.info("No Jira token: not checking for an existing issue")
+            return
     try:
         session = jira.get_session(token=args.token)
         user = jira.verify(session, url=args.jira_url)
         logger.info("Authenticated as %s", user.get("displayName", user.get("name")))
-        result = jira.create_issue(session, fields, url=args.jira_url)
+        jira.create_or_update_issue(
+            session,
+            fields,
+            locked_statuses=LOCKED_STATUSES,
+            update=args.update,
+            force=args.force,
+            dry_run=args.dry_run,
+            url=args.jira_url,
+        )
     except jira.JiraError as error:
         sys.exit(str(error))
-    print(f"Created {result['key']}: {args.jira_url}/browse/{result['key']}")
 
 
 if __name__ == "__main__":

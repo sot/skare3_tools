@@ -128,7 +128,11 @@ def github_api(monkeypatch):
 
 
 def _stub_milestones(rsps, milestones):
-    rsps.add(responses.GET, "https://api.github.com/repos/sot/skare3", json={"name": "skare3"})
+    rsps.add(
+        responses.GET,
+        "https://api.github.com/repos/sot/skare3",
+        json={"name": "skare3"},
+    )
     # paginated list: one page of results, then an empty page
     rsps.add(responses.GET, MILESTONES_URL, json=milestones)
     rsps.add(responses.GET, MILESTONES_URL, json=[])
@@ -167,8 +171,18 @@ def test_get_matlab_release(github_api, titles, version, matlab_release, expecte
         # "MATLAB 2026_060" can only be found with the Matlab release
         (["MATLAB 2026_060"], "2026.13", None, "No milestone"),
         (["2026.13"], "2026.13", None, "does not name the Matlab Tools release"),
-        (["2026.13 (MATLAB 2026_060)"], "2026.13", "2026_070", "not for MATLAB 2026_070"),
-        (["2026.14 (MATLAB 2026_060)"], "2026.13", "2026_060", "not for version 2026.13"),
+        (
+            ["2026.13 (MATLAB 2026_060)"],
+            "2026.13",
+            "2026_070",
+            "not for MATLAB 2026_070",
+        ),
+        (
+            ["2026.14 (MATLAB 2026_060)"],
+            "2026.13",
+            "2026_060",
+            "not for version 2026.13",
+        ),
         (["2026.13", "MATLAB 2026_060"], "2026.13", "2026_060", "More than one"),
     ],
 )
@@ -205,7 +219,11 @@ def _stub_github(rsps, pulls, milestone_titles=MILESTONE_TITLES):
         "https://api.github.com/graphql",
         json={"data": {"viewer": {"login": "tester"}}},
     )
-    rsps.add(responses.GET, "https://api.github.com/repos/sot/skare3", json={"name": "skare3"})
+    rsps.add(
+        responses.GET,
+        "https://api.github.com/repos/sot/skare3",
+        json={"name": "skare3"},
+    )
     # paginated list: one page of results, then an empty page
     rsps.add(responses.GET, "https://api.github.com/repos/sot/skare3/pulls", json=pulls)
     rsps.add(responses.GET, "https://api.github.com/repos/sot/skare3/pulls", json=[])
@@ -244,14 +262,32 @@ def test_main_without_milestone_exits(monkeypatch):
         matlab_issue.main()
 
 
-@responses.activate
-def test_main_creates_issue(monkeypatch, capsys):
-    _stub_github(responses, [_pr()])
-    responses.add(
+def _stub_jira(rsps, issues):
+    rsps.add(
         responses.GET,
         f"{JIRA_URL}/rest/api/2/myself",
         json={"name": "jdoe", "displayName": "J. Doe"},
     )
+    rsps.add(responses.GET, f"{JIRA_URL}/rest/api/2/search", json={"issues": issues})
+
+
+def _existing_issue(status="Not Started", description="old description"):
+    return {
+        "key": "MATLAB-12345",
+        "fields": {
+            "summary": "Python updates for ska3-matlab (Release 2026_060)",
+            "status": {"name": status},
+            "description": description,
+            "customfield_11600": "2026_060",
+            "customfield_11900": [{"name": "jdoe"}],
+        },
+    }
+
+
+@responses.activate
+def test_main_creates_issue(monkeypatch, capsys):
+    _stub_github(responses, [_pr()])
+    _stub_jira(responses, [])
     responses.add(
         responses.POST,
         f"{JIRA_URL}/rest/api/2/issue",
@@ -268,3 +304,52 @@ def test_main_creates_issue(monkeypatch, capsys):
     assert "assignee" not in posted
     out = capsys.readouterr().out
     assert f"Created MATLAB-12345: {JIRA_URL}/browse/MATLAB-12345" in out
+
+
+@responses.activate
+def test_main_existing_issue_without_update_exits(monkeypatch, capsys):
+    _stub_github(responses, [_pr()])
+    _stub_jira(responses, [_existing_issue()])
+    monkeypatch.setattr("sys.argv", _argv("--token", "abc"))
+    with pytest.raises(SystemExit, match="Use --update"):
+        matlab_issue.main()
+    assert "-old description" in capsys.readouterr().out
+
+
+@responses.activate
+def test_main_dry_run_with_token_shows_changes(monkeypatch, capsys):
+    _stub_github(responses, [_pr()])
+    _stub_jira(responses, [_existing_issue()])
+    monkeypatch.setattr("sys.argv", _argv("--token", "abc", "--dry-run", "--update"))
+    matlab_issue.main()
+    out = capsys.readouterr().out
+    assert '"customfield_11900": [' in out
+    assert "MATLAB-12345 (Not Started) differs" in out
+    assert not any(
+        c.request.method in ("POST", "PUT")
+        for c in responses.calls
+        if c.request.url.startswith(JIRA_URL)
+    )
+
+
+@responses.activate
+def test_main_updates_issue(monkeypatch, capsys):
+    _stub_github(responses, [_pr()])
+    _stub_jira(responses, [_existing_issue()])
+    responses.add(
+        responses.PUT, f"{JIRA_URL}/rest/api/2/issue/MATLAB-12345", status=204
+    )
+    monkeypatch.setattr("sys.argv", _argv("--token", "abc", "--update"))
+    matlab_issue.main()
+    sent = json.loads(responses.calls[-1].request.body)["fields"]
+    assert sent["description"] == (DATA_DIR / "description.jira").read_text()
+    assert "Updated MATLAB-12345" in capsys.readouterr().out
+
+
+@responses.activate
+def test_main_resolved_issue_needs_force(monkeypatch):
+    _stub_github(responses, [_pr()])
+    _stub_jira(responses, [_existing_issue(status="Resolved")])
+    monkeypatch.setattr("sys.argv", _argv("--token", "abc", "--update"))
+    with pytest.raises(SystemExit, match="--force"):
+        matlab_issue.main()

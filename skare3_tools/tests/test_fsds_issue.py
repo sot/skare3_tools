@@ -6,7 +6,8 @@ Covers:
   truncation of the PR body after the Testing section, the PR -> release wording
   change scoped to the intro, and protection of fenced code blocks,
 - the Jira REST client (skare3_tools.jira): token resolution, session headers,
-  authentication check, and issue creation (all HTTP stubbed with `responses`),
+  authentication check, issue creation, search, update, and the create-or-update
+  workflow shared by the release-issue scripts (all HTTP stubbed with `responses`),
 - the CLI --dry-run path end to end, with the GitHub API stubbed.
 """
 
@@ -246,6 +247,196 @@ def test_create_issue_error_reports_jira_message():
         jira.create_issue(session, {}, url=JIRA_URL)
 
 
+SEARCH_URL = f"{JIRA_URL}/rest/api/2/search"
+
+FIELDS = {
+    "project": {"key": "MATLAB"},
+    "issuetype": {"id": "10101"},
+    "summary": "Python updates for ska3-matlab (Release 2026_060)",
+    "description": "intro\n\nsummary\n",
+    "customfield_11600": "2026_060",
+    "customfield_11900": [{"name": "jdoe"}],
+}
+
+
+def _issue(key="MATLAB-12345", status="Not Started", **fields):
+    """An issue as returned by the Jira search, with the fields of FIELDS by default."""
+    issue_fields = {
+        "summary": FIELDS["summary"],
+        "status": {"name": status, "id": "1"},
+        # as Jira returns them: CRLF line ends, full user objects
+        "description": FIELDS["description"].replace("\n", "\r\n"),
+        "customfield_11600": FIELDS["customfield_11600"],
+        "customfield_11900": [{"name": "jdoe", "key": "jdoe", "displayName": "J. Doe"}],
+    }
+    issue_fields.update(fields)
+    return {"key": key, "fields": issue_fields}
+
+
+def _stub_search(issues):
+    responses.add(responses.GET, SEARCH_URL, json={"issues": issues})
+
+
+@responses.activate
+def test_find_issue_exact_summary():
+    # the JQL text search also returns issues with a similar summary
+    _stub_search([_issue("MATLAB-1", summary=FIELDS["summary"] + " (copy)"), _issue()])
+    session = jira.get_session(token="abc")
+    issue = jira.find_issue(session, "MATLAB", FIELDS["summary"], url=JIRA_URL)
+    assert issue["key"] == "MATLAB-12345"
+    jql = responses.calls[0].request.params["jql"]
+    assert jql == f'project = MATLAB AND summary ~ "\\"{FIELDS["summary"]}\\""'
+
+
+@responses.activate
+def test_find_issue_none():
+    _stub_search([])
+    session = jira.get_session(token="abc")
+    assert jira.find_issue(session, "MATLAB", FIELDS["summary"], url=JIRA_URL) is None
+
+
+@responses.activate
+def test_find_issue_more_than_one():
+    _stub_search([_issue("MATLAB-1"), _issue("MATLAB-2")])
+    session = jira.get_session(token="abc")
+    with pytest.raises(jira.JiraError, match="MATLAB-1, MATLAB-2"):
+        jira.find_issue(session, "MATLAB", FIELDS["summary"], url=JIRA_URL)
+
+
+@responses.activate
+def test_update_issue_omits_project_and_issuetype():
+    responses.add(
+        responses.PUT, f"{JIRA_URL}/rest/api/2/issue/MATLAB-12345", status=204
+    )
+    session = jira.get_session(token="abc")
+    jira.update_issue(session, "MATLAB-12345", FIELDS, url=JIRA_URL)
+    sent = json.loads(responses.calls[0].request.body)["fields"]
+    assert "project" not in sent
+    assert "issuetype" not in sent
+    assert sent["summary"] == FIELDS["summary"]
+
+
+@responses.activate
+def test_update_issue_error_reports_jira_message():
+    responses.add(
+        responses.PUT,
+        f"{JIRA_URL}/rest/api/2/issue/MATLAB-12345",
+        json={"errorMessages": [], "errors": {"customfield_11600": "not on screen"}},
+        status=400,
+    )
+    session = jira.get_session(token="abc")
+    with pytest.raises(jira.JiraError, match="not on screen"):
+        jira.update_issue(session, "MATLAB-12345", FIELDS, url=JIRA_URL)
+
+
+def test_field_changes_ignores_jira_formatting():
+    # CRLF line ends and full user objects are not changes
+    assert jira.field_changes(_issue()["fields"], FIELDS) == {}
+
+
+def test_field_changes():
+    current = _issue(description="old\r\n", customfield_11900=None)["fields"]
+    assert jira.field_changes(current, FIELDS) == {
+        "description": ("old", "intro\n\nsummary"),
+        "customfield_11900": (None, ["jdoe"]),
+    }
+
+
+def test_format_changes():
+    text = jira.format_changes(
+        {"description": ("a\nb", "a\nc"), "customfield_11600": ("2026_050", "2026_060")}
+    )
+    assert "--- description (current)" in text
+    assert "-b\n+c" in text
+    assert "customfield_11600: '2026_050' -> '2026_060'" in text
+
+
+def _create_or_update(**kwargs):
+    session = jira.get_session(token="abc")
+    jira.create_or_update_issue(
+        session, FIELDS, locked_statuses=("Resolved",), url=JIRA_URL, **kwargs
+    )
+
+
+def _writes():
+    return [c.request.method for c in responses.calls if c.request.method != "GET"]
+
+
+@responses.activate
+def test_create_or_update_creates(capsys):
+    _stub_search([])
+    responses.add(
+        responses.POST, f"{JIRA_URL}/rest/api/2/issue", json={"key": "MATLAB-12345"}
+    )
+    _create_or_update()
+    assert _writes() == ["POST"]
+    assert "Created MATLAB-12345" in capsys.readouterr().out
+
+
+@responses.activate
+def test_create_or_update_dry_run_does_not_create(capsys):
+    _stub_search([])
+    _create_or_update(dry_run=True)
+    assert _writes() == []
+    assert "would be created" in capsys.readouterr().out
+
+
+@responses.activate
+def test_create_or_update_up_to_date(capsys):
+    _stub_search([_issue()])
+    _create_or_update(update=True)
+    assert _writes() == []
+    assert "MATLAB-12345 (Not Started) is up to date" in capsys.readouterr().out
+
+
+@responses.activate
+def test_create_or_update_differs_without_update(capsys):
+    _stub_search([_issue(description="old")])
+    with pytest.raises(jira.JiraError, match="Use --update"):
+        _create_or_update()
+    assert _writes() == []
+    out = capsys.readouterr().out
+    assert "MATLAB-12345 (Not Started) differs" in out
+    assert "+intro" in out
+
+
+@responses.activate
+def test_create_or_update_differs_dry_run(capsys):
+    _stub_search([_issue(description="old")])
+    _create_or_update(update=True, dry_run=True)
+    assert _writes() == []
+    assert "+intro" in capsys.readouterr().out
+
+
+@responses.activate
+def test_create_or_update_updates(capsys):
+    _stub_search([_issue(description="old")])
+    responses.add(
+        responses.PUT, f"{JIRA_URL}/rest/api/2/issue/MATLAB-12345", status=204
+    )
+    _create_or_update(update=True)
+    assert _writes() == ["PUT"]
+    assert "Updated MATLAB-12345" in capsys.readouterr().out
+
+
+@responses.activate
+def test_create_or_update_locked_status():
+    _stub_search([_issue(status="Resolved", description="old")])
+    with pytest.raises(jira.JiraError, match="is Resolved .* --force"):
+        _create_or_update(update=True)
+    assert _writes() == []
+
+
+@responses.activate
+def test_create_or_update_locked_status_force():
+    _stub_search([_issue(status="Resolved", description="old")])
+    responses.add(
+        responses.PUT, f"{JIRA_URL}/rest/api/2/issue/MATLAB-12345", status=204
+    )
+    _create_or_update(update=True, force=True)
+    assert _writes() == ["PUT"]
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -332,3 +523,34 @@ def test_find_pr_matches_whole_version(version, number):
     _stub_github(responses, [_pr(1733, "2026.13"), _pr(1690, "ska3-flight 2026.1")])
     fsds_issue.github.init(token="test-token")
     assert fsds_issue.find_pr(version)["number"] == number
+
+
+@responses.activate
+def test_main_approved_issue_is_not_updated(monkeypatch, capsys):
+    _stub_github(responses, [_pr()])
+    responses.add(responses.GET, f"{JIRA_URL}/rest/api/2/myself", json={"name": "jdoe"})
+    existing = {
+        "key": "FSDS-215",
+        "fields": {"summary": "ska3-flight 2026.9", "status": {"name": "Approved"}},
+    }
+    responses.add(responses.GET, SEARCH_URL, json={"issues": [existing]})
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "skare3-fsds-issue",
+            "2026.9",
+            "--update",
+            "--token",
+            "abc",
+            "--github-token",
+            "x",
+        ],
+    )
+    with pytest.raises(SystemExit, match="FSDS-215 is Approved"):
+        fsds_issue.main()
+    assert "FSDS-215 (Approved) differs" in capsys.readouterr().out
+    assert not any(
+        c.request.method in ("POST", "PUT")
+        for c in responses.calls
+        if c.request.url.startswith(JIRA_URL)
+    )
