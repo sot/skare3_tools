@@ -536,6 +536,7 @@ class Repository:
         - tags
         - commits
         - issues
+        - milestones
         - branches
         - checks
     """
@@ -551,6 +552,7 @@ class Repository:
         self.tags = Tags(self)
         self.commits = Commits(self)
         self.issues = Issues(self)
+        self.milestones = Milestones(self)
         self.branches = Branches(self)
         self.checks = Checks(self)
         self.pull_requests = PullRequests(self)
@@ -916,6 +918,24 @@ class Issues(_EndpointGroup):
             json=json,
             **kwargs,
         )
+
+
+class Milestones(_EndpointGroup):
+    """
+    Endpoints that have to do with repository milestones.
+
+    (`milestones API docs <https://docs.github.com/en/rest/issues/milestones>`_)
+    """
+
+    def __call__(self, state="open"):
+        """
+        List milestones.
+
+        :param state: str
+            "open", "closed" or "all".
+        :return: list
+        """
+        return self._get_list("repos/:owner/:repo/milestones", params={"state": state})
 
 
 class Compare(_EndpointGroup):
