@@ -197,9 +197,9 @@ def field_changes(current, new):
         if name in ("project", "issuetype"):
             continue
         old = _simplify(current.get(name))
-        value = _simplify(value)
-        if old != value:
-            changes[name] = (old, value)
+        new_value = _simplify(value)
+        if old != new_value:
+            changes[name] = (old, new_value)
     return changes
 
 
@@ -220,6 +220,7 @@ def format_changes(changes):
 def create_or_update_issue(
     session,
     fields,
+    *,
     locked_statuses=(),
     update=False,
     force=False,

@@ -238,7 +238,10 @@ def parser():
     parse.add_argument(
         "--force",
         action="store_true",
-        help="With --update, update the issue whatever its status (Under Review, Approved or Withdrawn)",
+        help=(
+            "With --update, update the issue whatever its status"
+            " (Under Review, Approved or Withdrawn)"
+        ),
     )
     parse.add_argument(
         "--dry-run",
