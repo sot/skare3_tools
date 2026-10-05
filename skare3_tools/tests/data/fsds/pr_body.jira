@@ -1,0 +1,22 @@
+h1. ska3-flight 2026.9
+
+This release includes mostly changes useful for aspect. The more important ones are:
+* cheta: Support ingesting ACA L0 image telemetry into cheta archive
+* mica: Support decom of the 32-bit HDR3 quadrant offsets
+
+h2. Interface Impacts:
+
+This release requires the cheta ACA image telemetry data from sot/cheta/pull/291. This was copied into {{$SKA/data/eng_archive}} *in the test environment* and will need to be promoted to the flight environment. This is accounted for in the ska3-flight issue (#1708)
+
+h2. Testing:
+
+* [HEAD|https://icxc.cfa.harvard.edu/aspect/skare3/testr/releases/2026.9rc3-HEAD/].
+* [GRETA|https://icxc.cfa.harvard.edu/aspect/skare3/testr/releases/2026.9rc3-GRETA/] (on chimchim).
+
+The latest release candidates will be installed in {{/proj/sot/ska3/test}} on HEAD, and all release candidates will be available for testing from the usual channels:
+{noformat}
+conda create -n ska3-flight-2026.9rc3 --override-channels \
+  -c https://icxc.cfa.harvard.edu/aspect/ska3-conda/flight \
+  -c https://icxc.cfa.harvard.edu/aspect/ska3-conda/test \
+  ska3-flight==2026.9rc3
+{noformat}
