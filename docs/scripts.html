@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Scripts &#8212; SkaRE3 Tools 1.8.0 documentation</title>
+    <title>Scripts &#8212; SkaRE3 Tools 1.9.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="_static/documentation_options.js?v=b51e6972"></script>
+    <script src="_static/documentation_options.js?v=c4cb232b"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -58,7 +58,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.8.0 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.9.0 documentation</a>
 	 &#187;
       </li>
       
@@ -164,7 +164,7 @@ If not, the local copy of the skare3 repo must be in the tag branch.</p></li>
 </p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">release</span><span class="o">-</span><span class="n">check</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="o">--</span><span class="n">version</span> <span class="n">VERSION</span> <span class="p">[</span><span class="o">--</span><span class="n">skare3</span><span class="o">-</span><span class="n">path</span> <span class="n">SKARE3_PATH</span><span class="p">]</span>
                             <span class="p">[</span><span class="o">--</span><span class="n">repository</span> <span class="n">REPOSITORY</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
-                            <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">check</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">check</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">skip</span><span class="o">-</span><span class="n">github</span><span class="o">-</span><span class="n">sha</span><span class="o">-</span><span class="n">check</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="skare3_tools.scripts.skare3_release_check-parser-named-arguments">
@@ -188,6 +188,10 @@ If not, the local copy of the skare3 repo must be in the tag branch.</p></li>
 <dd><p>Checks for CI</p>
 <p>Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
 </dd>
+<dt><kbd>--skip-github-sha-check</kbd></dt>
+<dd><p>Skip check for GITHUB_SHA</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
 </dl>
 </section>
 </section>
@@ -198,12 +202,14 @@ If not, the local copy of the skare3 repo must be in the tag branch.</p></li>
 2. one string that must correspond to a package in conda-info file 3. the name of a json file
 containing a dictionary of versions indexed by package names (which can be created doing
 “conda search –info –json ska3-flight”, for example).</p>
+<p>The changes are listed for each platform. Platforms with the same changes are listed together.</p>
 <p>This script requires CONDA_PASSWORD to be defined.</p>
 </p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">changes</span><span class="o">-</span><span class="n">summary</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">initial</span><span class="o">-</span><span class="n">version</span> <span class="n">INITIAL_VERSION</span><span class="p">]</span>
                               <span class="p">[</span><span class="o">--</span><span class="n">final</span><span class="o">-</span><span class="n">version</span> <span class="n">FINAL_VERSION</span><span class="p">]</span>
                               <span class="p">[</span><span class="o">--</span><span class="n">meta</span><span class="o">-</span><span class="n">package</span> <span class="n">META_PACKAGE</span><span class="p">]</span>
-                              <span class="p">[</span><span class="o">--</span><span class="n">conda</span><span class="o">-</span><span class="n">channel</span> <span class="n">CONDA_CHANNEL</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
+                              <span class="p">[</span><span class="o">--</span><span class="n">conda</span><span class="o">-</span><span class="n">channel</span> <span class="n">CONDA_CHANNEL</span><span class="p">]</span>
+                              <span class="p">[</span><span class="o">--</span><span class="n">platform</span> <span class="n">PLATFORM</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="skare3_tools.scripts.skare3_update_summary-parser-named-arguments">
@@ -222,6 +228,9 @@ containing a dictionary of versions indexed by package names (which can be creat
 <dt><kbd>--conda-channel</kbd></dt>
 <dd><p>Conda channel where info for the final version of the meta-package can be found.The default is to use the test channel.</p>
 <p>Default: <code class="docutils literal notranslate"><span class="pre">'test'</span></code></p>
+</dd>
+<dt><kbd>--platform</kbd></dt>
+<dd><p>Conda platform to summarize. Default is all of: linux-64, osx-arm64, win-64.</p>
 </dd>
 <dt><kbd>--token</kbd></dt>
 <dd><p>Github token, or name of file that contains token</p>
@@ -285,8 +294,131 @@ them to the target channel.</p>
 </dl>
 </section>
 </section>
+<section id="skare3-fsds-issue">
+<span id="id6"></span><h2><a class="reference internal" href="#skare3-fsds-issue"><span class="std std-ref">skare3-fsds-issue</span></a><a class="headerlink" href="#skare3-fsds-issue" title="Link to this heading">¶</a></h2>
+<p><p>Create the FSDS Jira issue for a ska3-flight release.</p>
+<p>Finds the release pull request in sot/skare3 (the PR whose title is the release
+version), reformats its description as a Jira “Change Request” issue following
+the standard FSDS procedure, and creates the issue in the FSDS project at
+<a class="reference external" href="https://occ-cfa.cfa.harvard.edu">https://occ-cfa.cfa.harvard.edu</a>.</p>
+<p>The issue description is the PR description up to and including the Testing
+section, converted from GitHub markdown to Jira wiki markup.</p>
+<p>Jira authentication uses a Personal Access Token, created once at
+<a class="reference external" href="https://occ-cfa.cfa.harvard.edu">https://occ-cfa.cfa.harvard.edu</a> (avatar -&gt; Profile -&gt; Personal Access Tokens)
+and passed with –token or the FSDS_JIRA_TOKEN environment variable.</p>
+<p>If the issue for the release already exists, the script shows how it differs
+from the release PR. Use –update to update it (only while it is In
+Development, unless –force is given), and –dry-run to review the issue
+content without creating or updating anything.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">fsds</span><span class="o">-</span><span class="n">issue</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">pr</span> <span class="n">PR</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span>
+                         <span class="p">[</span><span class="o">--</span><span class="n">github</span><span class="o">-</span><span class="n">token</span> <span class="n">GITHUB_TOKEN</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">update</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">force</span><span class="p">]</span>
+                         <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span>
+                         <span class="n">version</span>
+</pre></div>
+</div>
+<section id="skare3_tools.scripts.fsds_issue-parser-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#skare3_tools.scripts.fsds_issue-parser-positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>version</kbd></dt>
+<dd><p>Release version (e.g. 2026.9)</p>
+</dd>
+</dl>
+</section>
+<section id="skare3_tools.scripts.fsds_issue-parser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#skare3_tools.scripts.fsds_issue-parser-named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--pr</kbd></dt>
+<dd><p>PR number in sot/skare3 (skips the title search)</p>
+</dd>
+<dt><kbd>--token, -t</kbd></dt>
+<dd><p>Jira Personal Access Token, or name of file that contains the token. Default: the FSDS_JIRA_TOKEN environment variable. Create the token in Jira (avatar -&gt; Profile -&gt; Personal Access Tokens)</p>
+</dd>
+<dt><kbd>--github-token</kbd></dt>
+<dd><p>Github token</p>
+</dd>
+<dt><kbd>--update</kbd></dt>
+<dd><p>Update the issue for this release if it already exists</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+<dt><kbd>--force</kbd></dt>
+<dd><p>With –update, update the issue whatever its status (Under Review, Approved or Withdrawn)</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+<dt><kbd>--dry-run</kbd></dt>
+<dd><p>Print the issue fields and, if there is a Jira token, how they differ from the existing issue. Nothing is created or updated</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="skare3-matlab-issue">
+<span id="id7"></span><h2><a class="reference internal" href="#skare3-matlab-issue"><span class="std std-ref">skare3-matlab-issue</span></a><a class="headerlink" href="#skare3-matlab-issue" title="Link to this heading">¶</a></h2>
+<p><p>Create the MATLAB Jira issue for a ska3-matlab release.</p>
+<p>Finds the release pull request in sot/skare3 (the PR whose title is the release
+version) and the Matlab Tools release it ships with, and creates a “Problem
+Report” issue in the MATLAB project at <a class="reference external" href="https://occ-cfa.cfa.harvard.edu">https://occ-cfa.cfa.harvard.edu</a>.</p>
+<p>The Matlab Tools release comes from the release milestone in sot/skare3: the
+PR’s milestone, or else the milestone whose title names the version or the
+–matlab-release. The proper title is “2026.13 (MATLAB 2026_060)”, but
+“2026.13” and “MATLAB 2026_060” are also recognized.</p>
+<p>The issue description links the release PR and includes the PR’s executive
+summary (the “This PR includes:” list), converted to Jira wiki markup. The
+authenticated user is set as the issue’s Developer.</p>
+<p>Jira authentication uses a Personal Access Token, created once at
+<a class="reference external" href="https://occ-cfa.cfa.harvard.edu">https://occ-cfa.cfa.harvard.edu</a> (avatar -&gt; Profile -&gt; Personal Access Tokens)
+and passed with –token or the FSDS_JIRA_TOKEN environment variable.</p>
+<p>If the issue for the release already exists, the script shows how it differs
+from the release PR. Use –update to update it (unless it is Resolved or
+Withdrawn, in which case –force is also needed), and –dry-run to review the
+issue content without creating or updating anything.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">skare3</span><span class="o">-</span><span class="n">matlab</span><span class="o">-</span><span class="n">issue</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">matlab</span><span class="o">-</span><span class="n">release</span> <span class="n">MATLAB_RELEASE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">pr</span> <span class="n">PR</span><span class="p">]</span>
+                           <span class="p">[</span><span class="o">--</span><span class="n">token</span> <span class="n">TOKEN</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">github</span><span class="o">-</span><span class="n">token</span> <span class="n">GITHUB_TOKEN</span><span class="p">]</span>
+                           <span class="p">[</span><span class="o">--</span><span class="n">update</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">force</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span>
+                           <span class="n">version</span>
+</pre></div>
+</div>
+<section id="skare3_tools.scripts.matlab_issue-parser-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#skare3_tools.scripts.matlab_issue-parser-positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>version</kbd></dt>
+<dd><p>ska3-matlab release version (e.g. 2026.13)</p>
+</dd>
+</dl>
+</section>
+<section id="skare3_tools.scripts.matlab_issue-parser-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#skare3_tools.scripts.matlab_issue-parser-named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--matlab-release</kbd></dt>
+<dd><p>Matlab Tools release (e.g. 2026_060). Needed if the milestone title does not include it. Default: from the milestone title</p>
+</dd>
+<dt><kbd>--pr</kbd></dt>
+<dd><p>PR number in sot/skare3 (skips the title search)</p>
+</dd>
+<dt><kbd>--token, -t</kbd></dt>
+<dd><p>Jira Personal Access Token, or name of file that contains the token. Default: the FSDS_JIRA_TOKEN environment variable. Create the token in Jira (avatar -&gt; Profile -&gt; Personal Access Tokens)</p>
+</dd>
+<dt><kbd>--github-token</kbd></dt>
+<dd><p>Github token</p>
+</dd>
+<dt><kbd>--update</kbd></dt>
+<dd><p>Update the issue for this release if it already exists</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+<dt><kbd>--force</kbd></dt>
+<dd><p>With –update, update the issue whatever its status (Resolved or Withdrawn)</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+<dt><kbd>--dry-run</kbd></dt>
+<dd><p>Print the issue fields and, if there is a Jira token, how they differ from the existing issue. Nothing is created or updated</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</section>
+</section>
 <section id="skare3-git-pass">
-<span id="id6"></span><h2><a class="reference internal" href="#skare3-git-pass"><span class="std std-ref">skare3-git-pass</span></a><a class="headerlink" href="#skare3-git-pass" title="Link to this heading">¶</a></h2>
+<span id="id8"></span><h2><a class="reference internal" href="#skare3-git-pass"><span class="std std-ref">skare3-git-pass</span></a><a class="headerlink" href="#skare3-git-pass" title="Link to this heading">¶</a></h2>
 <p><p>Utility script to provide username/password when authenticating git.</p>
 <p>This script reads the GIT_USERNAME and GIT_PASSWORD environmental variables
 and returns the corresponding value when requested.</p>
@@ -337,6 +469,16 @@ and GIT_PASSWORD, git takes care of the rest.</p>
 <li><a class="reference internal" href="#skare3-promote"><span class="xref std std-ref">skare3-promote</span></a><ul>
 <li><a class="reference internal" href="#skare3_tools.scripts.skare3_promote-parser-positional-arguments">Positional Arguments</a></li>
 <li><a class="reference internal" href="#skare3_tools.scripts.skare3_promote-parser-named-arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#skare3-fsds-issue"><span class="xref std std-ref">skare3-fsds-issue</span></a><ul>
+<li><a class="reference internal" href="#skare3_tools.scripts.fsds_issue-parser-positional-arguments">Positional Arguments</a></li>
+<li><a class="reference internal" href="#skare3_tools.scripts.fsds_issue-parser-named-arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#skare3-matlab-issue"><span class="xref std std-ref">skare3-matlab-issue</span></a><ul>
+<li><a class="reference internal" href="#skare3_tools.scripts.matlab_issue-parser-positional-arguments">Positional Arguments</a></li>
+<li><a class="reference internal" href="#skare3_tools.scripts.matlab_issue-parser-named-arguments">Named Arguments</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#skare3-git-pass"><span class="xref std std-ref">skare3-git-pass</span></a><ul>

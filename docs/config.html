@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Configuration &#8212; SkaRE3 Tools 1.8.0 documentation</title>
+    <title>Configuration &#8212; SkaRE3 Tools 1.9.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="_static/documentation_options.js?v=b51e6972"></script>
+    <script src="_static/documentation_options.js?v=c4cb232b"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -58,7 +58,7 @@
 	 |
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.8.0 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.9.0 documentation</a>
 	 &#187;
       </li>
       
@@ -87,9 +87,12 @@ standard password to conda channels called CONDA_PASSWORD.</p>
 </ul>
 <p>The directory must already exist: it is operational data (on synced hosts it
 rides the $SKA/data sync). If it cannot be determined, does not exist, or
-needs to be written and is not writable, init fails with an error saying so.
+needs to be written and is not writable, init fails with a DataDirError saying so.
 The one exception is a pending config-version upgrade on a read-only copy
 (e.g. a synced host): the upgraded config is kept in memory and not persisted.</p>
+<p>Importing this module does not fail for lack of a data directory: commands that only query
+Github (e.g. the release scripts on GitHub-hosted runners) do not need one. The configuration
+then keeps its defaults, and <code class="xref py py-func docutils literal notranslate"><span class="pre">data_dir</span></code> raises the DataDirError when the store is needed.</p>
 <p>The default looks like this:</p>
 <div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;config_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>

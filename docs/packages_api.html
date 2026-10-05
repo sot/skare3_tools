@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Packages &#8212; SkaRE3 Tools 1.8.0 documentation</title>
+    <title>Packages &#8212; SkaRE3 Tools 1.9.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="_static/documentation_options.js?v=b51e6972"></script>
+    <script src="_static/documentation_options.js?v=c4cb232b"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -52,7 +52,7 @@
 	
       </li>
       <li>
-	<a href="index.html">SkaRE3 Tools 1.8.0 documentation</a>
+	<a href="index.html">SkaRE3 Tools 1.9.0 documentation</a>
 	 &#187;
       </li>
       <li><a href="api.html" accesskey="U">API</a> &#187;</li>
@@ -146,7 +146,7 @@ Query Github directly instead of reading the store.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="skare3_tools.packages.get_conda_pkg_info">
-<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_conda_pkg_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conda_package</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conda_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/packages.html#get_conda_pkg_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_conda_pkg_info" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">skare3_tools.packages.</span></span><span class="sig-name descname"><span class="pre">get_conda_pkg_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conda_package</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conda_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/skare3_tools/packages/packages.html#get_conda_pkg_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#skare3_tools.packages.get_conda_pkg_info" title="Link to this definition">¶</a></dt>
 <dd><p>Get information on a conda package.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -155,6 +155,8 @@ Query Github directly instead of reading the store.</p></li>
 Name of conda package</p></li>
 <li><p><strong>conda_channel</strong> – str
 url of the channel</p></li>
+<li><p><strong>subdir</strong> – str
+Conda platform subdir to search (e.g. ‘osx-arm64’). The default is the current platform.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>skare3_tools.packages.packages &#8212; SkaRE3 Tools 1.8.0 documentation</title>
+    <title>skare3_tools.packages.packages &#8212; SkaRE3 Tools 1.9.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="../../../_static/documentation_options.js?v=b51e6972"></script>
+    <script src="../../../_static/documentation_options.js?v=c4cb232b"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="../../../_static/sidebar.js"></script>
@@ -44,7 +44,7 @@
     <h3>Navigation</h3>
     <ul>
       <li>
-	<a href="../../../index.html">SkaRE3 Tools 1.8.0 documentation</a>
+	<a href="../../../index.html">SkaRE3 Tools 1.9.0 documentation</a>
 	 &#187;
       </li>
       <li><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
@@ -822,7 +822,7 @@
 
 <div class="viewcode-block" id="get_conda_pkg_info">
 <a class="viewcode-back" href="../../../packages_api.html#skare3_tools.packages.get_conda_pkg_info">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_conda_pkg_info</span><span class="p">(</span><span class="n">conda_package</span><span class="p">,</span> <span class="n">conda_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_conda_pkg_info</span><span class="p">(</span><span class="n">conda_package</span><span class="p">,</span> <span class="n">conda_channel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">subdir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get information on a conda package.</span>
 
@@ -830,6 +830,8 @@
 <span class="sd">        Name of conda package</span>
 <span class="sd">    :param conda_channel: str</span>
 <span class="sd">        url of the channel</span>
+<span class="sd">    :param subdir: str</span>
+<span class="sd">        Conda platform subdir to search (e.g. &#39;osx-arm64&#39;). The default is the current platform.</span>
 <span class="sd">    :return: dict</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">==</span> <span class="mi">3</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">):</span>
@@ -837,6 +839,8 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;stdout&quot;</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">}</span>
     <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;conda&quot;</span><span class="p">,</span> <span class="s2">&quot;search&quot;</span><span class="p">,</span> <span class="n">conda_package</span><span class="p">,</span> <span class="s2">&quot;--override-channels&quot;</span><span class="p">,</span> <span class="s2">&quot;--json&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">subdir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;--subdir&quot;</span><span class="p">,</span> <span class="n">subdir</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">conda_channel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">conda_channels</span> <span class="o">=</span> <span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;conda_channels&quot;</span><span class="p">][</span><span class="s2">&quot;main&quot;</span><span class="p">]</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">conda_channel</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>

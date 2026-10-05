@@ -4,11 +4,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>skare3_tools.github.github &#8212; SkaRE3 Tools 1.8.0 documentation</title>
+    <title>skare3_tools.github.github &#8212; SkaRE3 Tools 1.9.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../_static/bootstrap-astropy.css?v=f4f7060c" />
     
-    <script src="../../../_static/documentation_options.js?v=b51e6972"></script>
+    <script src="../../../_static/documentation_options.js?v=c4cb232b"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script type="text/javascript" src="../../../_static/sidebar.js"></script>
@@ -44,7 +44,7 @@
     <h3>Navigation</h3>
     <ul>
       <li>
-	<a href="../../../index.html">SkaRE3 Tools 1.8.0 documentation</a>
+	<a href="../../../index.html">SkaRE3 Tools 1.9.0 documentation</a>
 	 &#187;
       </li>
       <li><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
@@ -624,6 +624,7 @@
 <span class="sd">        - tags</span>
 <span class="sd">        - commits</span>
 <span class="sd">        - issues</span>
+<span class="sd">        - milestones</span>
 <span class="sd">        - branches</span>
 <span class="sd">        - checks</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -639,6 +640,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="n">Tags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">commits</span> <span class="o">=</span> <span class="n">Commits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">issues</span> <span class="o">=</span> <span class="n">Issues</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">milestones</span> <span class="o">=</span> <span class="n">Milestones</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">branches</span> <span class="o">=</span> <span class="n">Branches</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">checks</span> <span class="o">=</span> <span class="n">Checks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pull_requests</span> <span class="o">=</span> <span class="n">PullRequests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -1050,6 +1052,24 @@
         <span class="p">)</span></div>
 </div>
 
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Milestones</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Endpoints that have to do with repository milestones.</span>
+
+<span class="sd">    (`milestones API docs &lt;https://docs.github.com/en/rest/issues/milestones&gt;`_)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="s2">&quot;open&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List milestones.</span>
+
+<span class="sd">        :param state: str</span>
+<span class="sd">            &quot;open&quot;, &quot;closed&quot; or &quot;all&quot;.</span>
+<span class="sd">        :return: list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_list</span><span class="p">(</span><span class="s2">&quot;repos/:owner/:repo/milestones&quot;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="n">state</span><span class="p">})</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Compare</span><span class="p">(</span><span class="n">_EndpointGroup</span><span class="p">):</span>
