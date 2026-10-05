@@ -755,7 +755,7 @@ def _channel_is_reachable(url, tries=4, timeout=5, wait=5):
     return False
 
 
-def get_conda_pkg_info(conda_package, conda_channel=None):
+def get_conda_pkg_info(conda_package, conda_channel=None, subdir=None):
     """
     Get information on a conda package.
 
@@ -763,6 +763,8 @@ def get_conda_pkg_info(conda_package, conda_channel=None):
         Name of conda package
     :param conda_channel: str
         url of the channel
+    :param subdir: str
+        Conda platform subdir to search (e.g. 'osx-arm64'). The default is the current platform.
     :return: dict
     """
     if sys.version_info == 3 >= (3, 7):
@@ -770,6 +772,8 @@ def get_conda_pkg_info(conda_package, conda_channel=None):
     else:
         kwargs = {"stdout": subprocess.PIPE}
     cmd = ["conda", "search", conda_package, "--override-channels", "--json"]
+    if subdir is not None:
+        cmd += ["--subdir", subdir]
     if conda_channel is None:
         conda_channels = CONFIG["conda_channels"]["main"]
     elif isinstance(conda_channel, list):
